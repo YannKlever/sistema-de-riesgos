@@ -1,0 +1,39 @@
+.logoutButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--clr-prim-osc);
+  border: none;
+  color: var(--clr-blanco);
+  padding: 0.75rem 1.5rem;
+  width: 80%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  gap: 0.75rem;
+  border-radius: 50px;
+  margin-top: 1rem;
+  box-shadow: var(--sombra-ligera);
+}
+
+.logoutButton:hover {
+  background: var(--clr-error);
+  transform: translateY(-2px);
+  box-shadow: var(--sombra-tarjeta);
+}
+
+.logoutButton:active {
+  transform: translateY(0);
+}
+
+.icon {
+  transition: transform 0.3s ease;
+}
+
+.logoutButton:hover .icon {
+  transform: rotate(180deg);
+}
+
+.text {
+  font-size: 0.9rem;
+  font-weight: 500;
+}

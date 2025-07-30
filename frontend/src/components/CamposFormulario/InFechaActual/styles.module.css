@@ -1,0 +1,30 @@
+.fechaContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.fechaLabel {
+    font-size: 0.8125rem;
+    color: var(--clr-gris-texto);
+    font-weight: 500;
+}
+
+.fechaValue {
+    font-size: 0.9375rem;
+    color: var(--clr-negro-80);
+    padding: 0.4375rem 0;
+    border-bottom: 1px solid var(--clr-gris-claro);
+}
+
+/* Modo oscuro */
+@media (prefers-color-scheme: dark) {
+    .fechaLabel {
+        color: var(--clr-gris-medio);
+    }
+    
+    .fechaValue {
+        color: var(--clr-blanco);
+        border-bottom-color: var(--clr-gris-60);
+    }
+}

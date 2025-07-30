@@ -1,0 +1,29 @@
+.seccionContainer {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--clr-gris-claro);
+}
+
+.seccionTitulo {
+    display: flex;
+    align-items: center;
+    color: var(--clr-prim-mas-osc);
+    margin-bottom: 1.5rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.seccionIcono {
+    margin-right: 0.75rem;
+    font-size: 1.1em;
+}
+
+.seccionCampos {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.campoWrapper {
+    width: auto;
+}

@@ -1,0 +1,159 @@
+.pageContainer {
+    min-height: 100vh;
+    background-color: var(--clr-blanco-roto);
+    padding: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.contentWrapper {
+    width: 100%;
+    max-width: 900px;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    height: 100vh;
+    padding: 1rem;
+}
+
+@media (min-width: 768px) {
+    .contentWrapper {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr;
+        align-items: center;
+        gap: 2rem;
+    }
+}
+
+.imageContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+}
+
+.heroImage {
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+    object-fit: contain;
+    border-radius: 18px;
+}
+
+/* Contenido de texto */
+.textContent {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 1rem;
+}
+
+/* Encabezado */
+.header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.title {
+    color: var(--clr-prim-mas-osc);
+    font-size: 2.2rem;
+    margin-bottom: 0.8rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.subtitle {
+    color: var(--clr-gris-60);
+    font-size: 1.1rem;
+    line-height: 1.5;
+    font-weight: 400;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+/* Botón principal */
+.ctaContainer {
+    text-align: center;
+    width: 100%;
+}
+
+.mainButton {
+    padding: 1rem 2.5rem;
+    background: var(--grad-prim);
+    color: var(--clr-blanco);
+    border: none;
+    border-radius: 30px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--sombra-ligera);
+}
+
+.mainButton:hover {
+    background: var(--grad-sec);
+    transform: translateY(-3px);
+    box-shadow: var(--sombra-tarjeta);
+}
+
+.buttonIcon {
+    font-size: 1.2rem;
+    transition: transform 0.3s ease;
+}
+
+.mainButton:hover .buttonIcon {
+    transform: translateX(4px);
+}
+
+.helperText {
+    color: var(--clr-gris-60);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* Responsive */
+@media (max-width: 767px) {
+    .contentWrapper {
+        grid-template-rows: auto 1fr;
+        height: auto;
+        min-height: 100vh;
+    }
+
+    .imageContainer {
+        padding: 1rem 0;
+    }
+
+    .heroImage {
+        max-width: 350px;
+        max-height: 40vh;
+    }
+
+    .textContent {
+        padding-top: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .title {
+        font-size: 1.8rem;
+    }
+
+    .subtitle {
+        font-size: 1rem;
+    }
+
+    .mainButton {
+        padding: 0.9rem 2rem;
+        font-size: 1rem;
+    }
+
+    .heroImage {
+        max-width: 280px;
+    }
+}

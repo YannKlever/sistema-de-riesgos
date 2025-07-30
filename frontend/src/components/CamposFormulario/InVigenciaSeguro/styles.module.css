@@ -1,0 +1,44 @@
+.vigenciaContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.vigenciaRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.vigenciaField {
+    flex: 1;
+    min-width: 200px;
+}
+
+.vigenciaLabel {
+    color: var(--clr-gris-texto);
+    font-weight: 500;
+    font-size: 0.95rem;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.requiredAsterisk {
+    color: var(--clr-error);
+    margin-left: 0.25rem;
+}
+
+.vigenciaInput {
+    width: 95%;
+    padding: 0.75rem;
+    border: 1px solid var(--clr-gris-medio);
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.vigenciaInput:focus {
+    outline: none;
+    border-color: var(--clr-prim);
+    box-shadow: 0 0 0 3px var(--clr-foco);
+}

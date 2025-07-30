@@ -1,0 +1,37 @@
+.nitGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.nitLabel {
+    color: var(--clr-gris-texto);
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.requiredAsterisk {
+    color: var(--clr-error);
+    margin-left: 0.25rem;
+}
+
+.nitInput {
+    width: auto;
+    padding: 0.75rem;
+    border: 1px solid var(--clr-gris-medio);
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.nitInput:focus {
+    outline: none;
+    border-color: var(--clr-prim);
+    box-shadow: 0 0 0 3px var(--clr-foco);
+}
+
+.nitHelpText {
+    color: var(--clr-gris-60);
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+}

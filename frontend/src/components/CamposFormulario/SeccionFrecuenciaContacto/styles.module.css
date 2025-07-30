@@ -1,0 +1,56 @@
+/* styles.module.css */
+.seccionContainer {
+    margin-bottom: 2rem;
+    background-color: var(--clr-blanco);
+}
+
+.seccionTitulo {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    color: var(--clr-prim-mas-osc);
+    font-size: 1.25rem;
+    font-weight: 500;
+}
+
+.seccionIcono {
+    margin-right: 0.75rem;
+    font-size: 1.2em;
+    color: var(--clr-prim);
+}
+
+.filaSuperior, .filaInferior {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.campoWrapper {
+    margin-bottom: 0;
+}
+
+.labelContainer {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.labelText {
+    font-weight: 500;
+    color: var(--clr-gris-texto);
+}
+
+.requiredAsterisk {
+    color: var(--clr-error);
+    margin-left: 0.25rem;
+    font-weight: bold;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .filaSuperior, .filaInferior {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}

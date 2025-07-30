@@ -1,0 +1,74 @@
+/* Radio.module.css */
+.radioContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.radioLabel {
+    font-size: 0.95rem;
+    color: var(--clr-gris-texto);
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.radioOptions {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.radioOption {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.radioInput {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--clr-gris-medio);
+    border-radius: 50%;
+    background-color: var(--clr-blanco);
+    outline: none;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.radioInput:checked {
+    border-color: var(--clr-prim);
+    background-color: var(--clr-prim);
+}
+
+.radioInput:checked::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background-color: var(--clr-blanco);
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.radioText {
+    color: var(--clr-gris-texto);
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.radioInput:checked + .radioText {
+    color: var(--clr-prim-osc);
+}
+
+/* Efectos hover */
+.radioOption:hover .radioInput:not(:checked) {
+    border-color: var(--clr-prim-claro);
+}
+
+.radioOption:hover .radioText {
+    color: var(--clr-prim-osc);
+}
