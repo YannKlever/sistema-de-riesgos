@@ -1,0 +1,111 @@
+.contenedor {
+    padding: 20px;
+    background-color: #f9f9f9;
+    min-height: 100vh;
+}
+
+.header {
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.header h1 {
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.header p {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+}
+
+.controles {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.buscador {
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    min-width: 300px;
+    flex-grow: 1;
+    max-width: 500px;
+}
+
+.botonModo {
+    padding: 10px 15px;
+    background-color: #4472C4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.3s;
+}
+
+.botonModo:hover {
+    background-color: #3257a3;
+}
+
+.chartContainer {
+    margin: 0 auto;
+    max-width: 1200px;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.chartWrapper {
+    min-height: 400px;
+    height: 70vh;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.leyenda {
+    padding: 15px;
+    background: #f5f5f5;
+    border-radius: 5px;
+}
+
+.leyenda h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #2c3e50;
+    font-size: 1rem;
+}
+
+.leyendaItems {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.leyendaItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.leyendaColor {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+}
+
+.sinDatos {
+    text-align: center;
+    padding: 40px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    color: #7f8c8d;
+}
