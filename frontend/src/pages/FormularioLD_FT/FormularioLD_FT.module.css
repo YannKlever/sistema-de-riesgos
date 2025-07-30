@@ -1,0 +1,234 @@
+/* FormularioLD_FT.module.css */
+
+
+.container {
+    display: flex;
+    justify-content: center;
+    padding: 2rem 1rem;
+    background-color: var(--clr-gris-muy-claro);
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+.card {
+    width: 100%;
+    max-width: 1200px;
+    background-color: var(--clr-blanco);
+    border-radius: 12px;
+    box-shadow: var(--sombra-tarjeta);
+    overflow: hidden;
+}
+
+.header {
+    padding: 1.5rem 2rem;
+    background: linear-gradient(135deg, var(--clr-prim), var(--clr-prim-osc));
+    color: var(--clr-blanco);
+    border-bottom: 2px solid var(--clr-prim-osc);
+}
+
+.content {
+    padding: 2rem;
+}
+
+.section {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--clr-gris-claro);
+}
+
+.section:last-child {
+    border-bottom: none;
+    margin-bottom: 1rem;
+}
+
+.sectionTitle {
+    display: flex;
+    align-items: center;
+    color: var(--clr-prim-mas-osc);
+    margin-bottom: 1.5rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    padding: 0.5rem;
+    background-color: var(--clr-gris-muy-claro);
+    border-radius: 6px;
+}
+
+.sectionIcon {
+    margin-right: 0.75rem;
+    font-size: 1.1em;
+}
+
+/* Ajustamos el field para preguntas largas */
+.field {
+    flex: 1;
+    min-width: 250px;
+    margin-bottom: 1.5rem;
+}
+
+.field label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--clr-texto);
+    line-height: 1.4;
+}
+
+/* Estilo específico para las opciones de selección */
+.selectWrapper {
+    position: relative;
+}
+
+.selectWrapper select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--clr-gris-medio);
+    border-radius: 6px;
+    background-color: var(--clr-blanco);
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+}
+
+.selectWrapper select:focus {
+    outline: none;
+    border-color: var(--clr-prim);
+    box-shadow: 0 0 0 2px rgba(var(--clr-prim-rgb), 0.2);
+}
+
+/* Estilo para las opciones de respuesta */
+.optionItem {
+    padding: 0.5rem 0;
+    border-bottom: 1px dashed var(--clr-gris-claro);
+}
+
+.buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--clr-gris-claro);
+}
+
+.primaryButton {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, var(--clr-prim), var(--clr-prim-osc));
+    color: var(--clr-blanco);
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.primaryButton:hover:not(:disabled) {
+    background: var(--clr-prim-osc);
+    transform: translateY(-1px);
+    box-shadow: var(--sombra-ligera);
+}
+
+.primaryButton:disabled {
+    background: var(--clr-gris-medio);
+    cursor: not-allowed;
+}
+
+.secondaryButton {
+    padding: 0.75rem 1.5rem;
+    background: var(--clr-blanco);
+    color: var(--clr-prim-osc);
+    border: 1px solid var(--clr-prim);
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.secondaryButton:hover:not(:disabled) {
+    background: var(--clr-hover-prim);
+    box-shadow: var(--sombra-ligera);
+}
+
+.secondaryButton:disabled {
+    color: var(--clr-gris-medio);
+    border-color: var(--clr-gris-medio);
+    cursor: not-allowed;
+}
+
+/* Nuevos estilos específicos para el formulario LD/FT */
+.riskIndicator {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+}
+
+.riskLow {
+    background-color: var(--clr-verde-claro);
+    color: var(--clr-verde-osc);
+}
+
+.riskMedium {
+    background-color: var(--clr-amarillo-claro);
+    color: var(--clr-amarillo-osc);
+}
+
+.riskHigh {
+    background-color: var(--clr-rojo-claro);
+    color: var(--clr-rojo-osc);
+}
+
+.questionHelpText {
+    font-size: 0.85rem;
+    color: var(--clr-gris-osc);
+    margin-top: 0.25rem;
+    font-style: italic;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem 0.5rem;
+    }
+    
+    .header {
+        padding: 1.25rem 1.5rem;
+    }
+    
+    .content {
+        padding: 1.5rem;
+    }
+    
+    .field {
+        min-width: 100%;
+    }
+    
+    .buttons {
+        flex-direction: column;
+    }
+    
+    .primaryButton,
+    .secondaryButton {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .sectionTitle {
+        font-size: 1.1rem;
+    }
+    
+    .header,
+    .content {
+        padding: 1rem;
+    }
+    
+    .section {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+    }
+    
+    .field {
+        margin-bottom: 1rem;
+    }
+}

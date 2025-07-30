@@ -1,0 +1,189 @@
+/* formularioPersonaNatural1000.module.css */
+
+/* Estructura principal */
+.container {
+    display: flex;
+    justify-content: center;
+    padding: 2rem 1rem;
+    background-color: var(--clr-gris-muy-claro);
+    min-height: 100vh;
+}
+
+/* Tarjeta contenedora */
+.card {
+    width: 100%;
+    max-width: 1100px;
+    background-color: var(--clr-blanco);
+    border-radius: 12px;
+    box-shadow: var(--sombra-tarjeta);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+/* Encabezado */
+.cardHeader {
+    padding: 1.5rem 2rem;
+    background: var(--grad-prim);
+    color: var(--clr-blanco);
+    border-bottom: 2px solid var(--clr-prim-osc);
+}
+
+/* Cuerpo del formulario */
+.cardBody {
+    padding: 2rem;
+}
+
+/* Secciones */
+.formSection {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--clr-gris-claro);
+}
+
+.formSection:last-child {
+    border-bottom: none;
+    margin-bottom: 1rem;
+}
+
+/* Títulos */
+.sectionTitle {
+    display: flex;
+    align-items: center;
+    color: var(--clr-prim-mas-osc);
+    margin-bottom: 1.5rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.subsectionTitle {
+    color: var(--clr-prim-osc);
+    margin: 1rem 0 1.5rem;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.sectionIcon {
+    margin-right: 0.75rem;
+    font-size: 1.1em;
+}
+
+/* Grid de campos */
+.formRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.formCol {
+    flex: 1;
+    min-width: 250px;
+}
+
+.fullWidthField {
+    flex: 0 0 100%;
+}
+
+/* Botones */
+.formActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--clr-gris-claro);
+}
+
+.primaryButton {
+    padding: 0.85rem 2rem;
+    background: var(--grad-prim);
+    color: var(--clr-blanco);
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.primaryButton:hover:not(:disabled) {
+    background: var(--clr-prim-osc);
+    transform: translateY(-2px);
+    box-shadow: var(--sombra-ligera);
+}
+
+.primaryButton:disabled {
+    background: var(--clr-gris-medio);
+    cursor: not-allowed;
+}
+
+.secondaryButton {
+    padding: 0.85rem 2rem;
+    background: var(--clr-blanco);
+    color: var(--clr-prim-osc);
+    border: 1px solid var(--clr-prim);
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.secondaryButton:hover:not(:disabled) {
+    background: var(--clr-hover-prim);
+    box-shadow: var(--sombra-ligera);
+}
+
+.secondaryButton:disabled {
+    color: var(--clr-gris-medio);
+    border-color: var(--clr-gris-medio);
+    cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .cardBody {
+        padding: 1.75rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem 0.5rem;
+    }
+    
+    .cardHeader {
+        padding: 1.25rem 1.5rem;
+    }
+    
+    .cardBody {
+        padding: 1.5rem;
+    }
+    
+    .formCol {
+        min-width: 100%;
+    }
+    
+    .formActions {
+        flex-direction: column;
+    }
+    
+    .primaryButton,
+    .secondaryButton {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .sectionTitle {
+        font-size: 1.15rem;
+    }
+    
+    .cardHeader,
+    .cardBody {
+        padding: 1.25rem 1rem;
+    }
+    
+    .primaryButton,
+    .secondaryButton {
+        padding: 0.75rem 1.5rem;
+    }
+}

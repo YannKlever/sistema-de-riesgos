@@ -1,0 +1,143 @@
+/* formularioEmpresaUnipersonal1000.module.css */
+
+/* Estilos del contenedor principal */
+.container {
+    display: flex;
+    justify-content: center;
+    padding: 2rem 1rem;
+    background-color: var(--clr-gris-muy-claro);
+    min-height: 100vh;
+}
+
+/* Estilo de la tarjeta contenedora */
+.card {
+    width: 100%;
+    max-width: 1200px;
+    background-color: var(--clr-blanco);
+    border-radius: 12px;
+    box-shadow: var(--sombra-tarjeta);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+/* Encabezado de la tarjeta */
+.cardHeader {
+    padding: 1.5rem 2rem;
+    background: var(--grad-prim);
+    color: var(--clr-blanco);
+    border-bottom: 2px solid var(--clr-prim-osc);
+}
+
+/* Cuerpo del formulario */
+.cardBody {
+    padding: 2rem;
+}
+
+/* Estructura de secciones */
+.formSection {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--clr-gris-claro);
+}
+
+.formSection:last-child {
+    border-bottom: none;
+    margin-bottom: 1rem;
+}
+
+/* Títulos de sección */
+.sectionTitle {
+    display: flex;
+    align-items: center;
+    color: var(--clr-prim-mas-osc);
+    margin-bottom: 1.5rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.sectionIcon {
+    margin-right: 0.75rem;
+    font-size: 1.1em;
+}
+
+/* Acciones del formulario */
+.formActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2.5rem;
+}
+
+/* Botones base (estilos mínimos) */
+.resetButton,
+.submitButton {
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.resetButton {
+    background-color: var(--clr-blanco);
+    color: var(--clr-prim-osc);
+    border: 1px solid var(--clr-prim);
+}
+
+.submitButton {
+    background: var(--grad-prim);
+    color: var(--clr-blanco);
+    border: none;
+}
+
+.resetButton:hover:not(:disabled) {
+    background-color: var(--clr-hover-prim);
+}
+
+.submitButton:hover:not(:disabled) {
+    background: var(--clr-prim-osc);
+}
+
+.resetButton:disabled,
+.submitButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem 0.5rem;
+    }
+    
+    .cardHeader {
+        padding: 1.25rem;
+    }
+    
+    .cardBody {
+        padding: 1.5rem;
+    }
+    
+    .formCol {
+        min-width: 100%;
+    }
+    
+    .formActions {
+        flex-direction: column;
+    }
+    
+    .resetButton,
+    .submitButton {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .cardBody {
+        padding: 1.25rem;
+    }
+    
+    .sectionTitle {
+        font-size: 1.15rem;
+    }
+}
