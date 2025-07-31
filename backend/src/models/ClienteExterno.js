@@ -65,18 +65,12 @@ class ClienteExterno {
             comportamiento_cliente: cliente.comportamiento_cliente || null,
             observaciones: cliente.observaciones || null,
 
-
-
-
-
-
             //promedio de riesgo 
 
-
             promedio_riesgo_canal_distribucion: cliente.promedio_riesgo_canal_distribucion || null,
-            promedio_riesgo_cliente_externo: cliente.promedio_riesgo_cliente_externo || null, 
+            promedio_riesgo_cliente_externo: cliente.promedio_riesgo_cliente_externo || null,
             impacto: cliente.impacto || null,
-            probabilidad: cliente.probabilidad || null,  
+            probabilidad: cliente.probabilidad || null,
             //para vincular cliente interno
 
             cliente_interno_id: cliente.cliente_interno_id || null,
@@ -151,52 +145,52 @@ class ClienteExterno {
 
 
 
-static async listarClientesExternosConRiesgoInterno() {
-    return new Promise((resolve, reject) => {
-        db.all(
-            `SELECT 
+    static async listarClientesExternosConRiesgoInterno() {
+        return new Promise((resolve, reject) => {
+            db.all(
+                `SELECT 
                 ce.*,
                 ci.promedio_riesgo_cliente_interno,
                 ci.ejecutivo AS ejecutivo_interno
              FROM "tabla-clientes-externos" ce
              LEFT JOIN "tabla-clientes-internos" ci ON ce.ejecutivo = ci.ejecutivo
              ORDER BY ce.fecha_registro DESC`,
-            [],
-            (err, rows) => {
-                if (err) {
-                    console.error('Error al listar clientes externos con riesgo interno:', err);
-                    reject({ success: false, error: err.message });
-                } else {
-                    // Procesar los resultados para asegurar valores numéricos
-                    const processedRows = rows.map(row => ({
-                        ...row,
-                        promedio_riesgo_cliente_interno: row.promedio_riesgo_cliente_interno 
-                            ? parseFloat(row.promedio_riesgo_cliente_interno) 
-                            : 0
-                    }));
-                    resolve({ success: true, data: processedRows });
+                [],
+                (err, rows) => {
+                    if (err) {
+                        console.error('Error al listar clientes externos con riesgo interno:', err);
+                        reject({ success: false, error: err.message });
+                    } else {
+                        // Procesar los resultados para asegurar valores numéricos
+                        const processedRows = rows.map(row => ({
+                            ...row,
+                            promedio_riesgo_cliente_interno: row.promedio_riesgo_cliente_interno
+                                ? parseFloat(row.promedio_riesgo_cliente_interno)
+                                : 0
+                        }));
+                        resolve({ success: true, data: processedRows });
+                    }
                 }
-            }
-        );
-    });
-}
+            );
+        });
+    }
 
-static async vincularClienteInterno(idClienteExterno, idClienteInterno) {
-    return new Promise((resolve, reject) => {
-        db.run(
-            `UPDATE "tabla-clientes-externos" 
+    static async vincularClienteInterno(idClienteExterno, idClienteInterno) {
+        return new Promise((resolve, reject) => {
+            db.run(
+                `UPDATE "tabla-clientes-externos" 
              SET cliente_interno_id = ? 
              WHERE id = ?`,
-            [idClienteInterno, idClienteExterno],
-            function(err) {
-                if (err) reject(err);
-                else resolve({ success: true, changes: this.changes });
-            }
-        );
-    });
-}
+                [idClienteInterno, idClienteExterno],
+                function (err) {
+                    if (err) reject(err);
+                    else resolve({ success: true, changes: this.changes });
+                }
+            );
+        });
+    }
 
- static async actualizar(id, data) {
+    static async actualizar(id, data) {
         const campos = Object.keys(data)
             .filter(key => key !== 'id')
             .map(key => `"${key}" = ?`)
@@ -286,7 +280,120 @@ static async vincularClienteInterno(idClienteExterno, idClienteInterno) {
             );
         });
     }
-    
+    static async bulkCreate(clientes) {
+        return new Promise((resolve, reject) => {
+            db.serialize(() => {
+                db.run("BEGIN TRANSACTION", (beginErr) => {
+                    if (beginErr) return reject({
+                        success: false,
+                        error: `Error al iniciar transacción: ${beginErr.message}`
+                    });
+
+                    // 1. Limpiar tabla existente
+                    db.run("DELETE FROM \"tabla-clientes-externos\"", (deleteErr) => {
+                        if (deleteErr) {
+                            return db.run("ROLLBACK", () => {
+                                reject({
+                                    success: false,
+                                    error: `Error al limpiar tabla: ${deleteErr.message}`
+                                });
+                            });
+                        }
+
+                        // 2. Obtener todas las columnas posibles de la tabla
+                        db.all("PRAGMA table_info(\"tabla-clientes-externos\")", (pragmaErr, columns) => {
+                            if (pragmaErr) {
+                                return db.run("ROLLBACK", () => {
+                                    reject({
+                                        success: false,
+                                        error: `Error al obtener estructura de tabla: ${pragmaErr.message}`
+                                    });
+                                });
+                            }
+
+                            const allColumns = columns.map(col => col.name);
+
+                            // 3. Procesar en lotes
+                            const batchSize = 50;
+                            let processedCount = 0;
+                            const errors = [];
+
+                            const processBatch = (startIdx) => {
+                                if (startIdx >= clientes.length) {
+                                    db.run("COMMIT", (commitErr) => {
+                                        if (commitErr) {
+                                            reject({
+                                                success: false,
+                                                error: `Error al confirmar transacción: ${commitErr.message}`,
+                                                processed: processedCount
+                                            });
+                                        } else {
+                                            resolve({
+                                                success: true,
+                                                count: processedCount,
+                                                errors: errors.length > 0 ? errors : null
+                                            });
+                                        }
+                                    });
+                                    return;
+                                }
+
+                                const endIdx = Math.min(startIdx + batchSize, clientes.length);
+                                let batchProcessed = 0;
+
+                                const insertNext = (idx) => {
+                                    if (idx >= endIdx) return processBatch(endIdx);
+
+                                    const cliente = clientes[idx];
+                                    const clienteConFecha = {
+                                        fecha_registro: new Date().toISOString(),
+                                        ...cliente
+                                    };
+
+                                    // Filtrar solo columnas que existen en la tabla
+                                    const camposDisponibles = Object.keys(clienteConFecha)
+                                        .filter(key => allColumns.includes(key));
+
+                                    const campos = camposDisponibles.map(c => `"${c}"`).join(', ');
+                                    const placeholders = camposDisponibles.map(() => '?').join(', ');
+
+                                    const valores = camposDisponibles.map(key => {
+                                        const val = clienteConFecha[key];
+                                        return val !== null && typeof val === 'object' && !(val instanceof Date)
+                                            ? JSON.stringify(val)
+                                            : val;
+                                    });
+
+                                    const sql = `INSERT INTO "tabla-clientes-externos" (${campos}) VALUES (${placeholders})`;
+
+                                    db.run(sql, valores, function (err) {
+                                        if (err) {
+                                            errors.push(`Error en registro ${idx + 1}: ${err.message}`);
+                                            console.error(`Error insertando registro ${idx + 1}:`, {
+                                                error: err,
+                                                sql: sql,
+                                                valores: valores,
+                                                cliente: clienteConFecha
+                                            });
+                                        } else {
+                                            processedCount++;
+                                            batchProcessed++;
+                                        }
+                                        insertNext(idx + 1);
+                                    });
+                                };
+
+                                insertNext(startIdx);
+                            };
+
+                            processBatch(0);
+                        });
+                    });
+                });
+            });
+        });
+    }
+
 }
 
 
