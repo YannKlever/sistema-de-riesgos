@@ -48,7 +48,8 @@ export const ACCIONISTAS_SCHEMA = {
     'Riesgo Vigencia (Numérico)': 'vigencia_documental_numerico',
     'Riesgo Relevancia (Numérico)': 'relevancia_informacion_numerico',
     'Riesgo Consistencia (Numérico)': 'consistencia_informacion_numerico',
-    'Riesgo Comportamiento (Numérico)': 'comportamiento_cliente_numerico'
+    'Riesgo Comportamiento (Numérico)': 'comportamiento_cliente_numerico',
+    'Promedio Riesgo Accionista Socio': 'promedio_riesgo_accionista_socio'
   }
 };
 
