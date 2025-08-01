@@ -64,17 +64,13 @@ class ClienteExterno {
             consistencia_informacion: cliente.consistencia_informacion || null,
             comportamiento_cliente: cliente.comportamiento_cliente || null,
             observaciones: cliente.observaciones || null,
-
             //promedio de riesgo 
-
             promedio_riesgo_canal_distribucion: cliente.promedio_riesgo_canal_distribucion || null,
             promedio_riesgo_cliente_externo: cliente.promedio_riesgo_cliente_externo || null,
             impacto: cliente.impacto || null,
             probabilidad: cliente.probabilidad || null,
             //para vincular cliente interno
-
             cliente_interno_id: cliente.cliente_interno_id || null,
-
             nacionalidad_numerico: cliente.nacionalidad_numerico || null,
             riesgo_profesion_actividad_numerico: cliente.riesgo_profesion_actividad_numerico || null,
             riesgo_zona_numerico: cliente.riesgo_zona_numerico || null,
@@ -96,7 +92,6 @@ class ClienteExterno {
             consistencia_informacion_numerico: cliente.consistencia_informacion_numerico || null,
             comportamiento_cliente_numerico: cliente.comportamiento_cliente_numerico || null
         };
-
         const { campos, placeholders, valores } = Object.entries(camposCompletos).reduce(
             (acc, [campo, valor]) => {
                 acc.campos.push(`"${campo}"`);
@@ -108,9 +103,7 @@ class ClienteExterno {
             },
             { campos: [], placeholders: [], valores: [] }
         );
-
         const sql = `INSERT INTO "tabla-clientes-externos" (${campos.join(', ')}) VALUES (${placeholders.join(', ')})`;
-
         return new Promise((resolve, reject) => {
             db.run(sql, valores, function (err) {
                 if (err) {
@@ -131,7 +124,6 @@ class ClienteExterno {
                     if (isNaN(insertedId)) {
                         console.warn('Advertencia: lastID no es un número válido:', this.lastID);
                     }
-
                     resolve({
                         success: true,
                         id: insertedId,
@@ -393,9 +385,5 @@ class ClienteExterno {
             });
         });
     }
-
 }
-
-
-
 module.exports = ClienteExterno;
