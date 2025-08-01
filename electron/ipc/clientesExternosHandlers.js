@@ -65,11 +65,28 @@ function setupClientesExternosHandlers(ipcMain) {
             return { success: false, error: error.message };
         }
     });
-
-
-
-
-
+ // Handler para importar
+     ipcMain.handle('bulk-create-clientes-externos', async (_, clientes) => {
+        try {
+            console.log(`Iniciando importación de ${clientes.length} registros de clientes externos`);
+            const resultado = await ClienteExterno.bulkCreate(clientes);
+            console.log('Importación completada:', resultado);
+            return {
+                ...resultado,
+                message: resultado.success
+                    ? `Importación completada: ${resultado.count} registros procesados`
+                    : `Error en importación: ${resultado.error}`
+            };
+        } catch (error) {
+            console.error('Error en bulk create de clientes externos:', error);
+            return {
+                success: false,
+                error: error.message || 'Error desconocido al importar',
+                details: error.details || null,
+                processed: error.processed || 0
+            };
+        }
+    });
 }
 
 module.exports = setupClientesExternosHandlers;
