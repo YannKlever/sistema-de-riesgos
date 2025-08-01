@@ -7,13 +7,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     crearClienteExterno: (cliente) => ipcRenderer.invoke('crear-cliente-externo', cliente),
     eliminarClienteExterno: (id) => ipcRenderer.invoke('eliminar-cliente-externo', id),
     actualizarClienteExterno: (id, data) => ipcRenderer.invoke('actualizar-cliente-externo', id, data),
+    bulkCreateClientesExternos: (data) => ipcRenderer.invoke('bulk-create-clientes-externos', data),
     // Nuevos métodos
     listarClientesExternosConRiesgoInterno: () => ipcRenderer.invoke('listar-clientes-externos-con-riesgo-interno'),
     vincularClienteInterno: (idClienteExterno, idClienteInterno) =>
         ipcRenderer.invoke('vincular-cliente-interno', idClienteExterno, idClienteInterno),
-
-
-
     //Tabla accionistas socios
     crearAccionistaSocio: (data) => ipcRenderer.invoke('crear-accionista-socio', data),
     listarAccionistasSocios: () => ipcRenderer.invoke('listar-accionistas-socios'),
@@ -53,5 +51,4 @@ contextBridge.exposeInMainWorld('electronAPI', {
     actualizarUsuario: (id, data) => ipcRenderer.invoke('actualizar-usuario', id, data),
     eliminarUsuario: (id) => ipcRenderer.invoke('eliminar-usuario', id),
     verificarCredenciales: (email, password) => ipcRenderer.invoke('verificar-credenciales', email, password)
-
 });
