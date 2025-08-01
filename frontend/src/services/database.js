@@ -15,6 +15,30 @@ export const databaseService = {
         if (!window.electronAPI) throw new Error('API no disponible');
         return window.electronAPI.actualizarClienteExterno(id, data);
     },
+    // Método para importación masiva de clientes externos
+    async importarClientesExternos(data) {
+        if (!window.electronAPI) {
+            console.error('Electron API no disponible');
+            throw new Error('API no disponible');
+        }
+        try {
+            const resultado = await window.electronAPI.bulkCreateClientesExternos(data);
+            return {
+                success: resultado.success,
+                count: resultado.count,
+                errors: resultado.errors,
+                message: resultado.message || 'Importación completada'
+            };
+        } catch (error) {
+            console.error('Error en importación de clientes externos:', error);
+            return {
+                success: false,
+                error: error.message || 'Error desconocido al importar',
+                details: error.details || null
+            };
+        }
+    },
+
 
     // Nuevo método para listar con riesgo interno
     async listarClientesExternosConRiesgoInterno() {
