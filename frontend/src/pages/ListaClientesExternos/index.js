@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { databaseService } from '../../services/database';
 import { exportExcelFile } from '../../utils/export';
+import ImportModal from '../../utils/import/components/ImportModal';
+import { CLIENTES_EXTERNOS_SCHEMA } from '../../utils/import/constants/clientesExternos';
 import { TODAS_LAS_COLUMNAS, DEFAULT_VISIBLE_COLUMNS } from './constants';
 import ColumnSelector from './ColumnSelector';
 import ClientTable from './ClientTable';
@@ -17,7 +19,7 @@ const ListaClientesExternos = () => {
         mostrarSelectorColumnas: false,
         todasLasColumnas: false // Nuevo estado para controlar mostrar todas las columnas
     });
-
+    const [showImportModal, setShowImportModal] = useState(false);
     const navigate = useNavigate();
 
     const cargarClientes = useCallback(async () => {
@@ -73,8 +75,8 @@ const ListaClientesExternos = () => {
         setState(prev => ({
             ...prev,
             todasLasColumnas: !prev.todasLasColumnas,
-            columnasVisibles: !prev.todasLasColumnas 
-                ? TODAS_LAS_COLUMNAS 
+            columnasVisibles: !prev.todasLasColumnas
+                ? TODAS_LAS_COLUMNAS
                 : DEFAULT_VISIBLE_COLUMNS
         }));
     }, []);
@@ -183,7 +185,13 @@ const ListaClientesExternos = () => {
                     >
                         {state.todasLasColumnas ? 'Mostrar menos' : 'Mostrar todas'}
                     </button>
-
+                    <button
+                        onClick={() => setShowImportModal(true)}
+                        className={styles.botonImportar}
+                        disabled={state.loading}
+                    >
+                        Importar Excel
+                    </button>
                     <button
                         onClick={handleExportExcel}
                         className={styles.botonExportar}
@@ -220,6 +228,21 @@ const ListaClientesExternos = () => {
                     hasResults={clientesFiltrados.length > 0}
                     formatValue={formatearValor}
                     onDelete={eliminarCliente}
+                />
+            )}
+            {showImportModal && (
+                <ImportModal
+                    onClose={(result) => {
+                        setShowImportModal(false);
+                        if (result?.success) {
+                            cargarClientes(); // Recargar la lista después de importar
+                        }
+                    }}
+                    databaseService={databaseService}
+                    schema={CLIENTES_EXTERNOS_SCHEMA}
+                    title="Importar Clientes Externos"
+                    importFunctionName="importarClientesExternos"
+                    successMessage="Clientes externos importados correctamente"
                 />
             )}
         </div>
