@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import InTexto from '../../components/CamposFormulario/InTexto/InTexto';
 import InPersona from '../../components/CamposFormulario/InPersona/InPersona';
@@ -15,12 +15,72 @@ import styles from './formularioAccionistasSocios.module.css';
 import InParticipacionAccionaria from '../../components/CamposFormulario/InParticipacionAccionaria/InParticipacionAccionaria';
 import SeccionEvaluacionRiesgo from '../../components/CamposFormulario/SeccionEvaluacionRiesgo/SeccionEvaluacionRiesgo';
 import { databaseService } from '../../services/database';
+import { generateFormPDF, downloadPDF } from '../../utils/print/pdfGenerator';
+
+// Definición de las secciones para el PDF
+const printSections = [
+    {
+        title: 'Datos Generales',
+        fields: [
+            { label: 'Fecha de Registro', name: 'fecha_registro' },
+            { label: 'Oficina', name: 'oficina' },
+            { label: 'Ejecutivo', name: 'ejecutivo' }
+        ]
+    },
+    {
+        title: 'Datos Personales',
+        fields: [
+            { label: 'Nombre Completo', name: 'nombres_accionistas_socios' },
+            { label: 'Apellidos', name: 'apellidos_accionistas_socios' },
+            { label: 'Tipo de Documento', name: 'tipo_documento_accionistas_socios' },
+            { label: 'Número de Documento', name: 'nro_documento_accionistas_socios' },
+            { label: 'Extensión', name: 'extension_accionistas_socios' },
+            { label: 'Otra Extensión', name: 'otra_extension_accionistas_socios' },
+            { label: 'Fecha de Nacimiento', name: 'fecha_nacimiento' },
+            { label: 'Lugar de Nacimiento', name: 'lugar_nacimiento' },
+            { label: 'Nacionalidad', name: 'nacionalidad' },
+            { label: 'Estado Civil', name: 'estado_civil' }
+        ]
+    },
+    {
+        title: 'Información Profesional',
+        fields: [
+            { label: 'Profesión/Actividad', name: 'actividad' },
+            { label: 'Riesgo de profesión', name: 'riesgo_actividad' },
+            { label: 'Riesgo de la zona', name: 'riesgo_zona' },
+            { label: 'Cliente PEP', name: 'categoria_pep' },
+            { label: 'Nivel de Ingresos', name: 'ingresos_mensuales' },
+            { label: 'Volumen de actividad', name: 'volumen_actividad' },
+            { label: 'Frecuencia de actividad', name: 'frecuencia_actividad' },
+            { label: 'Participación Accionaria', name: 'participacion_accionaria' }
+        ]
+    },
+    {
+        title: 'Domicilio',
+        fields: [
+            { label: 'Domicilio Particular', name: 'domicilio_persona' }
+        ]
+    },
+    {
+        title: 'Evaluación de Riesgo',
+        fields: [
+            { label: 'Integridad documental', name: 'integridad_documental' },
+            { label: 'Exactitud documental', name: 'exactitud_documental' },
+            { label: 'Vigencia documental', name: 'vigencia_documental' },
+            { label: 'Relevancia información', name: 'relevancia_informacion' },
+            { label: 'Comportamiento cliente', name: 'comportamiento_cliente' },
+            { label: 'Consistencia información', name: 'consistencia_informacion' },
+            { label: 'Observaciones', name: 'observaciones' }
+        ]
+    }
+];
 
 const FormularioAccionistasSocios = () => {
     const { id } = useParams();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [initialData, setInitialData] = useState(null);
+    const [printError, setPrintError] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -50,6 +110,60 @@ const FormularioAccionistasSocios = () => {
         }
     }, [id, navigate]);
 
+    const getFormData = useCallback(() => {
+        try {
+            const form = document.forms[0];
+            if (!form) {
+                console.error('No se encontró el formulario en el DOM');
+                return {};
+            }
+
+            const data = {};
+            const formElements = form.elements;
+
+            for (let element of formElements) {
+                if (element.name && element.value !== undefined) {
+                    const cleanName = element.name.startsWith('_') ? element.name.substring(1) : element.name;
+
+                    if (element.type === 'checkbox') {
+                        data[cleanName] = element.checked;
+                    } else if (element.type === 'radio') {
+                        if (element.checked) data[cleanName] = element.value;
+                    } else {
+                        data[cleanName] = element.value;
+                    }
+                }
+            }
+
+            console.log('Datos recolectados del formulario:', data);
+            return data;
+        } catch (error) {
+            console.error('Error en getFormData:', error);
+            setPrintError('Error al leer el formulario');
+            return {};
+        }
+    }, []);
+
+    const handlePrint = (formData) => {
+        try {
+            const pdf = generateFormPDF(
+                formData, 
+                `Formulario de Accionista/Socio ${isEditing ? '(Edición)' : '(Nuevo)'}`, 
+                printSections
+            );
+            downloadPDF(pdf, `formulario_Accionista_Socio_${formData.nombres_accionistas_socios || 'nuevo'}`);
+            return true;
+        } catch (error) {
+            handlePrintError(error);
+            return false;
+        }
+    };
+
+    const handlePrintError = (error) => {
+        console.error('Error en generación de PDF:', error);
+        setPrintError(error);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -67,6 +181,14 @@ const FormularioAccionistasSocios = () => {
 
             if (result?.success) {
                 alert(`Accionista/Socio ${isEditing ? 'actualizado' : 'creado'} correctamente`);
+                
+                // Preguntar si desea imprimir
+                const shouldPrint = window.confirm('¿Desea imprimir el comprobante de registro?');
+                if (shouldPrint) {
+                    const formDataForPrint = getFormData();
+                    handlePrint(formDataForPrint);
+                }
+                
                 navigate('/parametros/lista-accionistas-socios');
             } else {
                 alert(`Error: ${result?.error || 'Error desconocido'}`);
@@ -81,6 +203,11 @@ const FormularioAccionistasSocios = () => {
 
     return (
         <div className={styles.container}>
+            {printError && (
+                <div className={styles.errorAlert}>
+                    Error al generar PDF: {printError}
+                </div>
+            )}
             <div className={styles.card}>
                 <div className={styles.cardBody}>
                     <form onSubmit={handleSubmit}>
