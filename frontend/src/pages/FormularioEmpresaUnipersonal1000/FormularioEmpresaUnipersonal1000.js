@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import SeccionDatosEmpresa from '../../components/CamposFormulario/SeccionDatosEmpresa/SeccionDatosEmpresa';
 import SeccionInformacionSeguro from '../../components/CamposFormulario/SeccionInformacionSeguro/SeccionInformacionSeguro';
 import InTexto from '../../components/CamposFormulario/InTexto/InTexto';
@@ -14,9 +14,151 @@ import InFrecuenciaActividad from '../../components/CamposFormulario/InFrecuenci
 import styles from './formularioEmpresaUnipersonal1000.module.css';
 import SeccionFrecuenciaContacto from '../../components/CamposFormulario/SeccionFrecuenciaContacto/SeccionFrecuenciaContacto';
 import SeccionEvaluacionRiesgo from '../../components/CamposFormulario/SeccionEvaluacionRiesgo/SeccionEvaluacionRiesgo';
+import { generateFormPDF, downloadPDF } from '../../utils/print/pdfGenerator';
+
+// Definición de las secciones para el PDF
+const printSections = [
+    {
+        title: 'Datos Generales',
+        fields: [
+            { label: 'Fecha de Registro', name: 'fecha_registro' },
+            { label: 'Oficina', name: 'oficina' },
+            { label: 'Ejecutivo', name: 'ejecutivo' },
+        ]
+    },
+    {
+        title: 'Datos de la Empresa',
+        fields: [
+            { label: 'Razon Social', name: 'razon_social' },
+            { label: 'NIT', name: 'nit' },
+            { label: 'Número de Matrícula', name: 'matricula_comercio' },
+            { label: 'Domicilio Comercial', name: 'domicilio_comercial_legal' },
+            { label: 'Teléfono', name: 'telefono' },
+            { label: 'Correo Electrónico', name: 'correo' }
+        ]
+    },
+    {
+        title: 'Información Comercial',
+        fields: [
+            { label: 'Actividad Económica', name: 'actividad' },
+            { label: 'Riesgo de la Actividad', name: 'riesgo_profesion_actividad' },
+            { label: 'Riesgo de la Zona', name: 'riesgo_zona' },
+            { label: 'Nivel de Ingresos', name: 'ingresos_mensuales' },
+            { label: 'Volumen de la actividad', name: 'volumen_actividad' },
+            { label: 'Frecuencia de la actividad', name: 'frecuencia_actividad' }
+        ]
+    },
+    {
+        title: 'Datos del Propietario',
+        fields: [
+            { label: 'Nombre Completo', name: 'nombres_propietario' },
+            { label: 'Apellidos', name: 'apellidos_propietario' },
+            { label: 'Tipo de Documento', name: 'tipo_documento_propietario' },
+            { label: 'Número de Documento', name: 'nro_documento_propietario' },
+            { label: 'Extensión', name: 'extension_propietario' },
+            { label: 'Otra Extensión', name: 'otra_extension_propietario' },
+            { label: 'Nacionalidad', name: 'nacionalidad' }
+        ]
+    },
+    {
+        title: 'Datos del Representante Legal',
+        fields: [
+            { label: 'Nombre Completo', name: 'nombres_representante' },
+            { label: 'Apellidos', name: 'apellidos_representante' },
+            { label: 'Tipo de Documento', name: 'tipo_documento_representante' },
+            { label: 'Número de Documento', name: 'nro_documento_representante' },
+            { label: 'Extensión', name: 'extension_representante' },
+            { label: 'Otra Extensión', name: 'otra_extension_representante' },
+            { label: 'Cliente PEP', name: 'categoria_pep' }
+        ]
+    },
+    {
+        title: 'Información del Seguro',
+        fields: [
+            { label: 'Ramo de seguro', name: 'ramo_seguro' },
+            { label: 'Tipo de documento', name: 'tipo_documento' },
+            { label: 'Fecha de Inicio de Vigencia', name: 'fecha_inicio' },
+            { label: 'Fecha de finalización de vigencia', name: 'fecha_fin' },
+            { label: 'Nº de Póliza', name: 'nro_poliza' },
+            { label: 'Valor de la prima', name: 'valor_prima_dolares' }
+        ]
+    },
+    {
+        title: 'Seguimiento de distribución',
+        fields: [
+            { label: 'Frecuencia contacto físico', name: 'frecuencia_contacto_fisico' },
+            { label: 'Frecuencia contacto digital', name: 'frecuencia_contacto_digital' },
+            { label: 'Medio de comunicación', name: 'medio_comunicacion' },
+            { label: 'Medio de pago', name: 'medio_pago' }
+        ]
+    },
+    {
+        title: 'Evaluación de Riesgo',
+        fields: [
+            { label: 'Integridad documental', name: 'integridad_documental' },
+            { label: 'Exactitud documental', name: 'exactitud_documental' },
+            { label: 'Vigencia documental', name: 'vigencia_documental' },
+            { label: 'Relevancia información', name: 'relevancia_informacion' },
+            { label: 'Comportamiento cliente', name: 'comportamiento_cliente' },
+            { label: 'Consistencia información', name: 'consistencia_informacion' },
+            { label: 'Observaciones', name: 'observaciones' }
+        ]
+    }
+];
 
 const FormularioEmpresaUnipersonal1000 = () => {
-    const [isSubmitting] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [printError, setPrintError] = useState(null);
+
+    const getFormData = useCallback(() => {
+        try {
+            const form = document.forms[0];
+            if (!form) {
+                console.error('No se encontró el formulario en el DOM');
+                return {};
+            }
+
+            const data = {};
+            const formElements = form.elements;
+
+            for (let element of formElements) {
+                if (element.name && element.value !== undefined) {
+                    const cleanName = element.name.startsWith('_') ? element.name.substring(1) : element.name;
+
+                    if (element.type === 'checkbox') {
+                        data[cleanName] = element.checked;
+                    } else if (element.type === 'radio') {
+                        if (element.checked) data[cleanName] = element.value;
+                    } else {
+                        data[cleanName] = element.value;
+                    }
+                }
+            }
+
+            console.log('Datos recolectados del formulario:', data);
+            return data;
+        } catch (error) {
+            console.error('Error en getFormData:', error);
+            setPrintError('Error al leer el formulario');
+            return {};
+        }
+    }, []);
+
+    const handlePrint = (formData) => {
+        try {
+            const pdf = generateFormPDF(formData, "Formulario de Empresa Unipersonal (Prima $1000-$5000)", printSections);
+            downloadPDF(pdf, "formulario_Empresa_Unipersonal_1000_5000");
+            return true;
+        } catch (error) {
+            handlePrintError(error);
+            return false;
+        }
+    };
+
+    const handlePrintError = (error) => {
+        console.error('Error en generación de PDF:', error);
+        setPrintError(error);
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -38,6 +180,13 @@ const FormularioEmpresaUnipersonal1000 = () => {
 
             if (result?.success) {
                 alert(`Cliente guardado con ID: ${result.id ?? 'N/A'}`);
+                // Preguntar si desea imprimir
+                const shouldPrint = window.confirm('¿Desea imprimir el comprobante de registro?');
+                if (shouldPrint) {
+                    const formDataForPrint = getFormData();
+                    handlePrint(formDataForPrint);
+                }
+
                 // Limpiar formulario si es exitoso
                 e.target.reset();
             } else {
@@ -46,11 +195,18 @@ const FormularioEmpresaUnipersonal1000 = () => {
         } catch (error) {
             console.error('Error en handleSubmit:', error);
             alert(`Error de conexión: ${error.message}`);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     return (
         <div className={styles.container}>
+            {printError && (
+                <div className={styles.errorAlert}>
+                    Error al generar PDF: {printError}
+                </div>
+            )}
             <div className={styles.card}>
                 <div className={styles.cardBody}>
                     <form onSubmit={handleSubmit}>
