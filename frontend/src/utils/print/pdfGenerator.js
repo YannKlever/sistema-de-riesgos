@@ -8,21 +8,14 @@ export const generateFormPDF = (formData, formTitle, sections) => {
             unit: 'mm'
         });
 
-        // ==============================================
-        // NUEVO: Encabezado con logo y datos de empresa
-        // ==============================================
-        const logoPath = 'images/logo.jpg'; // Ruta relativa desde public
-        const margin = 15; // Márgen en mm
+        const margin = 15;
         const pageWidth = doc.internal.pageSize.width;
         
-        // Agregar logo (ajusta las coordenadas y tamaño según necesites)
-        try {
-            doc.addImage(logoPath, 'JPEG', margin, 10, 25, 25);
-        } catch (error) {
-            console.warn('No se pudo cargar el logo:', error);
-        }
-
-        // Datos de la empresa
+        // ==============================================
+        // Encabezado sin logo
+        // ==============================================
+        
+        // Datos de la empresa (sin logo)
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(12);
         doc.setTextColor(30, 30, 30);
@@ -30,7 +23,7 @@ export const generateFormPDF = (formData, formTitle, sections) => {
         // Nombre empresa
         doc.text('EMPRESA SEGUROS S.A.', pageWidth - margin, 15, { align: 'right' });
         
-        // Información adicional (ajusta según tus necesidades)
+        // Información adicional
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
         doc.text('NIT: 1234567890123', pageWidth - margin, 20, { align: 'right' });
@@ -43,7 +36,7 @@ export const generateFormPDF = (formData, formTitle, sections) => {
         doc.line(margin, 35, pageWidth - margin, 35);
 
         // ==============================================
-        // Título del formulario (existente, con ajustes de posición)
+        // Título del formulario
         // ==============================================
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(20);
@@ -55,8 +48,7 @@ export const generateFormPDF = (formData, formTitle, sections) => {
         doc.setLineWidth(0.5);
         doc.line(margin, 50, pageWidth - margin, 50);
 
-        // Ajustamos el startY para dar más espacio después del encabezado
-        let startY = 55; // Aumentado para acomodar el nuevo encabezado
+        let startY = 55; // Posición inicial para las secciones
 
         // Ancho total disponible para la tabla (210mm - márgenes)
         const tableWidth = doc.internal.pageSize.width - 30; // 15mm cada lado
