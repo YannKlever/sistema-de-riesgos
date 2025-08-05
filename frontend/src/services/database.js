@@ -101,6 +101,16 @@ export const databaseService = {
         return window.electronAPI.crearClienteInterno(data);
     },
 
+
+    //importar
+    async importarClientesInternos(data) {
+    if (!window.electronAPI) {
+        console.error('Electron API no disponible');
+        throw new Error('API no disponible');
+    }
+    return window.electronAPI.bulkCreateClientesInternos(data);
+},
+
     async listarClientesInternos() {
         if (!window.electronAPI) {
             console.error('Electron API no disponible');
@@ -185,6 +195,19 @@ export const databaseService = {
             return { success: false, error: error.message };
         }
     },
+
+    /// importar
+    async importarProductosServicios(data) {
+    if (!window.electronAPI) {
+        console.error('Electron API no disponible');
+        throw new Error('API no disponible');
+    }
+    return window.electronAPI.bulkCreateProductosServicios(data);
+},
+
+
+
+
 
     // Nuevos métodos para obtener riesgos específicos
     async obtenerRiesgoZonaGeografica(oficina) {
@@ -306,6 +329,15 @@ export const databaseService = {
         }
     },
 
+    //importar
+    async importarSucursales(data) {
+    if (!window.electronAPI) {
+        console.error('Electron API no disponible');
+        throw new Error('API no disponible');
+    }
+    return window.electronAPI.bulkCreateSucursales(data);
+},
+
     async listarSucursales() {
         if (!window.electronAPI) {
             console.error('Electron API no disponible');
@@ -373,6 +405,40 @@ export const databaseService = {
             return { success: false, error: error.message };
         }
     },
+
+
+
+    //metodos para usuarios
+     async crearUsuario(data) {
+    if (!window.electronAPI) throw new Error('API no disponible');
+    return window.electronAPI.crearUsuario(data);
+  },
+
+  async listarUsuarios() {
+    if (!window.electronAPI) throw new Error('API no disponible');
+    return window.electronAPI.listarUsuarios();
+  },
+
+  async obtenerUsuario(id) {
+    if (!window.electronAPI) throw new Error('API no disponible');
+    return window.electronAPI.obtenerUsuario(id);
+  },
+
+  async actualizarUsuario(id, data) {
+    if (!window.electronAPI) throw new Error('API no disponible');
+    return window.electronAPI.actualizarUsuario(id, data);
+  },
+
+  async eliminarUsuario(id) {
+    if (!window.electronAPI) throw new Error('API no disponible');
+    return window.electronAPI.eliminarUsuario(id);
+  },
+
+  async verificarCredenciales(email, password) {
+    if (!window.electronAPI) throw new Error('API no disponible');
+    return window.electronAPI.verificarCredenciales(email, password);
+  }
+
 };
 
 
