@@ -7,8 +7,28 @@ const ProductoServicioTable = ({
   isLoading, 
   onEdit, 
   onDelete,
-  getLabelRiesgo 
+  getLabelRiesgo,
+  visibleColumns
 }) => {
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Fecha no disponible';
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Fecha inválida';
+      
+      return date.toLocaleString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (e) {
+      return 'Fecha inválida';
+    }
+  };
+
   if (isLoading && productos.length === 0) {
     return <p>Cargando productos...</p>;
   }
@@ -22,22 +42,28 @@ const ProductoServicioTable = ({
       <table className={styles.table}>
         <thead>
           <tr>
-            <th>Producto/Servicio</th>
-            <th>Oficina</th> {}
-            <th>Riesgo Producto/Servicio</th>
-            <th>Riesgo Tipo Cliente</th>
-            <th>Fecha Registro</th>
+            {visibleColumns.map(column => (
+              <th key={column.id}>{column.nombre}</th>
+            ))}
             <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
           {productos.map((item) => (
             <tr key={item.id}>
-              <td>{item.producto_servicio}</td>
-              <td>{item.oficina}</td> {}
-              <td>{getLabelRiesgo(item.riesgo_producto)}</td>
-              <td>{getLabelRiesgo(item.riesgo_cliente)}</td>
-              <td>{new Date(item.fecha_registro).toLocaleDateString()}</td>
+              {visibleColumns.map(column => {
+                if (column.id === 'fecha_registro') {
+                  return <td key={column.id}>{formatDate(item[column.id])}</td>;
+                } else if (column.id === 'riesgo_producto' || column.id === 'riesgo_cliente') {
+                  return <td key={column.id}>{getLabelRiesgo(item[column.id])}</td>;
+                } else if (column.id === 'observaciones') {
+                  return <td key={column.id} className={styles.observacionesCell}>
+                    {item[column.id] || '-'}
+                  </td>;
+                } else {
+                  return <td key={column.id}>{item[column.id] || '-'}</td>;
+                }
+              })}
               <td>
                 <ProductoServicioActions
                   id={item.id}
