@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import UserTable from './UserTable';
 import UserForm from './UserForm';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
+
+import { databaseService } from '../../../services/database';
 import styles from './styles.module.css';
 
 const UserConfig = () => {
@@ -20,13 +22,26 @@ const UserConfig = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await window.electronAPI.listarUsuarios();
+        setLoading(true);
+        setError('');
+        const response = await databaseService.listarUsuarios();
+        
         if (response.success) {
-          setUsers(response.data);
+          // Mapear los nombres de campos si es necesario (nombre -> name, rol -> role)
+          const formattedUsers = response.data.map(user => ({
+            id: user.id,
+            name: user.nombre,
+            email: user.email,
+            role: user.rol,
+            activo: user.activo,
+            ultimo_login: user.ultimo_login
+          }));
+          setUsers(formattedUsers);
         } else {
           setError(response.error || 'Error al cargar los usuarios');
         }
       } catch (err) {
+        console.error('Error fetching users:', err);
         setError('Error al conectar con la base de datos');
       } finally {
         setLoading(false);
@@ -38,14 +53,26 @@ const UserConfig = () => {
 
   const handleEdit = async (user) => {
     try {
-      const response = await window.electronAPI.obtenerUsuario(user.id);
+      setError('');
+      const response = await databaseService.obtenerUsuario(user.id);
+      
       if (response.success) {
-        setSelectedUser(response.data);
+        // Formatear los datos del usuario para el formulario
+        const userData = {
+          id: response.data.id,
+          name: response.data.nombre,
+          email: response.data.email,
+          role: response.data.rol,
+          password: '',
+          confirmPassword: ''
+        };
+        setSelectedUser(userData);
         setShowForm(true);
       } else {
         setError(response.error || 'Error al cargar el usuario');
       }
     } catch (err) {
+      console.error('Error getting user:', err);
       setError('Error al obtener los datos del usuario');
     }
   };
@@ -59,7 +86,9 @@ const UserConfig = () => {
     if (!userToDelete) return;
     
     try {
-      const response = await window.electronAPI.eliminarUsuario(userToDelete);
+      setError('');
+      const response = await databaseService.eliminarUsuario(userToDelete);
+      
       if (response.success) {
         setUsers(users.filter(user => user.id !== userToDelete));
         setSuccessMessage('Usuario desactivado correctamente');
@@ -68,6 +97,7 @@ const UserConfig = () => {
         setError(response.error || 'Error al eliminar el usuario');
       }
     } catch (err) {
+      console.error('Error deleting user:', err);
       setError('Error al eliminar el usuario');
     } finally {
       setShowDeleteModal(false);
@@ -82,31 +112,38 @@ const UserConfig = () => {
 
   const handleUserSubmit = async (userData) => {
     try {
+      setError('');
       let response;
+      
+      // Preparar los datos para la base de datos
+      const dbData = {
+        nombre: userData.name,
+        email: userData.email,
+        rol: userData.role,
+        ...(userData.password && { password: userData.password })
+      };
       
       if (userData.id) {
         // Actualizar usuario existente
-        response = await window.electronAPI.actualizarUsuario(userData.id, {
-          nombre: userData.name,
-          email: userData.email,
-          rol: userData.role,
-          ...(userData.password && { password: userData.password })
-        });
+        response = await databaseService.actualizarUsuario(userData.id, dbData);
       } else {
         // Crear nuevo usuario
-        response = await window.electronAPI.crearUsuario({
-          nombre: userData.name,
-          email: userData.email,
-          rol: userData.role,
-          password: userData.password
-        });
+        response = await databaseService.crearUsuario(dbData);
       }
       
       if (response.success) {
         // Actualizar la lista de usuarios
-        const usersResponse = await window.electronAPI.listarUsuarios();
+        const usersResponse = await databaseService.listarUsuarios();
         if (usersResponse.success) {
-          setUsers(usersResponse.data);
+          const formattedUsers = usersResponse.data.map(user => ({
+            id: user.id,
+            name: user.nombre,
+            email: user.email,
+            role: user.rol,
+            activo: user.activo,
+            ultimo_login: user.ultimo_login
+          }));
+          setUsers(formattedUsers);
         }
         
         setSuccessMessage(userData.id ? 
@@ -119,6 +156,7 @@ const UserConfig = () => {
         setError(response.error || 'Error al guardar el usuario');
       }
     } catch (err) {
+      console.error('Error saving user:', err);
       setError('Error al guardar el usuario');
     }
   };
@@ -129,8 +167,6 @@ const UserConfig = () => {
       <p>Cargando usuarios...</p>
     </div>
   );
-
-  if (error) return <div className={styles.error}>{error}</div>;
 
   return (
     <div className={styles.container}>
@@ -161,6 +197,12 @@ const UserConfig = () => {
         </button>
       </div>
 
+      {error && (
+        <div className={styles.error}>
+          {error}
+        </div>
+      )}
+
       {successMessage && (
         <div className={styles.success}>
           {successMessage}
@@ -173,6 +215,7 @@ const UserConfig = () => {
           onCancel={() => {
             setShowForm(false);
             setSelectedUser(null);
+            setError('');
           }}
           onSubmit={handleUserSubmit}
         />
