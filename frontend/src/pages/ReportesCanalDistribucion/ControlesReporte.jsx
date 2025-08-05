@@ -1,34 +1,45 @@
-// ControlesReporte.js
 import React from 'react';
 import styles from './reportesCanalesDistribucion.module.css';
-import { exportExcelFile, EXCEL_STYLES } from '../../utils/export/index';
+import { exportExcelFile } from '../../utils/export/index';
 
 export const ControlesReporte = ({ 
     filtro, 
     onFiltroChange, 
     onActualizar,
-    onValidarTodo,
-    onValidarTodosLosRiesgos,  // Nueva prop
-    clientes,
+    onValidarTodos,
+    datos,
     columnas,
     loading 
 }) => {
     const handleExportExcel = () => {
-        const excelColumns = columnas.map(col => ({
-            id: col.id,
-            name: col.nombre,
-            ...(col.id.endsWith('_numerico') && { format: 'number' }),
-            ...(col.id === 'factorRiesgoClienteExterno' && { format: 'number' })
-        }));
+        const excelColumns = columnas.map(col => {
+            const columnDef = {
+                id: col.id,
+                name: col.nombre
+            };
+            
+            // Aplicar formato numérico a las columnas correspondientes
+            if (col.id.endsWith('_numerico') || 
+                col.id.includes('factorRiesgo') || 
+                col.id.includes('promedio_riesgo') ||
+                col.id === 'riesgoTotal') {
+                columnDef.format = 'number';
+            }
+            
+            return columnDef;
+        });
         
         exportExcelFile(
-            clientes,
+            datos,
             excelColumns,
-            'reporte_clientes_externos',
+            'reporte_canales_distribucion',
             {
-                sheetName: 'Clientes Externos',
-                headerStyle: EXCEL_STYLES.HEADER_BLUE,
-                autoWidth: true
+                sheetName: 'Canales Distribución',
+                headerStyle: {
+                    font: { bold: true, color: { rgb: 'FFFFFF' } },
+                    fill: { fgColor: { rgb: '4472C4' } },
+                    alignment: { horizontal: 'center' }
+                }
             }
         );
     };
@@ -39,7 +50,7 @@ export const ControlesReporte = ({
                 type="text"
                 placeholder="Buscar en reporte..."
                 value={filtro}
-                onChange={(e) => onFiltroChange(e)}
+                onChange={(e) => onFiltroChange(e.target.value)}
                 className={styles.buscador}
             />
             
@@ -52,12 +63,11 @@ export const ControlesReporte = ({
                     Actualizar Reporte
                 </button>
                 
-                
-                
                 <button 
-                    onClick={onValidarTodosLosRiesgos}  // Nuevo botón
-                    className={styles.botonValidarRiesgos}
-                    disabled={loading}
+                    onClick={onValidarTodos}
+                    className={styles.botonValidar}
+                    disabled={loading || datos.length === 0}
+                    title="Validar todos los riesgos calculados"
                 >
                     Validar Riesgos
                 </button>
@@ -65,7 +75,7 @@ export const ControlesReporte = ({
                 <button 
                     onClick={handleExportExcel}
                     className={styles.botonExportar}
-                    disabled={loading}
+                    disabled={loading || datos.length === 0}
                 >
                     Exportar a Excel
                 </button>

@@ -38,15 +38,16 @@ export const TablaReporte = ({
                                         key={`${item.id}-${columna.id}`}
                                         className={
                                             columna.id.endsWith('_numerico') || 
-                                            columna.id.includes('factorRiesgo') ||
-                                            columna.id.includes('promedio_riesgo')
+                                            columna.id === 'riesgoCanalDistribucion' ||
+                                            columna.id === 'promedio_riesgo_canal_distribucion' ||
+                                            columna.id === 'promedio_riesgo_cliente_interno'
                                                 ? styles.celdaNumerica : ''
                                         }
                                         title={item[columna.id] ?? '-'}
                                     >
                                         {formatearValor(item[columna.id])}
                                         {columna.id === 'promedio_riesgo_canal_distribucion' && 
-                                         item.promedio_riesgo_canal_distribucion === item.factorRiesgoCanal && (
+                                         item.promedio_riesgo_canal_distribucion === item.riesgoCanalDistribucion && (
                                             <span className={styles.validadoIcono}> ✓</span>
                                         )}
                                     </td>
@@ -56,7 +57,7 @@ export const TablaReporte = ({
                     ) : (
                         <tr>
                             <td colSpan={columnas.length} className={styles.sinResultados}>
-                                No hay datos para mostrar
+                                No hay canales de distribución para mostrar
                             </td>
                         </tr>
                     )}

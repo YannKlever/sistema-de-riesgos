@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { useCanalesDistribucion } from './useCanalesDistribucion';
+import React from 'react';
+import styles from './reportesCanalesDistribucion.module.css';
 import { ControlesReporte } from './ControlesReporte';
 import { TablaReporte } from './TablaReporte';
-import styles from './reportesCanalesDistribucion.module.css';
+import { useCanalesDistribucion } from './useCanalesDistribucion';
 
 export const ReporteCanalesDistribucion = () => {
     const {
@@ -10,88 +10,66 @@ export const ReporteCanalesDistribucion = () => {
         canalesFiltrados,
         handleFiltroChange,
         actualizarReporte,
-        validarTodo,
         validarTodosLosRiesgos,
         COLUMNAS_REPORTE
     } = useCanalesDistribucion();
 
-    const [localError, setLocalError] = useState('');
-
-    const handleCloseError = () => {
-        setLocalError('');
+    // Función para limpiar el error
+    const limpiarError = () => {
+        actualizarReporte(); // Esto actualizará el estado y limpiará cualquier error
     };
 
     return (
         <div className={styles.contenedor}>
-            <header className={styles.header}>
-                <h1>Reporte de Canales de Distribución</h1>
-                <p>Evaluación de riesgos en canales de distribución</p>
-            </header>
-
-            {(state.error || localError) && (
+            <h1 className={styles.titulo}>Reporte de Canales de Distribución</h1>
+            
+            {state.error && (
                 <div className={styles.error}>
-                    {state.error || localError}
+                    Error: {state.error}
                     <button 
-                        onClick={handleCloseError}
+                        onClick={limpiarError}
                         className={styles.botonCerrarError}
                     >
                         ×
                     </button>
                 </div>
             )}
-
-            <ControlesReporte
+            
+            <ControlesReporte 
                 filtro={state.filtro}
                 onFiltroChange={handleFiltroChange}
                 onActualizar={actualizarReporte}
-                onValidarTodo={validarTodo}
-                onValidarTodosLosRiesgos={validarTodosLosRiesgos}
-                clientes={canalesFiltrados}
+                onValidarTodos={validarTodosLosRiesgos}
+                datos={canalesFiltrados}
                 columnas={COLUMNAS_REPORTE}
                 loading={state.loading}
             />
-
-            <TablaReporte
+            
+            <TablaReporte 
                 columnas={COLUMNAS_REPORTE}
                 datos={canalesFiltrados}
                 loading={state.loading}
             />
 
-            <div className={styles.resumen}>
-                <p>Total en reporte: <strong>{canalesFiltrados.length}</strong></p>
-                {canalesFiltrados.length > 0 && (
-                    <>
-                        <p>Promedio de riesgo calculado: <strong>
-                            {(
-                                canalesFiltrados.reduce((sum, canal) => 
-                                    sum + (canal.factorRiesgoCanal || 0), 0) / 
-                                canalesFiltrados.length
-                            ).toFixed(2)}
-                        </strong></p>
-                        <p>Promedio de riesgo cliente interno: <strong>
-                            {(
-                                canalesFiltrados.reduce((sum, canal) => 
-                                    sum + (canal.promedio_riesgo_cliente_interno || 0), 0) / 
-                                canalesFiltrados.length
-                            ).toFixed(2)}
-                        </strong></p>
-                        <p>Promedio de riesgo validado: <strong>
-                            {(
-                                canalesFiltrados.reduce((sum, canal) => 
-                                    sum + (canal.promedio_riesgo_canal_distribucion || 0), 0) / 
-                                canalesFiltrados.length
-                            ).toFixed(2)}
-                        </strong></p>
-                        <p>Promedio riesgo total: <strong>
-                            {(
-                                canalesFiltrados.reduce((sum, canal) => 
-                                    sum + (parseFloat(canal.riesgoTotal) || 0), 0) / 
-                                canalesFiltrados.length
-                            ).toFixed(2)}
-                        </strong></p>
-                    </>
-                )}
-            </div>
+            {canalesFiltrados.length > 0 && (
+                <div className={styles.resumen}>
+                    <p>Total canales: <strong>{canalesFiltrados.length}</strong></p>
+                    <p>Promedio riesgo calculado: <strong>
+                        {(
+                            canalesFiltrados.reduce((sum, canal) => 
+                                sum + (canal.riesgoCanalDistribucion || 0), 0) / 
+                            canalesFiltrados.length
+                        ).toFixed(2)}
+                    </strong></p>
+                    <p>Promedio riesgo validado: <strong>
+                        {(
+                            canalesFiltrados.reduce((sum, canal) => 
+                                sum + (canal.promedio_riesgo_canal_distribucion || 0), 0) / 
+                            canalesFiltrados.length
+                        ).toFixed(2)}
+                    </strong></p>
+                </div>
+            )}
         </div>
     );
 };
