@@ -1,5 +1,4 @@
-import React, { useMemo } from 'react';
-import { COLUMNAS_NUMERICAS_PRODUCTOS } from '../ReportesProductoServicio/constantes';
+import React, { useState, useMemo } from 'react';
 import { useProductosServicios } from '../ReportesProductoServicio/useProductosServicios';
 import { Chart } from 'react-chartjs-2';
 import {
@@ -29,7 +28,8 @@ ChartJS.register(
 );
 
 const GraficosProductosServicios = () => {
-    const { state, productosFiltrados, handleFiltroChange } = useProductosServicios();
+    const { productosFiltrados } = useProductosServicios();
+    const [busqueda, setBusqueda] = useState('');
 
     // Función para redondear matemáticamente a entero (0.5 hacia arriba)
     const redondearRiesgo = (valor) => {
@@ -37,22 +37,34 @@ const GraficosProductosServicios = () => {
         return Math.round(valor);
     };
 
+    // Filtrar productos según la búsqueda
+    const productosFiltradosBusqueda = useMemo(() => {
+        if (!busqueda) return productosFiltrados;
+
+        const termino = busqueda.toLowerCase();
+        return productosFiltrados.filter(producto =>
+            `${producto.producto_servicio || ''} ${producto.oficina || ''} ${producto.riesgo_producto || ''} ${producto.riesgo_cliente || ''}`
+                .toLowerCase()
+                .includes(termino)
+        );
+    }, [productosFiltrados, busqueda]);
+
     // Preparar datos para el gráfico
     const prepararDatosGrafico = () => {
-        if (!productosFiltrados.length) return { labels: [], datasets: [] };
+        if (!productosFiltradosBusqueda.length) return { labels: [], datasets: [] };
 
         // Ordenar por riesgo (mayor a menor)
-        const productosOrdenados = [...productosFiltrados]
-            .sort((a, b) => (b.riesgoFactorProductosServicios || 0) - (a.riesgoFactorProductosServicios || 0));
+        const productosOrdenados = [...productosFiltradosBusqueda]
+            .sort((a, b) => (b.promedio_riesgo_producto_servicio || 0) - (a.promedio_riesgo_producto_servicio || 0));
 
-        // Preparar etiquetas con nombre, código y categoría
+        // Preparar etiquetas con nombre del producto/servicio y oficina
         const labels = productosOrdenados.map(producto => {
-            return `${producto.nombre || 'Sin nombre'} (${producto.codigo || 'Sin código'}) - ${producto.categoria || 'Sin categoría'}`;
+            return `${producto.producto_servicio || 'Sin nombre'} - ${producto.oficina || 'Sin oficina'}`;
         });
 
         // Obtener valores de riesgo con redondeo matemático
         const valoresRiesgo = productosOrdenados.map(producto => {
-            const valor = producto.riesgoFactorProductosServicios;
+            const valor = producto.promedio_riesgo_producto_servicio;
             // Aseguramos que el valor esté entre 1 y 5 después del redondeo
             const redondeado = Math.min(5, Math.max(1, redondearRiesgo(valor)));
             return redondeado;
@@ -103,7 +115,7 @@ const GraficosProductosServicios = () => {
                         const value = context.raw;
                         const riskLevels = ['Minimo', 'Bajo', 'Moderado', 'Alto', 'Critico'];
                         const producto = productos[context.dataIndex];
-                        const valorOriginal = producto.riesgoFactorProductosServicios?.toFixed(2) || 'N/A';
+                        const valorOriginal = producto.promedio_riesgo_producto_servicio?.toFixed(2) || 'N/A';
 
                         return [
                             `Nivel de riesgo Ponderado: ${value} (${riskLevels[value - 1] || 'N/A'})`,
@@ -114,17 +126,9 @@ const GraficosProductosServicios = () => {
                         const producto = productos[context.dataIndex];
                         const info = [];
                         
-                        info.push(`Nombre: ${producto.nombre || 'N/A'}`);
-                        info.push(`Código: ${producto.codigo || 'N/A'}`);
-                        info.push(`Categoría: ${producto.categoria || 'N/A'}`);
-                        info.push(`Tipo: ${producto.tipo || 'N/A'}`);
+                        info.push(`Producto/Servicio: ${producto.producto_servicio || 'N/A'}`);
+                        info.push(`Oficina: ${producto.oficina || 'N/A'}`);
                         
-                        // Mostrar campos numéricos que contribuyen al riesgo
-                        COLUMNAS_NUMERICAS_PRODUCTOS.forEach(col => {
-                            if (producto[col.id] !== undefined) {
-                                info.push(`${col.nombre}: ${producto[col.id] || 'N/A'}`);
-                            }
-                        });
                         
                         return info;
                     }
@@ -158,24 +162,20 @@ const GraficosProductosServicios = () => {
         <div className={styles.contenedor}>
             <header className={styles.header}>
                 <h1>Análisis de Riesgo - Productos/Servicios</h1>
-                <p>Visualización del factor de riesgo por producto/servicio</p>
+                <p>Visualización del factor de riesgo individual por producto/servicio</p>
             </header>
-
-            {state.error && <div className={styles.error}>{state.error}</div>}
 
             <div className={styles.controles}>
                 <input
                     type="text"
-                    placeholder="Buscar por nombre, código, categoría o tipo..."
-                    value={state.filtro}
-                    onChange={handleFiltroChange}
+                    placeholder="Buscar por producto, oficina o tipo de riesgo..."
+                    value={busqueda}
+                    onChange={(e) => setBusqueda(e.target.value)}
                     className={styles.buscador}
                 />
             </div>
 
-            {state.loading ? (
-                <div className={styles.cargando}>Cargando datos...</div>
-            ) : datasets?.length > 0 ? (
+            {datasets?.length > 0 ? (
                 <div className={styles.chartContainer}>
                     <div className={styles.chartWrapper} style={{ height: `${Math.max(400, labels.length * 40)}px` }}>
                         <Chart
@@ -213,24 +213,11 @@ const GraficosProductosServicios = () => {
                             ))}
                         </div>
                     </div>
-
-                    <div className={styles.resumen}>
-                        <p>Total de productos/servicios en gráfico: <strong>{productosFiltrados.length}</strong></p>
-                        {productosFiltrados.length > 0 && (
-                            <p>Promedio de riesgo: <strong>
-                                {(
-                                    productosFiltrados.reduce((sum, producto) => 
-                                        sum + (producto.riesgoFactorProductosServicios || 0), 0) / 
-                                    productosFiltrados.length
-                                ).toFixed(2)}
-                            </strong></p>
-                        )}
-                    </div>
                 </div>
             ) : (
                 <div className={styles.sinDatos}>
-                    {state.filtro
-                        ? 'No se encontraron productos/servicios que coincidan con el filtro'
+                    {busqueda
+                        ? 'No se encontraron productos/servicios que coincidan con la búsqueda'
                         : 'No hay datos suficientes para generar el análisis de riesgo'}
                 </div>
             )}
