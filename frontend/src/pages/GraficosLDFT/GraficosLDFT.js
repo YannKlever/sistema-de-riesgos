@@ -126,11 +126,7 @@ const GraficosLDFT = () => {
                         info.push(`Fecha: ${new Date(evaluacion.fecha_evaluacion).toLocaleDateString() || 'N/A'}`);
                         
                         // Mostrar campos numéricos de riesgo
-                        COLUMNAS_NUMERICAS.forEach(col => {
-                            if (evaluacion[col.id] !== undefined) {
-                                info.push(`${col.nombre}: ${evaluacion[col.id] || 'N/A'}`);
-                            }
-                        });
+                        
                         
                         return info;
                     }
@@ -177,13 +173,7 @@ const GraficosLDFT = () => {
                     onChange={(e) => setBusqueda(e.target.value)}
                     className={styles.buscador}
                 />
-                <input
-                    type="text"
-                    placeholder="Filtrar por cualquier campo..."
-                    value={state.filtro}
-                    onChange={handleFiltroChange}
-                    className={styles.buscador}
-                />
+                
             </div>
 
             {state.loading ? (
