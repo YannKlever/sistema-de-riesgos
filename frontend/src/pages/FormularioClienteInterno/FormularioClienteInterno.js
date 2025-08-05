@@ -35,12 +35,12 @@ const FormularioClienteInterno = () => {
                         setIsEditing(true);
                     } else {
                         alert('No se pudo cargar el cliente interno para edición');
-                        navigate('/parametros/lista-clientes-internos');
+                        navigate('/parametros/clientes-internos');
                     }
                 } catch (error) {
                     console.error('Error al cargar datos:', error);
                     alert('Error al cargar datos del cliente interno');
-                    navigate('/parametros/lista-clientes-internos');
+                    navigate('/parametros/clientes-internos');
                 } finally {
                     setIsSubmitting(false);
                 }
@@ -109,7 +109,7 @@ const FormularioClienteInterno = () => {
 
             if (result?.success) {
                 alert(`Cliente interno ${isEditing ? 'actualizado' : 'creado'} correctamente`);
-                navigate('/parametros/lista-clientes-internos');
+                navigate('/parametros/clientes-internos');
             } else {
                 alert(`Error: ${result?.error || 'Error desconocido'}`);
             }
@@ -287,7 +287,7 @@ const FormularioClienteInterno = () => {
                         <div className={styles.formActions}>
                             <button
                                 type="button"
-                                onClick={() => navigate('/parametros/lista-clientes-internos')}
+                                onClick={() => navigate('/parametros')}
                                 className={styles.secondaryButton}
                                 disabled={isSubmitting}
                             >
