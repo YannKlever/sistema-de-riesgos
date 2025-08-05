@@ -1,5 +1,4 @@
-import React, { useMemo } from 'react';
-import { COLUMNAS_NUMERICAS } from '../ReportesClientesInternos/constantes';
+import React, { useState, useMemo } from 'react';
 import { useClientesInternos } from '../ReportesClientesInternos/useClientesInternos';
 import { Chart } from 'react-chartjs-2';
 import {
@@ -29,7 +28,8 @@ ChartJS.register(
 );
 
 const GraficosClientesInternos = () => {
-    const { state, clientesFiltrados, handleFiltroChange } = useClientesInternos();
+    const { clientesFiltrados } = useClientesInternos();
+    const [busqueda, setBusqueda] = useState('');
 
     // Función para redondear matemáticamente a entero (0.5 hacia arriba)
     const redondearRiesgo = (valor) => {
@@ -37,22 +37,34 @@ const GraficosClientesInternos = () => {
         return Math.round(valor);
     };
 
+    // Filtrar clientes según la búsqueda
+    const clientesFiltradosBusqueda = useMemo(() => {
+        if (!busqueda) return clientesFiltrados;
+
+        const termino = busqueda.toLowerCase();
+        return clientesFiltrados.filter(cliente =>
+            `${cliente.nombres_cliente_interno || ''} ${cliente.apellidos_cliente_interno || ''} ${cliente.nro_documento_cliente_interno || ''} ${cliente.oficina || ''} ${cliente.categoria_pep || ''}`
+                .toLowerCase()
+                .includes(termino)
+        );
+    }, [clientesFiltrados, busqueda]);
+
     // Preparar datos para el gráfico
     const prepararDatosGrafico = () => {
-        if (!clientesFiltrados.length) return { labels: [], datasets: [] };
+        if (!clientesFiltradosBusqueda.length) return { labels: [], datasets: [] };
 
         // Ordenar por riesgo (mayor a menor)
-        const clientesOrdenados = [...clientesFiltrados]
-            .sort((a, b) => (b.factorRiesgoClienteInterno || 0) - (a.factorRiesgoClienteInterno || 0));
+        const clientesOrdenados = [...clientesFiltradosBusqueda]
+            .sort((a, b) => (b.promedio_riesgo_cliente_interno || 0) - (a.promedio_riesgo_cliente_interno || 0));
 
-        // Preparar etiquetas con nombre completo, documento y cargo
+        // Preparar etiquetas con nombre completo, documento y cargo/oficina
         const labels = clientesOrdenados.map(cliente => {
-            return `${cliente.nombres || ''} ${cliente.apellidos || ''} (${cliente.nro_documento || 'N/A'}) - ${cliente.cargo || 'N/A'}`;
+            return `${cliente.nombres_cliente_interno || ''} ${cliente.apellidos_cliente_interno || ''} (${cliente.nro_documento_cliente_interno || 'N/A'}) - ${cliente.oficina || 'N/A'}`;
         });
 
         // Obtener valores de riesgo con redondeo matemático
         const valoresRiesgo = clientesOrdenados.map(cliente => {
-            const valor = cliente.factorRiesgoClienteInterno;
+            const valor = cliente.promedio_riesgo_cliente_interno;
             // Aseguramos que el valor esté entre 1 y 5 después del redondeo
             const redondeado = Math.min(5, Math.max(1, redondearRiesgo(valor)));
             return redondeado;
@@ -103,7 +115,7 @@ const GraficosClientesInternos = () => {
                         const value = context.raw;
                         const riskLevels = ['Minimo', 'Bajo', 'Moderado', 'Alto', 'Critico'];
                         const cliente = clientes[context.dataIndex];
-                        const valorOriginal = cliente.factorRiesgoClienteInterno?.toFixed(2) || 'N/A';
+                        const valorOriginal = cliente.promedio_riesgo_cliente_interno?.toFixed(2) || 'N/A';
 
                         return [
                             `Nivel de riesgo Ponderado: ${value} (${riskLevels[value - 1] || 'N/A'})`,
@@ -112,23 +124,11 @@ const GraficosClientesInternos = () => {
                     },
                     afterLabel: (context) => {
                         const cliente = clientes[context.dataIndex];
-                        const info = [];
-                        
-                        info.push(`Nombres: ${cliente.nombres || 'N/A'}`);
-                        info.push(`Apellidos: ${cliente.apellidos || 'N/A'}`);
-                        info.push(`Documento: ${cliente.nro_documento || 'N/A'}`);
-                        info.push(`Cargo: ${cliente.cargo || 'N/A'}`);
-                        info.push(`Oficina: ${cliente.oficina || 'N/A'}`);
-                        info.push(`Área: ${cliente.area || 'N/A'}`);
-                        
-                        // Mostrar también los campos numéricos que contribuyen al riesgo
-                        COLUMNAS_NUMERICAS.forEach(col => {
-                            if (cliente[col.id] !== undefined) {
-                                info.push(`${col.nombre}: ${cliente[col.id] || 'N/A'}`);
-                            }
-                        });
-                        
-                        return info;
+                        return [
+                            
+                            `Riesgo Profesión: ${cliente.riesgo_profesion_actividad || 'N/A'}`,
+                            
+                        ];
                     }
                 }
             }
@@ -163,21 +163,17 @@ const GraficosClientesInternos = () => {
                 <p>Visualización del factor de riesgo individual por cliente interno</p>
             </header>
 
-            {state.error && <div className={styles.error}>{state.error}</div>}
-
             <div className={styles.controles}>
                 <input
                     type="text"
-                    placeholder="Buscar por nombre, apellido, documento, cargo u oficina..."
-                    value={state.filtro}
-                    onChange={handleFiltroChange}
+                    placeholder="Buscar por nombre, apellido, documento, oficina o categoría PEP..."
+                    value={busqueda}
+                    onChange={(e) => setBusqueda(e.target.value)}
                     className={styles.buscador}
                 />
             </div>
 
-            {state.loading ? (
-                <div className={styles.cargando}>Cargando datos...</div>
-            ) : datasets?.length > 0 ? (
+            {datasets?.length > 0 ? (
                 <div className={styles.chartContainer}>
                     <div className={styles.chartWrapper} style={{ height: `${Math.max(400, labels.length * 40)}px` }}>
                         <Chart
@@ -215,24 +211,11 @@ const GraficosClientesInternos = () => {
                             ))}
                         </div>
                     </div>
-
-                    <div className={styles.resumen}>
-                        <p>Total de clientes en gráfico: <strong>{clientesFiltrados.length}</strong></p>
-                        {clientesFiltrados.length > 0 && (
-                            <p>Promedio de riesgo: <strong>
-                                {(
-                                    clientesFiltrados.reduce((sum, cliente) => 
-                                        sum + (cliente.factorRiesgoClienteInterno || 0), 0) / 
-                                    clientesFiltrados.length
-                                ).toFixed(2)}
-                            </strong></p>
-                        )}
-                    </div>
                 </div>
             ) : (
                 <div className={styles.sinDatos}>
-                    {state.filtro
-                        ? 'No se encontraron clientes internos que coincidan con el filtro'
+                    {busqueda
+                        ? 'No se encontraron clientes internos que coincidan con la búsqueda'
                         : 'No hay datos suficientes para generar el análisis de riesgo'}
                 </div>
             )}
