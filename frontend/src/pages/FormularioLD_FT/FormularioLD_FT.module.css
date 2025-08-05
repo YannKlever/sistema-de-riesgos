@@ -1,6 +1,6 @@
 /* FormularioLD_FT.module.css */
 
-
+/* Estilos base */
 .container {
     display: flex;
     justify-content: center;
@@ -58,7 +58,7 @@
     font-size: 1.1em;
 }
 
-/* Ajustamos el field para preguntas largas */
+/* Campos del formulario */
 .field {
     flex: 1;
     min-width: 250px;
@@ -73,7 +73,7 @@
     line-height: 1.4;
 }
 
-/* Estilo específico para las opciones de selección */
+/* Select personalizado */
 .selectWrapper {
     position: relative;
 }
@@ -94,12 +94,13 @@
     box-shadow: 0 0 0 2px rgba(var(--clr-prim-rgb), 0.2);
 }
 
-/* Estilo para las opciones de respuesta */
+/* Opciones de respuesta */
 .optionItem {
     padding: 0.5rem 0;
     border-bottom: 1px dashed var(--clr-gris-claro);
 }
 
+/* Botones */
 .buttons {
     display: flex;
     justify-content: space-between;
@@ -153,7 +154,7 @@
     cursor: not-allowed;
 }
 
-/* Nuevos estilos específicos para el formulario LD/FT */
+/* Indicadores de riesgo */
 .riskIndicator {
     display: inline-block;
     padding: 0.25rem 0.75rem;
@@ -178,11 +179,46 @@
     color: var(--clr-rojo-osc);
 }
 
+/* Texto de ayuda */
 .questionHelpText {
     font-size: 0.85rem;
     color: var(--clr-gris-osc);
     margin-top: 0.25rem;
     font-style: italic;
+}
+
+/* Estilos para la sección de detalles adicionales */
+.detallesContainer {
+    margin: 1.5rem 0;
+}
+
+.detallesLabel {
+    color: var(--clr-gris-texto);
+    font-weight: 500;
+    font-size: 0.95rem;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.detallesTextarea {
+    min-height: 100px;
+    resize: vertical;
+    font-family: inherit;
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--clr-gris-medio);
+    border-radius: 6px;
+    font-size: 1rem;
+    background-color: var(--clr-blanco);
+    transition: border-color 0.2s;
+    color: var(--clr-gris-oscuro);
+    margin-top: 0.5rem;
+}
+
+.detallesTextarea:focus {
+    outline: none;
+    border-color: var(--clr-prim);
+    box-shadow: 0 0 0 3px var(--clr-foco);
 }
 
 /* Responsive Design */
@@ -230,5 +266,9 @@
     
     .field {
         margin-bottom: 1rem;
+    }
+    
+    .detallesTextarea {
+        min-height: 80px;
     }
 }

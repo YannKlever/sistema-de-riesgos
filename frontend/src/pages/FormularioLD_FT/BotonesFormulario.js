@@ -1,17 +1,23 @@
+import { useNavigate } from 'react-router-dom';
 import styles from './FormularioLD_FT.module.css';
 
 const BotonesFormulario = ({ 
   isSubmitting, 
-  onBack, 
   onReset,
   onSubmit 
 }) => {
+  const navigate = useNavigate();
+
+  const handleBack = () => {
+    navigate('/parametros');
+  };
+
   return (
     <div className={styles.buttons}>
       <button 
         type="button" 
         className={styles.secondaryButton}
-        onClick={onBack}
+        onClick={handleBack}
         disabled={isSubmitting}
       >
         Volver
