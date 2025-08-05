@@ -12,6 +12,9 @@ class ProductoServicio {
             // Solo estos dos campos numéricos adicionales
             riesgo_producto_numerico: producto.riesgo_producto_numerico || null,
             riesgo_cliente_numerico: producto.riesgo_cliente_numerico || null,
+            
+            
+            
             //promedio de riesgo 
 
 
@@ -176,6 +179,132 @@ static async listar() {
             );
         });
     }
+
+
+
+    //para importar
+static async bulkCreate(productosServicios) {
+    return new Promise((resolve, reject) => {
+        db.serialize(() => {
+            db.run("BEGIN TRANSACTION", (beginErr) => {
+                if (beginErr) return reject({
+                    success: false,
+                    error: `Error al iniciar transacción: ${beginErr.message}`
+                });
+
+                // 1. Limpiar tabla existente
+                db.run("DELETE FROM \"tabla-productos-servicios\"", (deleteErr) => {
+                    if (deleteErr) {
+                        return db.run("ROLLBACK", () => {
+                            reject({
+                                success: false,
+                                error: `Error al limpiar tabla: ${deleteErr.message}`
+                            });
+                        });
+                    }
+
+                    // 2. Obtener todas las columnas posibles de la tabla
+                    db.all("PRAGMA table_info(\"tabla-productos-servicios\")", (pragmaErr, columns) => {
+                        if (pragmaErr) {
+                            return db.run("ROLLBACK", () => {
+                                reject({
+                                    success: false,
+                                    error: `Error al obtener estructura de tabla: ${pragmaErr.message}`
+                                });
+                            });
+                        }
+
+                        const allColumns = columns.map(col => col.name);
+
+                        // 3. Procesar en lotes
+                        const batchSize = 50;
+                        let processedCount = 0;
+                        const errors = [];
+
+                        const processBatch = (startIdx) => {
+                            if (startIdx >= productosServicios.length) {
+                                db.run("COMMIT", (commitErr) => {
+                                    if (commitErr) {
+                                        reject({
+                                            success: false,
+                                            error: `Error al confirmar transacción: ${commitErr.message}`,
+                                            processed: processedCount
+                                        });
+                                    } else {
+                                        resolve({
+                                            success: true,
+                                            count: processedCount,
+                                            errors: errors.length > 0 ? errors : null
+                                        });
+                                    }
+                                });
+                                return;
+                            }
+
+                            const endIdx = Math.min(startIdx + batchSize, productosServicios.length);
+                            let batchProcessed = 0;
+
+                            const insertNext = (idx) => {
+                                if (idx >= endIdx) return processBatch(endIdx);
+
+                                const producto = productosServicios[idx];
+                                const productoConFecha = {
+                                    fecha_registro: new Date().toISOString(),
+                                    ...producto
+                                };
+
+                                // Filtrar solo columnas que existen en la tabla
+                                const camposDisponibles = Object.keys(productoConFecha)
+                                    .filter(key => allColumns.includes(key));
+
+                                const campos = camposDisponibles.map(c => `"${c}"`).join(', ');
+                                const placeholders = camposDisponibles.map(() => '?').join(', ');
+
+                                const valores = camposDisponibles.map(key => {
+                                    const val = productoConFecha[key];
+                                    return val !== null && typeof val === 'object' && !(val instanceof Date)
+                                        ? JSON.stringify(val)
+                                        : val;
+                                });
+
+                                const sql = `INSERT INTO "tabla-productos-servicios" (${campos}) VALUES (${placeholders})`;
+
+                                db.run(sql, valores, function (err) {
+                                    if (err) {
+                                        errors.push(`Error en registro ${idx + 1}: ${err.message}`);
+                                        console.error(`Error insertando registro ${idx + 1}:`, {
+                                            error: err,
+                                            sql: sql,
+                                            valores: valores,
+                                            producto: productoConFecha
+                                        });
+                                    } else {
+                                        processedCount++;
+                                        batchProcessed++;
+                                    }
+                                    insertNext(idx + 1);
+                                });
+                            };
+
+                            insertNext(startIdx);
+                        };
+
+                        processBatch(0);
+                    });
+                });
+            });
+        });
+    });
+}
+
+
+
+
+
+
+
+
+
 
     static async eliminar(id) {
         return new Promise((resolve, reject) => {
