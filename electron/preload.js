@@ -29,11 +29,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
     obtenerClienteInterno: (id) => ipcRenderer.invoke('obtener-cliente-interno', id),
     actualizarClienteInterno: (id, data) => ipcRenderer.invoke('actualizar-cliente-interno', id, data),
     eliminarClienteInterno: (id) => ipcRenderer.invoke('eliminar-cliente-interno', id),
+    bulkCreateClientesInternos: (data) => ipcRenderer.invoke('bulk-create-clientes-internos', data),
     //Tabla producto servicio
     crearProductoServicio: (data) => ipcRenderer.invoke('crear-producto-servicio', data),
     listarProductosServicios: () => ipcRenderer.invoke('listar-productos-servicios'),
     obtenerProductoServicio: (id) => ipcRenderer.invoke('obtener-producto-servicio', id),
     actualizarProductoServicio: (id, data) => ipcRenderer.invoke('actualizar-producto-servicio', id, data),
+    bulkCreateProductosServicios: (data) => ipcRenderer.invoke('bulk-create-productos-servicios', data),
 
     obtenerRiesgoZona: (oficina) => ipcRenderer.invoke('obtener-riesgo-zona', oficina),
     obtenerRiesgoCanal: (oficina) => ipcRenderer.invoke('obtener-riesgo-canal', oficina),
@@ -43,6 +45,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     listarSucursales: () => ipcRenderer.invoke('listar-sucursales'),
     obtenerSucursal: (id) => ipcRenderer.invoke('obtener-sucursal', id),
     actualizarSucursal: (id, data) => ipcRenderer.invoke('actualizar-sucursal', id, data),
+
+    bulkCreateSucursales: (data) => ipcRenderer.invoke('bulk-create-sucursales', data),
     eliminarSucursal: (id) => ipcRenderer.invoke('eliminar-sucursal', id),
     //Tabla usuarios
     crearUsuario: (data) => ipcRenderer.invoke('crear-usuario', data),
