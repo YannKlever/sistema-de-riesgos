@@ -33,76 +33,77 @@ export const useSucursales = () => {
     }, []);
 
     const validarTodosLosRiesgos = useCallback(async () => {
-        try {
-            setState(prev => ({ ...prev, validandoTodos: true, error: '' }));
-            
-            const sucursalesAValidar = sucursalesConRiesgo.filter(
-                s => s.factorRiesgoZonaGeografica && !s.promedio_riesgo_zona_geografica
-            );
+    try {
+        setState(prev => ({ ...prev, validandoTodos: true, error: '' }));
+        
+        // Modificar esta línea para incluir todos los registros con riesgo calculado
+        const sucursalesAValidar = sucursalesConRiesgo.filter(
+            s => s.factorRiesgoZonaGeografica !== null && 
+                 s.factorRiesgoZonaGeografica !== undefined
+        );
 
-            if (sucursalesAValidar.length === 0) {
-                return { success: true, message: 'No hay registros pendientes de validar' };
-            }
-
-            let successCount = 0;
-            let errorCount = 0;
-            const errors = [];
-
-            for (const sucursal of sucursalesAValidar) {
-                try {
-                    const resultado = await databaseService.actualizarSucursal(sucursal.id, {
-                        promedio_riesgo_zona_geografica: sucursal.factorRiesgoZonaGeografica
-                    });
-
-                    if (resultado.success) {
-                        successCount++;
-                    } else {
-                        errorCount++;
-                        errors.push(`Error en sucursal ${sucursal.id}: ${resultado.error}`);
-                    }
-                } catch (err) {
-                    errorCount++;
-                    errors.push(`Error en sucursal ${sucursal.id}: ${err.message}`);
-                }
-            }
-
-            // Actualizar el estado con los cambios
-            const nuevasSucursales = state.sucursales.map(s => {
-                const sucursalValidada = sucursalesAValidar.find(sv => sv.id === s.id);
-                return sucursalValidada ? { 
-                    ...s, 
-                    promedio_riesgo_zona_geografica: sucursalValidada.factorRiesgoZonaGeografica 
-                } : s;
-            });
-
-            setState(prev => ({ ...prev, sucursales: nuevasSucursales }));
-            calcularRiesgoSucursales(nuevasSucursales);
-
-            if (errorCount > 0) {
-                const errorMessage = `Se completaron ${successCount} validaciones con éxito. Errores: ${errors.join('; ')}`;
-                setState(prev => ({ ...prev, error: errorMessage }));
-                return { 
-                    success: false, 
-                    message: errorMessage,
-                    successCount,
-                    errorCount
-                };
-            }
-
-            return { 
-                success: true, 
-                message: `Todas las ${successCount} validaciones se completaron con éxito`,
-                successCount
-            };
-        } catch (err) {
-            setState(prev => ({ ...prev, error: err.message }));
-            console.error('Error al validar todos los riesgos:', err);
-            return { success: false, error: err.message };
-        } finally {
-            setState(prev => ({ ...prev, validandoTodos: false }));
+        if (sucursalesAValidar.length === 0) {
+            return { success: true, message: 'No hay riesgos calculados para validar' };
         }
-    }, [state.sucursales, sucursalesConRiesgo]);
 
+        let successCount = 0;
+        let errorCount = 0;
+        const errors = [];
+
+        for (const sucursal of sucursalesAValidar) {
+            try {
+                const resultado = await databaseService.actualizarSucursal(sucursal.id, {
+                    promedio_riesgo_zona_geografica: sucursal.factorRiesgoZonaGeografica
+                });
+
+                if (resultado.success) {
+                    successCount++;
+                } else {
+                    errorCount++;
+                    errors.push(`Error en sucursal ${sucursal.id}: ${resultado.error}`);
+                }
+            } catch (err) {
+                errorCount++;
+                errors.push(`Error en sucursal ${sucursal.id}: ${err.message}`);
+            }
+        }
+
+        // Actualizar el estado con los cambios
+        const nuevasSucursales = state.sucursales.map(s => {
+            const sucursalValidada = sucursalesAValidar.find(sv => sv.id === s.id);
+            return sucursalValidada ? { 
+                ...s, 
+                promedio_riesgo_zona_geografica: sucursalValidada.factorRiesgoZonaGeografica 
+            } : s;
+        });
+
+        setState(prev => ({ ...prev, sucursales: nuevasSucursales }));
+        calcularRiesgoSucursales(nuevasSucursales);
+
+        if (errorCount > 0) {
+            const errorMessage = `Se completaron ${successCount} validaciones con éxito. Errores: ${errors.join('; ')}`;
+            setState(prev => ({ ...prev, error: errorMessage }));
+            return { 
+                success: false, 
+                message: errorMessage,
+                successCount,
+                errorCount
+            };
+        }
+
+        return { 
+            success: true, 
+            message: `Todas las ${successCount} validaciones se completaron con éxito`,
+            successCount
+        };
+    } catch (err) {
+        setState(prev => ({ ...prev, error: err.message }));
+        console.error('Error al validar todos los riesgos:', err);
+        return { success: false, error: err.message };
+    } finally {
+        setState(prev => ({ ...prev, validandoTodos: false }));
+    }
+}, [state.sucursales, sucursalesConRiesgo]);
     useEffect(() => {
         let isMounted = true;
 
