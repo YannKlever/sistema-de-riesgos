@@ -41,6 +41,29 @@ function setupSucursalesHandlers(ipcMain) {
         }
     });
 
+    //importar
+    ipcMain.handle('bulk-create-sucursales', async (_, sucursales) => {
+    try {
+        console.log(`Iniciando importación de ${sucursales.length} registros`);
+        const resultado = await Sucursal.bulkCreate(sucursales);
+        console.log('Importación completada:', resultado);
+        return {
+            ...resultado,
+            message: resultado.success
+                ? `Importación completada: ${resultado.count} registros procesados`
+                : `Error en importación: ${resultado.error}`
+        };
+    } catch (error) {
+        console.error('Error en bulk create:', error);
+        return {
+            success: false,
+            error: error.message || 'Error desconocido al importar',
+            details: error.details || null,
+            processed: error.processed || 0
+        };
+    }
+});
+
     ipcMain.handle('eliminar-sucursal', async (_, id) => {
         try {
             const resultado = await Sucursal.eliminar(id);

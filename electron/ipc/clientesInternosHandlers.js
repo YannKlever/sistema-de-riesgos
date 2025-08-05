@@ -23,6 +23,37 @@ function setupClientesInternosHandlers(ipcMain) {
         }
     });
 
+    //importar
+    ipcMain.handle('bulk-create-clientes-internos', async (_, clientes) => {
+    try {
+        console.log(`Iniciando importación de ${clientes.length} registros`);
+        const resultado = await ClienteInterno.bulkCreate(clientes);
+        console.log('Importación completada:', resultado);
+        return {
+            ...resultado,
+            message: resultado.success
+                ? `Importación completada: ${resultado.count} registros procesados`
+                : `Error en importación: ${resultado.error}`
+        };
+    } catch (error) {
+        console.error('Error en bulk create:', error);
+        return {
+            success: false,
+            error: error.message || 'Error desconocido al importar',
+            details: error.details || null,
+            processed: error.processed || 0
+        };
+    }
+});
+
+
+
+
+
+
+
+
+
     ipcMain.handle('obtener-cliente-interno', async (_, id) => {
         try {
             const resultado = await ClienteInterno.obtenerPorId(id);
