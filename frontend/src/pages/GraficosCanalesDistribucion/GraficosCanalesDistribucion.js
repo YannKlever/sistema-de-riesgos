@@ -28,28 +28,49 @@ ChartJS.register(
 );
 
 const GraficosCanalesDistribucion = () => {
-    const { state, canalesFiltrados, handleFiltroChange, COLUMNAS_REPORTE } = useCanalesDistribucion();
-    
-    // Obtener columnas numéricas del hook o definirlas localmente
-    const COLUMNAS_NUMERICAS = COLUMNAS_REPORTE.filter(col => col.id.endsWith('_numerico'));
+    const { state, canalesFiltrados } = useCanalesDistribucion();
+    const [busqueda, setBusqueda] = useState('');
 
     const redondearRiesgo = (valor) => {
         if (valor == null) return 0;
         return Math.round(valor);
     };
 
+    // Filtrar clientes según la búsqueda
+    const clientesFiltradosBusqueda = useMemo(() => {
+        if (!busqueda) return canalesFiltrados;
+
+        const termino = busqueda.toLowerCase();
+        return canalesFiltrados.filter(cliente =>
+            `${cliente.nombres_propietario || ''} ${cliente.apellidos_propietario || ''} ${cliente.nro_documento_propietario || ''} ${cliente.razon_social || ''} ${cliente.nit || ''}`
+                .toLowerCase()
+                .includes(termino)
+        );
+    }, [canalesFiltrados, busqueda]);
+
+    // Preparar datos para el gráfico mostrando TODOS los clientes
     const prepararDatosGrafico = () => {
-        if (!canalesFiltrados.length) return { labels: [], datasets: [] };
+        if (!clientesFiltradosBusqueda.length) return { labels: [], datasets: [] };
 
-        const canalesOrdenados = [...canalesFiltrados]
-            .sort((a, b) => (b.factorRiesgoCanal || 0) - (a.factorRiesgoCanal || 0));
+        // Ordenar por riesgo (mayor a menor) - sin limitar a 3
+        const clientesOrdenados = [...clientesFiltradosBusqueda]
+            .sort((a, b) => (b.promedio_riesgo_cliente_externo || 0) - (a.promedio_riesgo_cliente_externo || 0));
 
-        const labels = canalesOrdenados.map(canal => {
-            return `${canal.nombre_canal || 'Sin nombre'} (${canal.tipo_canal || 'Sin tipo'})`;
+        // Preparar etiquetas con los 3 campos más importantes: nombre/razón social, documento/NIT y riesgo
+        const labels = clientesOrdenados.map(cliente => {
+            const nombre = cliente.razon_social 
+                ? cliente.razon_social 
+                : `${cliente.nombres_propietario || ''} ${cliente.apellidos_propietario || ''}`;
+            
+            const identificador = cliente.nit || cliente.nro_documento_propietario || 'N/A';
+            const riesgo = cliente.promedio_riesgo_cliente_externo?.toFixed(2) || 'N/A';
+
+            return `${nombre} (${identificador}) - Riesgo: ${riesgo}`;
         });
 
-        const valoresRiesgo = canalesOrdenados.map(canal => {
-            const valor = canal.factorRiesgoCanal;
+        // Obtener valores de riesgo con redondeo matemático
+        const valoresRiesgo = clientesOrdenados.map(cliente => {
+            const valor = cliente.promedio_riesgo_cliente_externo;
             const redondeado = Math.min(5, Math.max(1, redondearRiesgo(valor)));
             return redondeado;
         });
@@ -72,11 +93,11 @@ const GraficosCanalesDistribucion = () => {
                 borderColor: '#ddd',
                 borderWidth: 1
             }],
-            canales: canalesOrdenados
+            clientes: clientesOrdenados
         };
     };
 
-    const { labels, datasets, canales } = prepararDatosGrafico();
+    const { labels, datasets, clientes } = prepararDatosGrafico();
 
     const options = {
         indexAxis: 'y',
@@ -88,7 +109,7 @@ const GraficosCanalesDistribucion = () => {
             },
             title: {
                 display: true,
-                text: 'Análisis de Riesgo por Canal de Distribución',
+                text: 'Canales de Distribución por Nivel de Riesgo',
                 font: {
                     size: 16
                 }
@@ -98,28 +119,24 @@ const GraficosCanalesDistribucion = () => {
                     label: (context) => {
                         const value = context.raw;
                         const riskLevels = ['Minimo', 'Bajo', 'Moderado', 'Alto', 'Critico'];
-                        const canal = canales[context.dataIndex];
-                        const valorOriginal = canal.factorRiesgoCanal?.toFixed(2) || 'N/A';
+                        const cliente = clientes[context.dataIndex];
+                        const valorOriginal = cliente.promedio_riesgo_cliente_externo?.toFixed(2) || 'N/A';
 
-                        return [
-                            `Nivel de riesgo Ponderado: ${value} (${riskLevels[value - 1] || 'N/A'})`,
-                            `Nivel de riesgo: ${valorOriginal}`,
-                        ];
+                        return `Nivel de riesgo: ${value} (${riskLevels[value - 1] || 'N/A'})`;
                     },
                     afterLabel: (context) => {
-                        const canal = canales[context.dataIndex];
+                        const cliente = clientes[context.dataIndex];
                         const info = [];
                         
-                        info.push(`Nombre: ${canal.nombre_canal || 'N/A'}`);
-                        info.push(`Tipo: ${canal.tipo_canal || 'N/A'}`);
-                        info.push(`Identificador: ${canal.identificador_canal || 'N/A'}`);
+                        if (cliente.razon_social) {
+                            info.push(`Razón Social: ${cliente.razon_social}`);
+                            info.push(`NIT: ${cliente.nit || 'N/A'}`);
+                        } else {
+                            info.push(`Nombre: ${cliente.nombres_propietario || ''} ${cliente.apellidos_propietario || ''}`);
+                            info.push(`Documento: ${cliente.nro_documento_propietario || 'N/A'}`);
+                        }
                         
-                        // Mostrar campos numéricos de riesgo si existen
-                        COLUMNAS_NUMERICAS.forEach(col => {
-                            if (canal[col.id] !== undefined) {
-                                info.push(`${col.nombre}: ${canal[col.id] || 'N/A'}`);
-                            }
-                        });
+                        info.push(`Riesgo: ${cliente.promedio_riesgo_cliente_externo?.toFixed(2) || 'N/A'}`);
                         
                         return info;
                     }
@@ -152,27 +169,25 @@ const GraficosCanalesDistribucion = () => {
     return (
         <div className={styles.contenedor}>
             <header className={styles.header}>
-                <h1>Análisis de Riesgo - Canales de Distribución</h1>
-                <p>Visualización del factor de riesgo por canal de distribución</p>
+                <h1>Canales de Distribución por Nivel de Riesgo</h1>
+                <p>Visualización de todos los Canales de Distribución ordenados por nivel de riesgo</p>
             </header>
-
-            {state.error && <div className={styles.error}>{state.error}</div>}
 
             <div className={styles.controles}>
                 <input
                     type="text"
-                    placeholder="Buscar por nombre, tipo o identificador..."
-                    value={state.filtro}
-                    onChange={handleFiltroChange}
+                    placeholder="Buscar por nombre, razón social, documento o NIT..."
+                    value={busqueda}
+                    onChange={(e) => setBusqueda(e.target.value)}
                     className={styles.buscador}
                 />
             </div>
 
-            {state.loading ? (
-                <div className={styles.cargando}>Cargando datos de canales...</div>
+            {state?.loading ? (
+                <div className={styles.cargando}>Cargando datos...</div>
             ) : datasets?.length > 0 ? (
                 <div className={styles.chartContainer}>
-                    <div className={styles.chartWrapper} style={{ height: `${Math.max(400, labels.length * 40)}px` }}>
+                    <div className={styles.chartWrapper} style={{ height: `${Math.max(500, clientes.length * 40)}px` }}>
                         <Chart
                             type='bar'
                             data={{ labels, datasets }}
@@ -208,24 +223,11 @@ const GraficosCanalesDistribucion = () => {
                             ))}
                         </div>
                     </div>
-
-                    <div className={styles.resumen}>
-                        <p>Total de canales en gráfico: <strong>{canalesFiltrados.length}</strong></p>
-                        {canalesFiltrados.length > 0 && (
-                            <p>Promedio de riesgo: <strong>
-                                {(
-                                    canalesFiltrados.reduce((sum, canal) => 
-                                        sum + (canal.factorRiesgoCanal || 0), 0) / 
-                                    canalesFiltrados.length
-                                ).toFixed(2)}
-                            </strong></p>
-                        )}
-                    </div>
                 </div>
             ) : (
                 <div className={styles.sinDatos}>
-                    {state.filtro
-                        ? 'No se encontraron canales que coincidan con el filtro'
+                    {busqueda
+                        ? 'No se encontraron clientes que coincidan con la búsqueda'
                         : 'No hay datos suficientes para generar el análisis de riesgo'}
                 </div>
             )}
