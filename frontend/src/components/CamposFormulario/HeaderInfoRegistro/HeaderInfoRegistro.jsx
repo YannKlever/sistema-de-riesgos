@@ -9,7 +9,7 @@ const HeaderInfoRegistro = ({
     titulo = "Formulario",
     oficinaDefault = "",
     ejecutivoDefault = "",
-    onDatosChange = () => {} // Nueva prop para enviar todos los datos
+    onDatosChange = () => {}
 }) => {
     const [oficina, setOficina] = useState(oficinaDefault);
     const [ejecutivo, setEjecutivo] = useState(ejecutivoDefault);
@@ -37,28 +37,24 @@ const HeaderInfoRegistro = ({
                         label: oficina
                     }));
                     
-                    // Si no hay oficinas, agregar valor por defecto
                     if (oficinasUnicas.length === 0) {
                         oficinasUnicas = [{ value: 'centro', label: 'centro' }];
                     }
                     
                     setSucursales(oficinasUnicas);
                     
-                    // Si no hay oficina seleccionada y hay opciones, seleccionar la primera
                     if (!oficinaDefault && oficinasUnicas.length > 0) {
                         setOficina(oficinasUnicas[0].value);
                         enviarDatos({ oficina: oficinasUnicas[0].value });
                     }
                 } else {
                     setError(prev => ({ ...prev, sucursales: resultado.error || 'Error al cargar sucursales' }));
-                    // En caso de error, establecer valor por defecto
                     setSucursales([{ value: 'centro', label: 'centro' }]);
                     setOficina('centro');
                     enviarDatos({ oficina: 'centro' });
                 }
             } catch (err) {
                 setError(prev => ({ ...prev, sucursales: err.message || 'Error al cargar sucursales' }));
-                // En caso de error, establecer valor por defecto
                 setSucursales([{ value: 'centro', label: 'centro' }]);
                 setOficina('centro');
                 enviarDatos({ oficina: 'centro' });
@@ -77,27 +73,32 @@ const HeaderInfoRegistro = ({
                 const resultado = await databaseService.listarClientesInternos();
                 if (resultado.success) {
                     let clientesFormateados = resultado.data
-                        .filter(cliente => cliente.ejecutivo) 
-                        .map(cliente => ({
-                            value: cliente.ejecutivo,
-                            label: cliente.ejecutivo,                         
-                            id: cliente.id,
-                            datosCompletos: cliente
-                        }));
+                        .filter(cliente => cliente.nombres_cliente_interno || cliente.apellidos_cliente_interno)
+                        .map(cliente => {
+                            const nombreCompleto = `${cliente.nombres_cliente_interno || ''} ${cliente.apellidos_cliente_interno || ''}`.trim();
+                            return {
+                                value: nombreCompleto,
+                                label: nombreCompleto,
+                                id: cliente.id,
+                                datosCompletos: cliente
+                            };
+                        });
                     
-                    // Si no hay clientes internos, agregar valor por defecto
                     if (clientesFormateados.length === 0) {
                         clientesFormateados = [{ 
                             value: 'admin', 
                             label: 'admin',
                             id: 0,
-                            datosCompletos: { ejecutivo: 'admin' }
+                            datosCompletos: { 
+                                nombres_cliente_interno: 'admin',
+                                apellidos_cliente_interno: '',
+                                ejecutivo: 'admin'
+                            }
                         }];
                     }
                     
                     setClientesInternos(clientesFormateados);
                     
-                    // Si no hay ejecutivo seleccionado y hay opciones, seleccionar la primera
                     if (!ejecutivoDefault && clientesFormateados.length > 0) {
                         setEjecutivo(clientesFormateados[0].value);
                         enviarDatos({ 
@@ -108,12 +109,15 @@ const HeaderInfoRegistro = ({
                     }
                 } else {
                     setError(prev => ({ ...prev, clientesInternos: resultado.error || 'Error al cargar clientes internos' }));
-                    // En caso de error, establecer valor por defecto
                     const clienteDefault = { 
                         value: 'admin', 
                         label: 'admin',
                         id: 0,
-                        datosCompletos: { ejecutivo: 'admin' }
+                        datosCompletos: { 
+                            nombres_cliente_interno: 'admin',
+                            apellidos_cliente_interno: '',
+                            ejecutivo: 'admin'
+                        }
                     };
                     setClientesInternos([clienteDefault]);
                     setEjecutivo('admin');
@@ -125,12 +129,15 @@ const HeaderInfoRegistro = ({
                 }
             } catch (err) {
                 setError(prev => ({ ...prev, clientesInternos: err.message || 'Error al cargar clientes internos' }));
-                // En caso de error, establecer valor por defecto
                 const clienteDefault = { 
                     value: 'admin', 
                     label: 'admin',
                     id: 0,
-                    datosCompletos: { ejecutivo: 'admin' }
+                    datosCompletos: { 
+                        nombres_cliente_interno: 'admin',
+                        apellidos_cliente_interno: '',
+                        ejecutivo: 'admin'
+                    }
                 };
                 setClientesInternos([clienteDefault]);
                 setEjecutivo('admin');
@@ -155,26 +162,23 @@ const HeaderInfoRegistro = ({
     const handleEjecutivoChange = (value) => {
         setEjecutivo(value);
         
-        // Buscar el cliente interno seleccionado para obtener todos sus datos
         const clienteSeleccionado = clientesInternos.find(cliente => cliente.value === value);
         
         if (clienteSeleccionado) {
             enviarDatos({ 
                 ejecutivo: value,
                 cliente_interno_id: clienteSeleccionado.id,
-                datosClienteInterno: clienteSeleccionado.datosCompletos // Opcional: todos los datos
+                datosClienteInterno: clienteSeleccionado.datosCompletos
             });
         } else {
             enviarDatos({ ejecutivo: value });
         }
     };
 
-    // Función para enviar todos los datos actualizados
     const enviarDatos = (nuevosDatos) => {
         const datosActuales = {
             oficina,
             ejecutivo,
-            // otros datos que quieras incluir
             ...nuevosDatos
         };
         onDatosChange(datosActuales);
