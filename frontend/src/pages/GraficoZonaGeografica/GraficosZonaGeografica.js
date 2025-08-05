@@ -110,19 +110,8 @@ const GraficosSucursales = () => {
                         const sucursal = sucursales[context.dataIndex];
                         const info = [];
                         
-                        info.push(`Oficina: ${sucursal.oficina || 'N/A'}`);
-                        info.push(`Ubicación: ${sucursal.ubicacion || 'N/A'}`);
-                        info.push(`Departamento: ${sucursal.departamento || 'N/A'}`);
-                        info.push(`Municipio: ${sucursal.municipio || 'N/A'}`);
-                        info.push(`Zona: ${sucursal.zona || 'N/A'}`);
-                        info.push(`Frontera: ${sucursal.frontera || 'N/A'}`);
+                    
                         
-                        // Mostrar campos numéricos de riesgo
-                        COLUMNAS_NUMERICAS.forEach(col => {
-                            if (sucursal[col.id] !== undefined) {
-                                info.push(`${col.nombre}: ${sucursal[col.id] || 'N/A'}`);
-                            }
-                        });
                         
                         return info;
                     }
