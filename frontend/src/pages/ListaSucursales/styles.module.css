@@ -1,226 +1,413 @@
 /* styles.module.css */
 
+/* Estilos generales del contenedor */
 .container {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-  background-color: var(--clr-blanco-roto);
-  border-radius: 8px;
-  box-shadow: var(--sombra-ligera);
+    padding: 1.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: var(--clr-blanco-roto);
+    border-radius: 8px;
+    box-shadow: var(--sombra-ligera);
 }
 
-.backButton {
-  background-color: var(--clr-prim);
-  color: var(--clr-blanco);
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-bottom: 1.5rem;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  width: auto; /* Asegura que el botón no sea demasiado ancho */
+.container h2 {
+    color: var(--clr-prim-mas-osc);
+    margin-bottom: 1.5rem;
+    font-size: 1.75rem;
+    border-bottom: 2px solid var(--clr-prim);
+    padding-bottom: 0.5rem;
 }
 
-.backButton:hover {
-  background-color: var(--clr-prim-osc);
-  box-shadow: var(--sombra-ligera);
-}
-
-h2 {
-  color: var(--clr-prim-mas-osc);
-  margin-bottom: 1.5rem;
-  font-size: 1.8rem;
-}
-
+/* Mensajes de error */
 .error {
-  background-color: var(--clr-error);
-  color: var(--clr-blanco);
-  padding: 1rem;
-  border-radius: 4px;
-  margin-bottom: 1.5rem;
-  font-weight: bold;
+    background-color: var(--clr-error-bg);
+    color: var(--clr-error-osc);
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid var(--clr-error);
+    font-size: 0.9rem;
 }
 
+/* Controles superiores */
+.controles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    align-items: center;
+}
+
+.controlesDerecha {
+    display: flex;
+    gap: 0.75rem;
+    margin-left: auto;
+    flex-wrap: wrap;
+}
+
+.buscador {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--clr-gris-claro);
+    border-radius: 4px;
+    min-width: 250px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    font-size: 0.9rem;
+}
+
+.buscador:focus {
+    outline: none;
+    border-color: var(--clr-prim);
+    box-shadow: 0 0 0 3px var(--clr-foco);
+}
+
+/* Estilos para botones principales */
+.botonImportar,
+.botonExportar,
+.botonColumnas,
+.botonMostrarTodas,
+.botonRegresar {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.botonImportar {
+    background-color: var(--clr-sec-osc);
+    color: var(--clr-prim-mas-osc);
+}
+
+.botonImportar:hover:not(:disabled) {
+    background-color: var(--clr-sec-claro);
+}
+
+.botonExportar {
+    background-color: var(--clr-exito);
+    color: var(--clr-blanco);
+}
+
+.botonExportar:hover:not(:disabled) {
+    background-color: var(--clr-exito-osc);
+}
+
+.botonColumnas {
+    background-color: var(--clr-prim);
+    color: var(--clr-blanco);
+}
+
+.botonColumnas:hover:not(:disabled) {
+    background-color: var(--clr-prim-osc);
+}
+
+.botonMostrarTodas {
+    background-color: var(--clr-gris-medio);
+    color: var(--clr-blanco);
+}
+
+.botonMostrarTodas:hover:not(:disabled) {
+    background-color: var(--clr-gris-osc);
+}
+
+.botonRegresar {
+    background-color: var(--clr-gris-texto);
+    color: var(--clr-blanco);
+}
+
+.botonRegresar:hover {
+    background-color: var(--clr-prim-mas-osc);
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Estilos para el formulario */
 .form {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-  background-color: var(--clr-blanco);
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: var(--sombra-ligera);
+    background-color: var(--clr-blanco);
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--sombra-ligera);
+    border: 1px solid var(--clr-gris-claro);
+}
+
+.formRow {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
 }
 
 .formGroup {
-  margin-bottom: 1.5rem; /* Aumentado para más espacio */
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
 }
 
 .formGroup label {
-  display: block;
-  margin-bottom: 0.75rem; /* Aumentado para más espacio */
-  color: var(--clr-gris-texto);
-  font-weight: 500;
+    font-size: 0.9rem;
+    color: var(--clr-gris-texto);
+    font-weight: 500;
 }
 
-/* Estilos consistentes para inputs y selects */
 .formGroup input,
 .formGroup select,
 .formGroup textarea {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid var(--clr-gris-claro);
-  border-radius: 4px;
-  font-size: 1rem;
-  transition: border-color 0.3s ease;
-  box-sizing: border-box; /* Asegura que el padding no afecte el ancho */
-  height: 48px; /* Altura consistente */
-}
-
-/* Estilo específico para textarea */
-.formGroup textarea {
-  min-height: 100px;
-  resize: vertical;
-  height: auto; /* Anula la altura fija para textarea */
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--clr-gris-claro);
+    border-radius: 4px;
+    font-size: 0.9rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .formGroup input:focus,
 .formGroup select:focus,
 .formGroup textarea:focus {
-  outline: none;
-  border-color: var(--clr-prim);
-  box-shadow: 0 0 0 3px var(--clr-foco);
+    outline: none;
+    border-color: var(--clr-prim);
+    box-shadow: 0 0 0 3px var(--clr-foco);
+}
+
+.formGroup textarea {
+    resize: vertical;
+    min-height: 80px;
 }
 
 .saveButton {
-  grid-column: 1 / -1;
-  background: var(--grad-prim);
-  color: var(--clr-blanco);
-  border: none;
-  padding: 0.75rem; /* Reducido ligeramente */
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: bold;
-  transition: all 0.3s ease;
-  margin-top: 1rem;
-  max-width: 200px; /* Ancho máximo para que no sea demasiado largo */
-  margin-left: auto; /* Centrado a la derecha */
-  margin-right: auto; /* Centrado a la derecha */
+    background-color: var(--clr-prim);
+    color: var(--clr-blanco);
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+    margin-top: 0.5rem;
 }
 
-.saveButton:hover {
-  background: var(--grad-sec);
-  box-shadow: var(--sombra-ligera);
+.saveButton:hover:not(:disabled) {
+    background-color: var(--clr-prim-osc);
 }
 
-.saveButton:disabled {
-  background: var(--clr-gris-medio);
-  cursor: not-allowed;
+/* Estilos para la tabla */
+.tablaContenedor {
+    overflow-x: auto;
+    margin-top: 1.5rem;
+    border-radius: 8px;
+    box-shadow: var(--sombra-ligera);
+    background-color: var(--clr-blanco);
 }
 
-.tableContainer {
-  overflow-x: auto;
-  margin-top: 2rem;
-  background-color: var(--clr-blanco);
-  border-radius: 8px;
-  box-shadow: var(--sombra-ligera);
+.tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
 }
 
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.95rem;
+.tabla th {
+    background-color: var(--clr-prim);
+    color: var(--clr-blanco);
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-weight: 500;
+    position: sticky;
+    top: 0;
 }
 
-.table th {
-  background-color: var(--clr-prim-mas-osc);
-  color: var(--clr-blanco);
-  padding: 1rem;
-  text-align: left;
+.tabla td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--clr-gris-claro);
+    vertical-align: top;
 }
 
-.table td {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--clr-gris-claro);
-  color: var(--clr-gris-texto);
+.tabla tr:last-child td {
+    border-bottom: none;
 }
 
-.table tr:hover {
-  background-color: var(--clr-hover-prim);
+.tabla tr:hover {
+    background-color: var(--clr-hover-prim);
 }
 
-.acciones {
-  display: flex;
-  gap: 0.75rem; /* Aumentado para más espacio */
+.observacionesCell {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.editButton {
-  background-color: var(--clr-sec);
-  color: var(--clr-negro);
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.3s ease;
-}
-
-.editButton:hover {
-  background-color: var(--clr-sec-claro);
-}
-
-.editButton:disabled {
-  background-color: var(--clr-gris-medio);
-  cursor: not-allowed;
-}
-
-.deleteButton {
-  background-color: var(--clr-error);
-  color: var(--clr-blanco);
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.3s ease;
-}
-
-.deleteButton:hover {
-  background-color: var(--clr-error-osc);
-}
-
-.deleteButton:disabled {
-  background-color: var(--clr-gris-medio);
-  cursor: not-allowed;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .form {
-    grid-template-columns: 1fr;
-  }
-  
-  .table th,
-  .table td {
-    padding: 0.5rem;
-    font-size: 0.85rem;
-  }
-  
-  .acciones {
-    flex-direction: column;
-    gap: 0.5rem; /* Aumentado para más espacio */
-  }
-  
-  .editButton,
-  .deleteButton {
-    padding: 0.5rem; /* Más consistente en móvil */
-    font-size: 0.8rem;
+.sinResultados {
     text-align: center;
-  }
+    padding: 2rem;
+    color: var(--clr-gris-texto);
+    font-style: italic;
+}
 
-  .saveButton {
-    max-width: 100%; /* Ocupa todo el ancho en móvil */
-  }
+/* Selector de columnas */
+.selectorColumnas {
+    background-color: var(--clr-blanco);
+    border: 1px solid var(--clr-gris-claro);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--sombra-ligera);
+    position: relative;
+}
+
+.selectorColumnas h4 {
+    color: var(--clr-prim-mas-osc);
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.listaColumnas {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.75rem;
+}
+
+.opcionColumna {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    font-size: 0.9rem;
+}
+
+.opcionColumna:hover {
+    background-color: var(--clr-hover-prim);
+}
+
+.opcionColumna input[type="checkbox"] {
+    accent-color: var(--clr-prim);
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+}
+
+.opcionColumna:has(input:disabled) {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Botones de acción (Editar/Eliminar) */
+.acciones {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+.botonAccion {
+    padding: 0.4rem 0.8rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    white-space: nowrap;
+}
+
+.botonEditar {
+    background-color: var(--clr-info);
+    color: var(--clr-blanco);
+}
+
+.botonEditar:hover:not(:disabled) {
+    background-color: var(--clr-info-osc);
+    transform: translateY(-1px);
+}
+
+.botonEliminar {
+    background-color: var(--clr-error);
+    color: var(--clr-blanco);
+}
+
+.botonEliminar:hover:not(:disabled) {
+    background-color: var(--clr-error-osc);
+    transform: translateY(-1px);
+}
+
+.botonAccion:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Celda de acciones en la tabla */
+.tabla td:last-child {
+    padding: 0.5rem;
+    width: 1%;
+    white-space: nowrap;
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+    .controles {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .controlesDerecha {
+        margin-left: 0;
+        justify-content: flex-start;
+    }
+    
+    .formRow {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .listaColumnas {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+}
+
+@media (max-width: 576px) {
+    .container {
+        padding: 1rem;
+    }
+    
+    .controlesDerecha {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .botonImportar,
+    .botonExportar,
+    .botonColumnas,
+    .botonMostrarTodas,
+    .botonRegresar {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .buscador {
+        width: 100%;
+        min-width: auto;
+    }
+
+    .acciones {
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+
+    .botonAccion {
+        width: 100%;
+        justify-content: center;
+        padding: 0.5rem;
+    }
 }
