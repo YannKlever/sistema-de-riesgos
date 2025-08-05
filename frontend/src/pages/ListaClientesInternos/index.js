@@ -2,6 +2,9 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { databaseService } from '../../services/database';
 import { exportExcelFile } from '../../utils/export';
+import ImportModal from '../../utils/import/components/ImportModal';
+import { CLIENTES_INTERNOS_SCHEMA, ALLOWED_FILE_TYPES } from '../../utils/import/constants/clientesInternos';
+
 import { COLUMNAS_CLIENTES_INTERNOS, DEFAULT_COLUMNAS_CLIENTES } from './constants';
 import ClientTable from './ClientTable';
 import ColumnSelector from './ColumnSelector';
@@ -18,6 +21,7 @@ const ListaClientesInternos = () => {
         todasLasColumnas: false
     });
 
+    const [showImportModal, setShowImportModal] = useState(false);
     const navigate = useNavigate();
 
     const cargarClientes = useCallback(async () => {
@@ -150,6 +154,23 @@ const ListaClientesInternos = () => {
         );
     }, [clientesFiltrados]);
 
+    const renderImportButton = () => (
+        <button
+            onClick={() => setShowImportModal(true)}
+            className={styles.botonImportar}
+            disabled={state.loading}
+        >
+            Importar Excel
+        </button>
+    );
+
+    const handleImportResult = useCallback((result) => {
+        if (result?.success) {
+            cargarClientes();
+            alert(`Importación completada: ${result.importedCount} registros importados`);
+        }
+    }, [cargarClientes]);
+
     return (
         <div className={styles.contenedor}>
             <h1>Clientes Internos</h1>
@@ -167,6 +188,7 @@ const ListaClientesInternos = () => {
                 />
 
                 <div className={styles.controlesDerecha}>
+                    {renderImportButton()}
                     <button
                         onClick={toggleSelectorColumnas}
                         className={styles.botonColumnas}
@@ -206,6 +228,21 @@ const ListaClientesInternos = () => {
                     visibleColumns={state.columnasVisibles}
                     onToggleColumn={toggleColumna}
                     loading={state.loading}
+                />
+            )}
+
+            {showImportModal && (
+                <ImportModal
+                    onClose={(result) => {
+                        setShowImportModal(false);
+                        if (result?.success) cargarClientes();
+                    }}
+                    databaseService={databaseService}
+                    schema={CLIENTES_INTERNOS_SCHEMA}
+                    title="Importar Clientes Internos"
+                    importFunctionName="importarClientesInternos"
+                    successMessage="Importación de clientes internos completada"
+                    allowedFileTypes={ALLOWED_FILE_TYPES}
                 />
             )}
 
