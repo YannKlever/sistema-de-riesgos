@@ -79,4 +79,13 @@
     /* Colores terciarios */
     --clr-terciario: #6D9EEB;
     --clr-terciario-oscuro: #4A86E8;
+
+    /*botones*/
+
+
+    --clr-info: #17a2b8;          /* Azul info (Bootstrap-like) */
+    --clr-info-osc: #138496;      /* Azul info oscuro */
+    --clr-error: #dc3545;         /* Rojo error (Bootstrap-like) */
+    --clr-error-osc: #c82333;     /* Rojo error oscuro */
+    --clr-blanco: #ffffff;        /* Blanco */
 }
