@@ -231,7 +231,24 @@ class AccionistaSocio {
             });
         });
     }
+    static async eliminar(id) {
+            return new Promise((resolve, reject) => {
+                db.run(
+                    'DELETE FROM "tabla-accionistas-socios" WHERE id = ?',
+                    [id],
+                    function (err) {
+                        if (err) {
+                            console.error('Error al eliminar accionista/socio:', err);
+                            reject({ success: false, error: err.message });
+                        } else {
+                            resolve({ success: true, changes: this.changes });
+                        }
+                    }
+                );
+            });
+        }
 }
+
 
 
 module.exports = AccionistaSocio;
