@@ -1,28 +1,38 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, flexRender } from '@tanstack/react-table';
 import { databaseService } from '../../services/database';
+import SociosActions from './SocioActions';
 import { exportExcelFile } from '../../utils/export';
 import ImportModal from '../../utils/import/components/ImportModal';
 import { ACCIONISTAS_SCHEMA, ALLOWED_FILE_TYPES } from '../../utils/import/constants/accionistasSocios';
 import { COLUMNAS_ACCIONISTAS_SOCIOS, DEFAULT_COLUMNAS_ACCIONISTAS } from './constants';
-import SociosTable from './SociosTable';
 import ColumnSelector from './ColumnSelector';
 import styles from './listaAccionistasSocios.module.css';
 
 const ListaAccionistasSocios = () => {
+    // 1. Estados
     const [state, setState] = useState({
         accionistas: [],
         loading: true,
         error: '',
-        filtro: '',
         columnasVisibles: DEFAULT_COLUMNAS_ACCIONISTAS,
         mostrarSelectorColumnas: false,
-        todasLasColumnas: false // Nuevo estado para controlar mostrar todas las columnas
+        todasLasColumnas: false
     });
 
-    const [showImportModal, setShowImportModal] = useState(false); // Estado para controlar el modal
-
+    const [showImportModal, setShowImportModal] = useState(false);
+    const [globalFilter, setGlobalFilter] = useState('');
     const navigate = useNavigate();
+
+    // 2. Funciones auxiliares (declaradas primero)
+    const formatearValor = useCallback((valor) => {
+        if (valor == null) return '-';
+        if (typeof valor === 'string' && valor.length > 20) {
+            return `${valor.substring(0, 17)}...`;
+        }
+        return valor;
+    }, []);
 
     const cargarAccionistas = useCallback(async () => {
         try {
@@ -50,10 +60,71 @@ const ListaAccionistasSocios = () => {
         }
     }, []);
 
-    useEffect(() => {
-        cargarAccionistas();
+    const eliminarAccionista = useCallback(async (id) => {
+        if (window.confirm('¿Está seguro de eliminar este accionista/socio?')) {
+            try {
+                setState(prev => ({ ...prev, loading: true }));
+                const resultado = await databaseService.eliminarAccionistaSocio(id);
+
+                if (resultado.success) {
+                    await cargarAccionistas();
+                } else {
+                    setState(prev => ({
+                        ...prev,
+                        error: resultado.error || 'Error al eliminar accionista/socio',
+                        loading: false
+                    }));
+                }
+            } catch (err) {
+                setState(prev => ({
+                    ...prev,
+                    error: 'Error al conectar con el servidor',
+                    loading: false
+                }));
+                console.error('Error al eliminar accionista/socio:', err);
+            }
+        }
     }, [cargarAccionistas]);
 
+    // 3. Configuración de la tabla (usa las funciones ya declaradas)
+    const columns = useMemo(() => [
+        ...state.columnasVisibles.map(col => ({
+            accessorKey: col.id,
+            header: col.nombre,
+            cell: info => formatearValor(info.getValue()),
+            size: 150
+        })),
+        {
+            id: 'acciones',
+            header: 'Acciones',
+            cell: info => (
+                <SociosActions 
+                    clientId={info.row.original.id} 
+                    onDelete={eliminarAccionista} 
+                />
+            ),
+            size: 120
+        }
+    ], [state.columnasVisibles, formatearValor, eliminarAccionista]);
+
+    const table = useReactTable({
+        data: state.accionistas,
+        columns,
+        state: {
+            globalFilter
+        },
+        onGlobalFilterChange: setGlobalFilter,
+        getCoreRowModel: getCoreRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        initialState: {
+            pagination: {
+                pageSize: 20
+            }
+        }
+    });
+
+    // 4. Otras funciones
     const toggleColumna = useCallback((columnaId) => {
         setState(prev => {
             const existe = prev.columnasVisibles.some(col => col.id === columnaId);
@@ -83,65 +154,9 @@ const ListaAccionistasSocios = () => {
         }));
     }, []);
 
-    const eliminarAccionista = useCallback(async (id) => {
-        if (window.confirm('¿Está seguro de eliminar este accionista/socio?')) {
-            try {
-                setState(prev => ({ ...prev, loading: true }));
-                const resultado = await databaseService.eliminarAccionistaSocio(id);
-
-                if (resultado.success) {
-                    await cargarAccionistas();
-                } else {
-                    setState(prev => ({
-                        ...prev,
-                        error: resultado.error || 'Error al eliminar accionista/socio',
-                        loading: false
-                    }));
-                }
-            } catch (err) {
-                setState(prev => ({
-                    ...prev,
-                    error: 'Error al conectar con el servidor',
-                    loading: false
-                }));
-                console.error('Error al eliminar accionista/socio:', err);
-            }
-        }
-    }, [cargarAccionistas]);
-
-    const filtrarAccionistas = useCallback((accionista) => {
-        if (!state.filtro) return true;
-        const texto = state.filtro.toLowerCase();
-        return Object.keys(accionista).some(key =>
-            typeof accionista[key] === 'string' &&
-            accionista[key].toLowerCase().includes(texto)
-        );
-    }, [state.filtro]);
-
-    const formatearValor = useCallback((valor) => {
-        if (valor == null) return '-';
-        if (typeof valor === 'string' && valor.length > 20) {
-            return `${valor.substring(0, 17)}...`;
-        }
-        return valor;
-    }, []);
-
-    const accionistasFiltrados = useMemo(() =>
-        state.accionistas.filter(filtrarAccionistas),
-        [state.accionistas, filtrarAccionistas]
-    );
-
-    const handleFiltroChange = useCallback((e) => {
-        setState(prev => ({ ...prev, filtro: e.target.value }));
-    }, []);
-
-    const toggleSelectorColumnas = useCallback(() => {
-        setState(prev => ({ ...prev, mostrarSelectorColumnas: !prev.mostrarSelectorColumnas }));
-    }, []);
-
     const handleExportExcel = useCallback(() => {
         exportExcelFile(
-            accionistasFiltrados,
+            table.getFilteredRowModel().rows.map(row => row.original),
             COLUMNAS_ACCIONISTAS_SOCIOS.map(col => ({ id: col.id, name: col.nombre })),
             `lista_accionistas_socios`,
             {
@@ -153,24 +168,14 @@ const ListaAccionistasSocios = () => {
                 }
             }
         );
-    }, [accionistasFiltrados]);
+    }, [table]);
 
-    const renderImportButton = () => (
-        <button
-            onClick={() => setShowImportModal(true)}
-            className={styles.botonImportar}
-            disabled={state.loading}
-        >
-            Importar Excel
-        </button>
-    );
-    const handleImportResult = useCallback((result) => {
-        if (result?.success) {
-            cargarAccionistas(); // Recargar la lista después de importar
-            alert(`Importación completada: ${result.importedCount} registros importados`);
-        }
+    // 5. Efectos
+    useEffect(() => {
+        cargarAccionistas();
     }, [cargarAccionistas]);
 
+    // 6. Renderizado
     return (
         <div className={styles.contenedor}>
             <h1>Accionistas y Socios</h1>
@@ -181,16 +186,23 @@ const ListaAccionistasSocios = () => {
                 <input
                     type="text"
                     placeholder="Buscar accionistas/socios..."
-                    value={state.filtro}
-                    onChange={handleFiltroChange}
+                    value={globalFilter}
+                    onChange={e => setGlobalFilter(e.target.value)}
                     className={styles.buscador}
                     disabled={state.loading}
                 />
 
                 <div className={styles.controlesDerecha}>
-                    {renderImportButton()}
                     <button
-                        onClick={toggleSelectorColumnas}
+                        onClick={() => setShowImportModal(true)}
+                        className={styles.botonImportar}
+                        disabled={state.loading}
+                    >
+                        Importar Excel
+                    </button>
+                    
+                    <button
+                        onClick={() => setState(prev => ({ ...prev, mostrarSelectorColumnas: !prev.mostrarSelectorColumnas }))}
                         className={styles.botonColumnas}
                         disabled={state.loading}
                     >
@@ -208,7 +220,7 @@ const ListaAccionistasSocios = () => {
                     <button
                         onClick={handleExportExcel}
                         className={styles.botonExportar}
-                        disabled={state.loading || accionistasFiltrados.length === 0}
+                        disabled={state.loading || table.getFilteredRowModel().rows.length === 0}
                     >
                         Exportar Excel
                     </button>
@@ -221,11 +233,15 @@ const ListaAccionistasSocios = () => {
                     </button>
                 </div>
             </div>
+
             {showImportModal && (
                 <ImportModal
                     onClose={(result) => {
                         setShowImportModal(false);
-                        if (result?.success) cargarAccionistas();
+                        if (result?.success) {
+                            cargarAccionistas();
+                            alert(`Importación completada: ${result.importedCount} registros importados`);
+                        }
                     }}
                     databaseService={databaseService}
                     schema={ACCIONISTAS_SCHEMA}
@@ -235,6 +251,7 @@ const ListaAccionistasSocios = () => {
                     allowedFileTypes={ALLOWED_FILE_TYPES}
                 />
             )}
+
             {state.mostrarSelectorColumnas && (
                 <ColumnSelector
                     columns={COLUMNAS_ACCIONISTAS_SOCIOS}
@@ -247,14 +264,86 @@ const ListaAccionistasSocios = () => {
             {state.loading ? (
                 <div className={styles.cargando}>Cargando accionistas/socios...</div>
             ) : (
-                <SociosTable
-                    visibleColumns={state.columnasVisibles}
-                    filteredClients={accionistasFiltrados}
-                    hasClients={state.accionistas.length > 0}
-                    hasResults={accionistasFiltrados.length > 0}
-                    formatValue={formatearValor}
-                    onDelete={eliminarAccionista}
-                />
+                <div className={styles.tablaContenedor}>
+                    <table className={styles.tabla}>
+                        <thead>
+                            {table.getHeaderGroups().map(headerGroup => (
+                                <tr key={headerGroup.id}>
+                                    {headerGroup.headers.map(header => (
+                                        <th key={header.id} style={{ width: header.getSize() }}>
+                                            {flexRender(
+                                                header.column.columnDef.header,
+                                                header.getContext()
+                                            )}
+                                        </th>
+                                    ))}
+                                </tr>
+                            ))}
+                        </thead>
+                        <tbody>
+                            {table.getRowModel().rows.map(row => (
+                                <tr key={row.id}>
+                                    {row.getVisibleCells().map(cell => (
+                                        <td key={cell.id}>
+                                            {flexRender(
+                                                cell.column.columnDef.cell,
+                                                cell.getContext()
+                                            )}
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+
+                    <div className={styles.paginacion}>
+                        <button
+                            onClick={() => table.setPageIndex(0)}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            {'<<'}
+                        </button>
+                        <button
+                            onClick={() => table.previousPage()}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            {'<'}
+                        </button>
+                        <button
+                            onClick={() => table.nextPage()}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            {'>'}
+                        </button>
+                        <button
+                            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            {'>>'}
+                        </button>
+
+                        <span>
+                            Página{' '}
+                            <strong>
+                                {table.getState().pagination.pageIndex + 1} de{' '}
+                                {table.getPageCount()}
+                            </strong>
+                        </span>
+
+                        <select
+                            value={table.getState().pagination.pageSize}
+                            onChange={e => {
+                                table.setPageSize(Number(e.target.value))
+                            }}
+                        >
+                            {[10, 20, 30, 40, 50].map(pageSize => (
+                                <option key={pageSize} value={pageSize}>
+                                    Mostrar {pageSize}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
             )}
         </div>
     );
