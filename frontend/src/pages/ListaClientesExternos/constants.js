@@ -60,8 +60,7 @@ export const TODAS_LAS_COLUMNAS = [
     { id: 'relevancia_informacion', nombre: 'Relevancia de Información', visible: false },
     { id: 'consistencia_informacion', nombre: 'Consistencia de Información', visible: false },
     { id: 'comportamiento_cliente', nombre: 'Comportamiento Cliente', visible: false },
-    { id: 'observaciones', nombre: 'Observaciones', visible: false },
-    
+    { id: 'observaciones', nombre: 'Observaciones', visible: false }, 
     { id: 'nacionalidad_numerico', nombre: 'Riesgo País (Ponderado)', visible: false },
     { id: 'riesgo_profesion_actividad_numerico', nombre: 'Riesgo Profesión/Actividad (Ponderado)', visible: false },
     { id: 'riesgo_zona_numerico', nombre: 'Riesgo Zona (Ponderado)', visible: false },
