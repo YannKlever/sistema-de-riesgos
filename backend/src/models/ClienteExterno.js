@@ -166,14 +166,6 @@ static async listarClientesExternosConRiesgoInterno() {
     });
 }
 
-
-
-
-
-
-
-
-
     static async vincularClienteInterno(idClienteExterno, idClienteInterno) {
         return new Promise((resolve, reject) => {
             db.run(
@@ -211,12 +203,6 @@ static async listarClientesExternosConRiesgoInterno() {
             );
         });
     }
-
-
-
-
-
-
 
     static async listar() {
         return new Promise((resolve, reject) => {

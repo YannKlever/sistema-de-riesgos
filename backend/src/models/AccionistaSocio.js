@@ -3,7 +3,7 @@ const db = require('../database/db');
 class AccionistaSocio {
     static async crear(accionista) {
         const camposCompletos = {
-            fecha_registro: new Date().toISOString(),
+            fecha_registro: accionista.fecha_registro,
             oficina: accionista.oficina || null,
             ejecutivo: accionista.ejecutivo || null,
             nombres_accionistas_socios: accionista.nombres_accionistas_socios || null,
@@ -16,6 +16,7 @@ class AccionistaSocio {
             lugar_nacimiento: accionista.lugar_nacimiento || null,
             nacionalidad: accionista.nacionalidad || null,
             estado_civil: accionista.estado_civil || null,
+            domicilio_persona: accionista.domicilio_persona || null,
             actividad: accionista.actividad || null,
             riesgo_actividad: accionista.riesgo_actividad || null,
             riesgo_zona: accionista.riesgo_zona || null,
@@ -24,7 +25,6 @@ class AccionistaSocio {
             volumen_actividad: accionista.volumen_actividad || null,
             frecuencia_actividad: accionista.frecuencia_actividad || null,
             participacion_accionaria: accionista.participacion_accionaria || null,
-            domicilio_persona: accionista.domicilio_persona || null,
             integridad_documental: accionista.integridad_documental || null,
             exactitud_documental: accionista.exactitud_documental || null,
             vigencia_documental: accionista.vigencia_documental || null,
@@ -32,23 +32,23 @@ class AccionistaSocio {
             consistencia_informacion: accionista.consistencia_informacion || null,
             comportamiento_cliente: accionista.comportamiento_cliente || null,
             observaciones: accionista.observaciones || null,
-            //promderio riesgo
-            promedio_riesgo_accionista_socio: accionista.promedio_riesgo_accionista_socio || null,
-
             nacionalidad_numerico: accionista.nacionalidad_numerico || null,
             riesgo_actividad_numerico: accionista.riesgo_actividad_numerico || null,
             riesgo_zona_numerico: accionista.riesgo_zona_numerico || null,
-            categoria_pep_numerico: accionista.categoria_pep_numerico || null,
             ingresos_mensuales_numerico: accionista.ingresos_mensuales_numerico || null,
             volumen_actividad_numerico: accionista.volumen_actividad_numerico || null,
             frecuencia_actividad_numerico: accionista.frecuencia_actividad_numerico || null,
+            categoria_pep_numerico: accionista.categoria_pep_numerico || null,
             participacion_accionaria_numerico: accionista.participacion_accionaria_numerico || null,
             integridad_documental_numerico: accionista.integridad_documental_numerico || null,
             exactitud_documental_numerico: accionista.exactitud_documental_numerico || null,
             vigencia_documental_numerico: accionista.vigencia_documental_numerico || null,
             relevancia_informacion_numerico: accionista.relevancia_informacion_numerico || null,
             consistencia_informacion_numerico: accionista.consistencia_informacion_numerico || null,
-            comportamiento_cliente_numerico: accionista.comportamiento_cliente_numerico || null
+            comportamiento_cliente_numerico: accionista.comportamiento_cliente_numerico || null,
+            probabilidad: accionista.probabilidad || null,
+            impacto: accionista.impacto || null,
+            promedio_riesgo_accionista_socio: accionista.promedio_riesgo_accionista_socio || null
         };
 
         const { campos, placeholders, valores } = Object.entries(camposCompletos).reduce(
@@ -232,23 +232,22 @@ class AccionistaSocio {
         });
     }
     static async eliminar(id) {
-            return new Promise((resolve, reject) => {
-                db.run(
-                    'DELETE FROM "tabla-accionistas-socios" WHERE id = ?',
-                    [id],
-                    function (err) {
-                        if (err) {
-                            console.error('Error al eliminar accionista/socio:', err);
-                            reject({ success: false, error: err.message });
-                        } else {
-                            resolve({ success: true, changes: this.changes });
-                        }
+        return new Promise((resolve, reject) => {
+            db.run(
+                'DELETE FROM "tabla-accionistas-socios" WHERE id = ?',
+                [id],
+                function (err) {
+                    if (err) {
+                        console.error('Error al eliminar accionista/socio:', err);
+                        reject({ success: false, error: err.message });
+                    } else {
+                        resolve({ success: true, changes: this.changes });
                     }
-                );
-            });
-        }
+                }
+            );
+        });
+    }
 }
-
 
 
 module.exports = AccionistaSocio;
