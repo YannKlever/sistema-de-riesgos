@@ -95,10 +95,6 @@ async function createTable(db) {
 
               impacto INTEGER,
               probabilidad INTEGER,
-
-
-
-
               FOREIGN KEY(cliente_interno_id) REFERENCES "tabla-clientes-internos"(id) 
               )`,
             function (err) {

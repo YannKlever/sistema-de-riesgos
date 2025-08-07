@@ -49,8 +49,9 @@ async function createTable(db) {
               relevancia_informacion_numerico INTEGER,
               consistencia_informacion_numerico INTEGER,
               comportamiento_cliente_numerico INTEGER,
-
-              promedio_riesgo_accionista_socio REAL DEFAULT 0
+              probabilidad REAL,
+              impacto REAL,
+              promedio_riesgo_accionista_socio REAL
               )`,
             function (err) {
                 if (err) {
