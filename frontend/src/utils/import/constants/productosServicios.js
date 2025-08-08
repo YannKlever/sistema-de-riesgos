@@ -6,15 +6,14 @@ export const PRODUCTOS_SERVICIOS_SCHEMA = {
   ],
   fieldMappings: {
     'ID': 'id',
+    'Fecha Registro': 'fecha_registro',
+    'Oficina': 'oficina',
     'Producto/Servicio': 'producto_servicio',
     'Riesgo Producto/Servicio': 'riesgo_producto',
-    'Riesgo Producto/Servicio Numérico': 'riesgo_producto_numerico',
     'Riesgo Cliente': 'riesgo_cliente',
-    'Riesgo Cliente Numérico': 'riesgo_cliente_numerico',
-    'Promedio Riesgo': 'promedio_riesgo_producto_servicio',
-    'Oficina': 'oficina',
-    'Fecha Registro': 'fecha_registro',
-    'Observaciones': 'observaciones'
+    'Observaciones': 'observaciones',
+    'Riesgo Producto/Servicio (Ponderado)': 'riesgo_producto_numerico',
+    'Riesgo Cliente (Ponderado)': 'riesgo_cliente_numerico',
   },
   fieldValidations: {
     'Riesgo Producto/Servicio': {
