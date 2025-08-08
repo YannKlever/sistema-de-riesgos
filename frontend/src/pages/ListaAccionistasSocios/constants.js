@@ -45,7 +45,7 @@ export const COLUMNAS_ACCIONISTAS_SOCIOS = [
     { id: 'comportamiento_cliente_numerico', nombre: 'Riesgo Comportamiento (Ponderado)', visible: false },
     { id: 'probabilidad', nombre: 'Probabilidad', visible: false },
     { id: 'impacto', nombre: 'Impacto', visible: false },
-    { id: 'promedio_riesgo_accionista_socio', nombre: 'Promedio Riesgo Accionista Socio', visible: false },
+    { id: 'promedio_riesgo_accionista_socio', nombre: 'Riesgo Promedio Accionista Socio', visible: false },
 ];
 
 export const DEFAULT_COLUMNAS_ACCIONISTAS = COLUMNAS_ACCIONISTAS_SOCIOS.filter(col => col.visible);
