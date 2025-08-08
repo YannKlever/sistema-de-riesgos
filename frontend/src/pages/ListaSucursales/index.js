@@ -1,50 +1,28 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, flexRender } from '@tanstack/react-table';
 import { databaseService } from '../../services/database';
 import { exportExcelFile } from '../../utils/export';
 import ImportModal from '../../utils/import/components/ImportModal';
 import { SUCURSALES_SCHEMA, ALLOWED_FILE_TYPES } from '../../utils/import/constants/sucursales';
 import { COLUMNAS_SUCURSALES, DEFAULT_COLUMNAS_SUCURSALES, NIVELES_RIESGO } from './constants';
-import SucursalTable from './SucursalTable';
 import ColumnSelector from './ColumnSelector';
-import styles from './styles.module.css';
+import SucursalFormModal from './SucursalFormModal';
+import styles from './listaSucursales.module.css';
 
 const ListaSucursales = ({ onBack }) => {
     const [state, setState] = useState({
         sucursales: [],
         loading: true,
         error: '',
-        filtro: '',
         columnasVisibles: DEFAULT_COLUMNAS_SUCURSALES,
         mostrarSelectorColumnas: false,
         todasLasColumnas: false
     });
 
     const [showImportModal, setShowImportModal] = useState(false);
-    const [formData, setFormData] = useState({
-        oficina: '',
-        ubicacion: '',
-        departamento: '',
-        riesgo_departamento: '',
-        riesgo_departamento_numerico: null,
-        municipio: '',
-        riesgo_municipio: '',
-        riesgo_municipio_numerico: null,
-        zona: '',
-        riesgo_zona: '',
-        riesgo_zona_numerico: null,
-        frontera: '',
-        riesgo_frontera: '',
-        riesgo_frontera_numerico: null,
-        observaciones: '',
-        fecha_registro: ''
-    });
+    const [showFormModal, setShowFormModal] = useState(false);
     const [editingId, setEditingId] = useState(null);
-
-    const departamentosBolivia = [
-        'La Paz', 'Santa Cruz', 'Cochabamba', 
-        'Oruro', 'Potosí', 'Beni', 
-        'Pando', 'Chuquisaca', 'Tarija'
-    ];
+    const [globalFilter, setGlobalFilter] = useState('');
 
     const cargarSucursales = useCallback(async () => {
         try {
@@ -116,119 +94,6 @@ const ListaSucursales = ({ onBack }) => {
         }));
     }, []);
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        
-        if (name.startsWith('riesgo_') && !name.endsWith('_numerico')) {
-            const nivelSeleccionado = NIVELES_RIESGO.find(nivel => nivel.value === value);
-            const nombreNumerico = `${name}_numerico`;
-            
-            setFormData(prev => ({
-                ...prev,
-                [name]: value,
-                [nombreNumerico]: nivelSeleccionado ? nivelSeleccionado.valorNumerico : null
-            }));
-        } else {
-            setFormData(prev => ({ ...prev, [name]: value }));
-        }
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        
-        if (!formData.oficina || !formData.ubicacion || !formData.departamento || !formData.riesgo_departamento) {
-            setState(prev => ({ ...prev, error: 'Por favor complete los campos requeridos' }));
-            return;
-        }
-
-        setState(prev => ({ ...prev, loading: true, error: '' }));
-        
-        try {
-            let resultado;
-            if (editingId !== null) {
-                const sucursalOriginal = state.sucursales.find(s => s.id === editingId);
-                const datosActualizados = {
-                    ...formData,
-                    fecha_registro: sucursalOriginal.fecha_registro
-                };
-                
-                resultado = await databaseService.actualizarSucursal(editingId, datosActualizados);
-                if (resultado.success) {
-                    setState(prev => ({
-                        ...prev,
-                        sucursales: prev.sucursales.map(item => 
-                            item.id === editingId ? { ...datosActualizados, id: editingId } : item
-                        )
-                    }));
-                    setEditingId(null);
-                } else {
-                    throw new Error(resultado.error);
-                }
-            } else {
-                const nuevaSucursal = {
-                    ...formData,
-                    fecha_registro: new Date().toISOString()
-                };
-                
-                resultado = await databaseService.crearSucursal(nuevaSucursal);
-                if (resultado.success) {
-                    setState(prev => ({
-                        ...prev,
-                        sucursales: [{ ...nuevaSucursal, id: resultado.id }, ...prev.sucursales]
-                    }));
-                } else {
-                    throw new Error(resultado.error);
-                }
-            }
-            
-            setFormData({
-                oficina: '',
-                ubicacion: '',
-                departamento: '',
-                riesgo_departamento: '',
-                riesgo_departamento_numerico: null,
-                municipio: '',
-                riesgo_municipio: '',
-                riesgo_municipio_numerico: null,
-                zona: '',
-                riesgo_zona: '',
-                riesgo_zona_numerico: null,
-                frontera: '',
-                riesgo_frontera: '',
-                riesgo_frontera_numerico: null,
-                observaciones: '',
-                fecha_registro: ''
-            });
-        } catch (error) {
-            setState(prev => ({ ...prev, error: error.message || 'Error al guardar sucursal' }));
-            console.error('Error:', error);
-        } finally {
-            setState(prev => ({ ...prev, loading: false }));
-        }
-    };
-
-    const handleEdit = (sucursal) => {
-        setFormData({
-            oficina: sucursal.oficina,
-            ubicacion: sucursal.ubicacion,
-            departamento: sucursal.departamento,
-            riesgo_departamento: sucursal.riesgo_departamento,
-            riesgo_departamento_numerico: sucursal.riesgo_departamento_numerico,
-            municipio: sucursal.municipio || '',
-            riesgo_municipio: sucursal.riesgo_municipio || '',
-            riesgo_municipio_numerico: sucursal.riesgo_municipio_numerico || null,
-            zona: sucursal.zona || '',
-            riesgo_zona: sucursal.riesgo_zona || '',
-            riesgo_zona_numerico: sucursal.riesgo_zona_numerico || null,
-            frontera: sucursal.frontera || '',
-            riesgo_frontera: sucursal.riesgo_frontera || '',
-            riesgo_frontera_numerico: sucursal.riesgo_frontera_numerico || null,
-            observaciones: sucursal.observaciones || '',
-            fecha_registro: sucursal.fecha_registro
-        });
-        setEditingId(sucursal.id);
-    };
-
     const handleDelete = async (id) => {
         if (window.confirm('¿Estás seguro de que deseas eliminar esta sucursal?')) {
             setState(prev => ({ ...prev, loading: true, error: '' }));
@@ -251,15 +116,6 @@ const ListaSucursales = ({ onBack }) => {
         }
     };
 
-    const filtrarSucursales = useCallback((sucursal) => {
-        if (!state.filtro) return true;
-        const texto = state.filtro.toLowerCase();
-        return Object.keys(sucursal).some(key =>
-            typeof sucursal[key] === 'string' &&
-            sucursal[key].toLowerCase().includes(texto)
-        );
-    }, [state.filtro]);
-
     const formatearValor = useCallback((valor) => {
         if (valor == null) return '-';
         if (typeof valor === 'string' && valor.length > 20) {
@@ -268,22 +124,99 @@ const ListaSucursales = ({ onBack }) => {
         return valor;
     }, []);
 
-    const sucursalesFiltradas = useMemo(() =>
-        state.sucursales.filter(filtrarSucursales),
-        [state.sucursales, filtrarSucursales]
-    );
+    const getLabelRiesgo = (valor) => {
+        const nivel = NIVELES_RIESGO.find(item => item.value === valor);
+        return nivel ? nivel.label : valor;
+    };
 
-    const handleFiltroChange = useCallback((e) => {
-        setState(prev => ({ ...prev, filtro: e.target.value }));
-    }, []);
+    const formatDate = (dateString) => {
+        if (!dateString) return 'Fecha no disponible';
+        try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return 'Fecha inválida';
+            return date.toLocaleString('es-ES', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (e) {
+            return 'Fecha inválida';
+        }
+    };
 
-    const toggleSelectorColumnas = useCallback(() => {
-        setState(prev => ({ ...prev, mostrarSelectorColumnas: !prev.mostrarSelectorColumnas }));
-    }, []);
+    // Configuración de la tabla
+    const columns = useMemo(() => [
+        ...state.columnasVisibles.map(col => ({
+            accessorKey: col.id,
+            header: col.nombre,
+            cell: info => {
+                const value = info.getValue();
+                if (col.id === 'fecha_registro') {
+                    return formatDate(value);
+                } else if (col.id.includes('riesgo_') && !col.id.endsWith('_numerico')) {
+                    return getLabelRiesgo(value) || '-';
+                }
+                return formatearValor(value);
+            },
+            size: 150
+        })),
+        {
+            id: 'acciones',
+            header: 'Acciones',
+            cell: info => (
+                <div className={styles.acciones}>
+                    <button
+                        onClick={() => {
+                            setEditingId(info.row.original.id);
+                            setShowFormModal(true);
+                        }}
+                        className={styles.botonEditar}
+                        disabled={state.loading}
+                    >
+                        Editar
+                    </button>
+                    <button
+                        onClick={() => handleDelete(info.row.original.id)}
+                        className={styles.botonEliminar}
+                        disabled={state.loading}
+                    >
+                        Eliminar
+                    </button>
+                </div>
+            ),
+            size: 120
+        }
+    ], [state.columnasVisibles, state.loading]);
+
+    const table = useReactTable({
+        data: state.sucursales,
+        columns,
+        state: {
+            globalFilter
+        },
+        onGlobalFilterChange: setGlobalFilter,
+        getCoreRowModel: getCoreRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        globalFilterFn: (row, columnId, filterValue) => {
+            const value = row.getValue(columnId);
+            if (value === undefined || value === null) return false;
+            const safeValue = String(value).toLowerCase();
+            const safeFilter = filterValue.toLowerCase();
+            return safeValue.includes(safeFilter);
+        },
+        initialState: {
+            pagination: {
+                pageSize: 20
+            }
+        }
+    });
 
     const handleExportExcel = useCallback(() => {
         exportExcelFile(
-            sucursalesFiltradas,
+            table.getFilteredRowModel().rows.map(row => row.original),
             COLUMNAS_SUCURSALES.map(col => ({ id: col.id, name: col.nombre })),
             `lista_sucursales`,
             {
@@ -295,50 +228,35 @@ const ListaSucursales = ({ onBack }) => {
                 }
             }
         );
-    }, [sucursalesFiltradas]);
-
-    const renderImportButton = () => (
-        <button
-            onClick={() => setShowImportModal(true)}
-            className={styles.botonImportar}
-            disabled={state.loading}
-        >
-            Importar Excel
-        </button>
-    );
-
-    const handleImportResult = useCallback((result) => {
-        if (result?.success) {
-            cargarSucursales();
-            alert(`Importación completada: ${result.importedCount} registros importados`);
-        }
-    }, [cargarSucursales]);
-
-    const getLabelRiesgo = (valor) => {
-        const nivel = NIVELES_RIESGO.find(item => item.value === valor);
-        return nivel ? nivel.label : valor;
-    };
+    }, [table]);
 
     return (
-        <div className={styles.container}>
-            <h2>Lista de Sucursales</h2>
+        <div className={styles.contenedor}>
+            <h1>Sucursales</h1>
 
             {state.error && <div className={styles.error}>{state.error}</div>}
 
             <div className={styles.controles}>
                 <input
                     type="text"
-                    placeholder="Buscar sucursales..."
-                    value={state.filtro}
-                    onChange={handleFiltroChange}
+                    placeholder="Buscar en todos los campos..."
+                    value={globalFilter}
+                    onChange={e => setGlobalFilter(e.target.value)}
                     className={styles.buscador}
                     disabled={state.loading}
                 />
 
                 <div className={styles.controlesDerecha}>
-                    {renderImportButton()}
                     <button
-                        onClick={toggleSelectorColumnas}
+                        onClick={() => setShowImportModal(true)}
+                        className={styles.botonImportar}
+                        disabled={state.loading}
+                    >
+                        Importar Excel
+                    </button>
+                    
+                    <button
+                        onClick={() => setState(prev => ({ ...prev, mostrarSelectorColumnas: !prev.mostrarSelectorColumnas }))}
                         className={styles.botonColumnas}
                         disabled={state.loading}
                     >
@@ -356,9 +274,19 @@ const ListaSucursales = ({ onBack }) => {
                     <button
                         onClick={handleExportExcel}
                         className={styles.botonExportar}
-                        disabled={state.loading || sucursalesFiltradas.length === 0}
+                        disabled={state.loading || table.getFilteredRowModel().rows.length === 0}
                     >
                         Exportar Excel
+                    </button>
+
+                    <button
+                        onClick={() => {
+                            setEditingId(null);
+                            setShowFormModal(true);
+                        }}
+                        className={styles.botonNuevo}
+                    >
+                        Nueva Sucursal
                     </button>
 
                     {onBack && (
@@ -376,7 +304,10 @@ const ListaSucursales = ({ onBack }) => {
                 <ImportModal
                     onClose={(result) => {
                         setShowImportModal(false);
-                        if (result?.success) cargarSucursales();
+                        if (result?.success) {
+                            cargarSucursales();
+                            alert(`Importación completada: ${result.importedCount} registros importados`);
+                        }
                     }}
                     databaseService={databaseService}
                     schema={SUCURSALES_SCHEMA}
@@ -396,185 +327,121 @@ const ListaSucursales = ({ onBack }) => {
                 />
             )}
 
-            <form onSubmit={handleSubmit} className={styles.form}>
-                <div className={styles.formRow}>
-                    <div className={styles.formGroup}>
-                        <label>Oficina:</label>
-                        <input
-                            type="text"
-                            name="oficina"
-                            value={formData.oficina}
-                            onChange={handleChange}
-                            placeholder="Nombre de la oficina"
-                            required
-                        />
-                    </div>
-                    
-                    <div className={styles.formGroup}>
-                        <label>Dirección:</label>
-                        <input
-                            type="text"
-                            name="ubicacion"
-                            value={formData.ubicacion}
-                            onChange={handleChange}
-                            placeholder="Dirección exacta"
-                            required
-                        />
-                    </div>
-                </div>
-                
-                <div className={styles.formRow}>
-                    <div className={styles.formGroup}>
-                        <label>Departamento:</label>
-                        <select
-                            name="departamento"
-                            value={formData.departamento}
-                            onChange={handleChange}
-                            required
-                        >
-                            <option value="">Seleccione departamento</option>
-                            {departamentosBolivia.map(depto => (
-                                <option key={depto} value={depto}>{depto}</option>
+            {state.loading && state.sucursales.length === 0 ? (
+                <div className={styles.cargando}>Cargando sucursales...</div>
+            ) : (
+                <div className={styles.tablaContenedor}>
+                    <table className={styles.tabla}>
+                        <thead>
+                            {table.getHeaderGroups().map(headerGroup => (
+                                <tr key={headerGroup.id}>
+                                    {headerGroup.headers.map(header => (
+                                        <th key={header.id} style={{ width: header.getSize() }}>
+                                            {flexRender(
+                                                header.column.columnDef.header,
+                                                header.getContext()
+                                            )}
+                                        </th>
+                                    ))}
+                                </tr>
                             ))}
-                        </select>
-                    </div>
-                    
-                    <div className={styles.formGroup}>
-                        <label>Riesgo Depto.:</label>
-                        <select
-                            name="riesgo_departamento"
-                            value={formData.riesgo_departamento}
-                            onChange={handleChange}
-                            required
-                        >
-                            <option value="">Nivel de riesgo</option>
-                            {NIVELES_RIESGO.map(nivel => (
-                                <option key={`depto-${nivel.value}`} value={nivel.value}>
-                                    {nivel.label}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-                
-                <div className={styles.formRow}>
-                    <div className={styles.formGroup}>
-                        <label>Municipio:</label>
-                        <input
-                            type="text"
-                            name="municipio"
-                            value={formData.municipio}
-                            onChange={handleChange}
-                            placeholder="Municipio"
-                        />
-                    </div>
-                    
-                    <div className={styles.formGroup}>
-                        <label>Riesgo Mun.:</label>
-                        <select
-                            name="riesgo_municipio"
-                            value={formData.riesgo_municipio}
-                            onChange={handleChange}
-                        >
-                            <option value="">Nivel de riesgo</option>
-                            {NIVELES_RIESGO.map(nivel => (
-                                <option key={`mun-${nivel.value}`} value={nivel.value}>
-                                    {nivel.label}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-                
-                <div className={styles.formRow}>
-                    <div className={styles.formGroup}>
-                        <label>Zona:</label>
-                        <input
-                            type="text"
-                            name="zona"
-                            value={formData.zona}
-                            onChange={handleChange}
-                            placeholder="Zona"
-                        />
-                    </div>
-                    
-                    <div className={styles.formGroup}>
-                        <label>Riesgo Zona:</label>
-                        <select
-                            name="riesgo_zona"
-                            value={formData.riesgo_zona}
-                            onChange={handleChange}
-                        >
-                            <option value="">Nivel de riesgo</option>
-                            {NIVELES_RIESGO.map(nivel => (
-                                <option key={`zona-${nivel.value}`} value={nivel.value}>
-                                    {nivel.label}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-                
-                <div className={styles.formRow}>
-                    <div className={styles.formGroup}>
-                        <label>Frontera:</label>
-                        <input
-                            type="text"
-                            name="frontera"
-                            value={formData.frontera}
-                            onChange={handleChange}
-                            placeholder="Frontera"
-                        />
-                    </div>
-                    
-                    <div className={styles.formGroup}>
-                        <label>Riesgo Frontera:</label>
-                        <select
-                            name="riesgo_frontera"
-                            value={formData.riesgo_frontera}
-                            onChange={handleChange}
-                        >
-                            <option value="">Nivel de riesgo</option>
-                            {NIVELES_RIESGO.map(nivel => (
-                                <option key={`frontera-${nivel.value}`} value={nivel.value}>
-                                    {nivel.label}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-                
-                <div className={styles.formGroup}>
-                    <label>Observaciones:</label>
-                    <textarea
-                        name="observaciones"
-                        value={formData.observaciones}
-                        onChange={handleChange}
-                        placeholder="Observaciones adicionales"
-                        rows={3}
-                    />
-                </div>
-                
-                <button 
-                    type="submit" 
-                    className={styles.saveButton}
-                    disabled={state.loading}
-                >
-                    {state.loading ? 'Guardando...' : (editingId !== null ? 'Actualizar' : 'Guardar')}
-                </button>
-            </form>
+                        </thead>
+                        <tbody>
+                            {table.getRowModel().rows.length > 0 ? (
+                                table.getRowModel().rows.map(row => (
+                                    <tr key={row.id}>
+                                        {row.getVisibleCells().map(cell => (
+                                            <td key={cell.id}>
+                                                {flexRender(
+                                                    cell.column.columnDef.cell,
+                                                    cell.getContext()
+                                                )}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={columns.length} className={styles.sinResultados}>
+                                        {state.sucursales.length === 0 
+                                            ? 'No hay sucursales registradas' 
+                                            : 'No se encontraron resultados'}
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
 
-            <SucursalTable
-                sucursales={sucursalesFiltradas}
-                isLoading={state.loading}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                getLabelRiesgo={getLabelRiesgo}
-                visibleColumns={state.columnasVisibles}
-                hasSucursales={state.sucursales.length > 0}
-                hasResults={sucursalesFiltradas.length > 0}
-                formatValue={formatearValor}
-            />
+                    {table.getFilteredRowModel().rows.length > 0 && (
+                        <div className={styles.paginacion}>
+                            <button
+                                onClick={() => table.setPageIndex(0)}
+                                disabled={!table.getCanPreviousPage()}
+                            >
+                                {'<<'}
+                            </button>
+                            <button
+                                onClick={() => table.previousPage()}
+                                disabled={!table.getCanPreviousPage()}
+                            >
+                                {'<'}
+                            </button>
+                            <button
+                                onClick={() => table.nextPage()}
+                                disabled={!table.getCanNextPage()}
+                            >
+                                {'>'}
+                            </button>
+                            <button
+                                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                                disabled={!table.getCanNextPage()}
+                            >
+                                {'>>'}
+                            </button>
+
+                            <span>
+                                Página{' '}
+                                <strong>
+                                    {table.getState().pagination.pageIndex + 1} de{' '}
+                                    {table.getPageCount()}
+                                </strong>
+                            </span>
+
+                            <select
+                                value={table.getState().pagination.pageSize}
+                                onChange={e => {
+                                    table.setPageSize(Number(e.target.value))
+                                }}
+                            >
+                                {[10, 20, 30, 40, 50].map(pageSize => (
+                                    <option key={pageSize} value={pageSize}>
+                                        Mostrar {pageSize}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {showFormModal && (
+                <SucursalFormModal
+                    editingId={editingId}
+                    sucursales={state.sucursales}
+                    onClose={() => {
+                        setShowFormModal(false);
+                        setEditingId(null);
+                    }}
+                    onSuccess={() => {
+                        cargarSucursales();
+                        setShowFormModal(false);
+                        setEditingId(null);
+                    }}
+                    onError={(error) => {
+                        setState(prev => ({ ...prev, error }));
+                    }}
+                />
+            )}
         </div>
     );
 };
