@@ -3,26 +3,17 @@ const db = require('../database/db');
 class ProductoServicio {
     static async crear(producto) {
         const camposCompletos = {
+            fecha_registro: producto.fecha_registro || null,
             producto_servicio: producto.producto_servicio || null,
             riesgo_producto: producto.riesgo_producto || null,
-            riesgo_cliente: producto.riesgo_cliente || null,
             oficina:producto.oficina || null,
+            riesgo_cliente: producto.riesgo_cliente || null,
             observaciones: producto.observaciones || null,
-            
-            // Solo estos dos campos numéricos adicionales
             riesgo_producto_numerico: producto.riesgo_producto_numerico || null,
             riesgo_cliente_numerico: producto.riesgo_cliente_numerico || null,
-            
-            
-            
-            //promedio de riesgo 
-
-
-            promedio_riesgo_producto_servicio: producto.promedio_riesgo_producto_servicio || null, 
-            impacto: producto.impacto || null,
             probabilidad: producto.probabilidad || null,
-
-            
+            impacto: producto.impacto || null,
+            promedio_riesgo_producto_servicio: producto.promedio_riesgo_producto_servicio || null, 
         };
 
         const { campos, placeholders, valores } = Object.entries(camposCompletos).reduce(
