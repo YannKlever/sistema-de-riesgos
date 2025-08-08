@@ -80,7 +80,11 @@ export const TODAS_LAS_COLUMNAS = [
     { id: 'vigencia_documental_numerico', nombre: 'Riesgo Vigencia Documental (Ponderado)', visible: false },
     { id: 'relevancia_informacion_numerico', nombre: 'Riesgo Relevancia Información (Ponderado)', visible: false },
     { id: 'consistencia_informacion_numerico', nombre: 'Riesgo Consistencia Información (Ponderado)', visible: false },
-    { id: 'comportamiento_cliente_numerico', nombre: 'Riesgo Comportamiento Cliente (Ponderado)', visible: false }
+    { id: 'probabilidad_canal_distribucion', nombre: 'Probabilidad del Canal de Distribución', visible: false },
+    { id: 'impacto_canal_distribucion', nombre: 'Impacto del Canal de distribución', visible: false },
+    { id: 'promedio_riesgo_canal_distribucion', nombre: 'Riesgo Promedio Canal de Distribución', visible: false },
+    { id: 'probabilidad_cliente_externo', nombre: 'Probabilidad del Cliente Externo', visible: false },
+    { id: 'impacto_cliente_externo', nombre: 'Impacto del Cliente Externo', visible: false },
+    { id: 'promedio_riesgo_cliente_externo', nombre: 'Riesgo Promedio Cliente Externo', visible: false },
 ];
-
 export const DEFAULT_VISIBLE_COLUMNS = TODAS_LAS_COLUMNAS.filter(col => col.visible);
