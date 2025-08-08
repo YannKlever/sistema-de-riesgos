@@ -18,12 +18,12 @@ class ClienteInterno {
             estado_civil: cliente.estado_civil || null,
             profesion: cliente.profesion || null,
             riesgo_profesion_actividad: cliente.riesgo_profesion_actividad || null,
+            domicilio_persona_sucursal: cliente.domicilio_persona_sucursal || null,
             riesgo_zona: cliente.riesgo_zona || null,
             categoria_pep: cliente.categoria_pep || null,
             ingresos_mensuales: cliente.ingresos_mensuales || null,
             volumen_actividad: cliente.volumen_actividad || null,
             frecuencia_actividad: cliente.frecuencia_actividad || null,
-            domicilio_persona_sucursal: cliente.domicilio_persona_sucursal || null,
             integridad_documental: cliente.integridad_documental || null,
             exactitud_documental: cliente.exactitud_documental || null,
             vigencia_documental: cliente.vigencia_documental || null,
@@ -31,8 +31,6 @@ class ClienteInterno {
             consistencia_informacion: cliente.consistencia_informacion || null,
             comportamiento_cliente: cliente.comportamiento_cliente || null,
             observaciones: cliente.observaciones || null,
-            
-            // Campos numéricos adicionales
             nacionalidad_numerico: cliente.nacionalidad_numerico || null,
             riesgo_profesion_actividad_numerico: cliente.riesgo_profesion_actividad_numerico || null,
             riesgo_zona_numerico: cliente.riesgo_zona_numerico || null,
@@ -46,15 +44,9 @@ class ClienteInterno {
             relevancia_informacion_numerico: cliente.relevancia_informacion_numerico || null,
             consistencia_informacion_numerico: cliente.consistencia_informacion_numerico || null,
             comportamiento_cliente_numerico: cliente.comportamiento_cliente_numerico || null,
-
-
-
-            //promedio de riesgo 
-
-
-            promedio_riesgo_cliente_interno: cliente.promedio_riesgo_cliente_interno || null, 
+            probabilidad: cliente.probabilidad || null,
             impacto: cliente.impacto || null,
-            probabilidad: cliente.probabilidad || null,  
+            promedio_riesgo_cliente_interno: cliente.promedio_riesgo_cliente_interno || null,   
         };
 
         const { campos, placeholders, valores } = Object.entries(camposCompletos).reduce(
