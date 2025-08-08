@@ -20,13 +20,11 @@ async function createTable(db) {
               observaciones TEXT,
               riesgo_departamento_numerico INTEGER,
               riesgo_municipio_numerico INTEGER,
-
-              promedio_riesgo_zona_geografica REAL DEFAULT 0,
-              impacto INTEGER,
-              probabilidad INTEGER,
-              
               riesgo_zona_numerico INTEGER,
-              riesgo_frontera_numerico INTEGER) `,
+              riesgo_frontera_numerico INTEGER,
+              probabilidad REAL,
+              impacto REAL,
+              promedio_riesgo_zona_geografica REAL)`,
             function (err) {
                 if (err) {
                     console.error('Error al crear tabla tabla-sucursales:', err);
