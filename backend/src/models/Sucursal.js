@@ -15,19 +15,13 @@ class Sucursal {
             frontera: sucursal.frontera || null,
             riesgo_frontera: sucursal.riesgo_frontera || null,
             observaciones: sucursal.observaciones || null,
-            
-            // Campos numéricos para riesgos
             riesgo_departamento_numerico: sucursal.riesgo_departamento_numerico || null,
             riesgo_municipio_numerico: sucursal.riesgo_municipio_numerico || null,
             riesgo_zona_numerico: sucursal.riesgo_zona_numerico || null,
             riesgo_frontera_numerico: sucursal.riesgo_frontera_numerico || null,
-
-            //promedio de riesgo 
-
-
-            promedio_riesgo_zona_geografica: sucursal.promedio_riesgo_zona_geografica || null, 
+            probabilidad: sucursal.probabilidad || null,
             impacto: sucursal.impacto || null,
-            probabilidad: sucursal.probabilidad || null,  
+            promedio_riesgo_zona_geografica: sucursal.promedio_riesgo_zona_geografica || null
         };
 
         const { campos, placeholders, valores } = Object.entries(camposCompletos).reduce(
