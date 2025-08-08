@@ -21,12 +21,12 @@ async function createTable(db) {
               estado_civil TEXT,
               profesion TEXT,
               riesgo_profesion_actividad TEXT,
+              domicilio_persona_sucursal TEXT,
               riesgo_zona TEXT,
               categoria_pep TEXT,
               ingresos_mensuales REAL,
               volumen_actividad REAL,
               frecuencia_actividad TEXT,
-              domicilio_persona_sucursal TEXT,
               integridad_documental TEXT,
               exactitud_documental TEXT,
               vigencia_documental TEXT,
@@ -46,17 +46,10 @@ async function createTable(db) {
               vigencia_documental_numerico INTEGER,
               relevancia_informacion_numerico INTEGER,
               consistencia_informacion_numerico INTEGER,
-
-              
-              promedio_riesgo_cliente_interno REAL DEFAULT 0,
-              impacto INTEGER,
-              probabilidad INTEGER,
-
-
-
-
-
-              comportamiento_cliente_numerico INTEGER
+              comportamiento_cliente_numerico INTEGER,
+              impacto REAL,
+              probabilidad REAL,
+              promedio_riesgo_cliente_interno REAL     
               )`,
             function (err) {
                 if (err) {
