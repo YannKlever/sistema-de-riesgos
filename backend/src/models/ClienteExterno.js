@@ -6,6 +6,7 @@ class ClienteExterno {
             fecha_registro: new Date().toISOString(),
             oficina: cliente.oficina || null,
             ejecutivo: cliente.ejecutivo || null,
+            cliente_interno_id: cliente.cliente_interno_id || null,
             tipo_sociedad: cliente.tipo_sociedad || null,
             nombres_propietario: cliente.nombres_propietario || null,
             apellidos_propietario: cliente.apellidos_propietario || null,
@@ -64,13 +65,6 @@ class ClienteExterno {
             consistencia_informacion: cliente.consistencia_informacion || null,
             comportamiento_cliente: cliente.comportamiento_cliente || null,
             observaciones: cliente.observaciones || null,
-            //promedio de riesgo 
-            promedio_riesgo_canal_distribucion: cliente.promedio_riesgo_canal_distribucion || null,
-            promedio_riesgo_cliente_externo: cliente.promedio_riesgo_cliente_externo || null,
-            impacto: cliente.impacto || null,
-            probabilidad: cliente.probabilidad || null,
-            //para vincular cliente interno
-            cliente_interno_id: cliente.cliente_interno_id || null,
             nacionalidad_numerico: cliente.nacionalidad_numerico || null,
             riesgo_profesion_actividad_numerico: cliente.riesgo_profesion_actividad_numerico || null,
             riesgo_zona_numerico: cliente.riesgo_zona_numerico || null,
@@ -90,7 +84,13 @@ class ClienteExterno {
             vigencia_documental_numerico: cliente.vigencia_documental_numerico || null,
             relevancia_informacion_numerico: cliente.relevancia_informacion_numerico || null,
             consistencia_informacion_numerico: cliente.consistencia_informacion_numerico || null,
-            comportamiento_cliente_numerico: cliente.comportamiento_cliente_numerico || null
+            comportamiento_cliente_numerico: cliente.comportamiento_cliente_numerico || null,
+            probabilidad_canal_distribucion: cliente.probabilidad_canal_distribucion || null,
+            impacto_canal_distribucion: cliente.impacto_canal_distribucion || null,
+            promedio_riesgo_canal_distribucion: cliente.promedio_riesgo_canal_distribucion || null,
+            probabilidad_cliente_externo: cliente.probabilidad_cliente_externo || null,
+            impacto_cliente_externo: cliente.impacto_cliente_externo || null,
+            promedio_riesgo_cliente_externo: cliente.promedio_riesgo_cliente_externo || null
         };
         const { campos, placeholders, valores } = Object.entries(camposCompletos).reduce(
             (acc, [campo, valor]) => {
