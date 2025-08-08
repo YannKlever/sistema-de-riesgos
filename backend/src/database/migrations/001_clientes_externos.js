@@ -72,10 +72,10 @@ async function createTable(db) {
               nacionalidad_numerico INTEGER,
               riesgo_profesion_actividad_numerico INTEGER,
               riesgo_zona_numerico INTEGER,
-              categoria_pep_numerico INTEGER,
               ingresos_mensuales_numerico INTEGER,
               volumen_actividad_numerico INTEGER,
               frecuencia_actividad_numerico INTEGER,
+              categoria_pep_numerico INTEGER,
               ramo_seguro_numerico INTEGER,
               tipo_documento_numerico INTEGER,
               valor_prima_dolares_numerico INTEGER,
@@ -89,12 +89,13 @@ async function createTable(db) {
               relevancia_informacion_numerico INTEGER,
               consistencia_informacion_numerico INTEGER,
               comportamiento_cliente_numerico INTEGER,
+              probabilidad_canal_distribucion REAL,
+              impacto_canal_distribucion REAL,
+              promedio_riesgo_canal_distribucion REAL,
+              probabilidad_cliente_externo REAL,
+              impacto_cliente_externo REAL,
+              promedio_riesgo_cliente_externo REAL,
 
-              promedio_riesgo_canal_distribucion REAL DEFAULT 0,
-              promedio_riesgo_cliente_externo REAL DEFAULT 0,
-
-              impacto INTEGER,
-              probabilidad INTEGER,
               FOREIGN KEY(cliente_interno_id) REFERENCES "tabla-clientes-internos"(id) 
               )`,
             function (err) {
