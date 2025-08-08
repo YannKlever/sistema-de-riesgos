@@ -67,7 +67,6 @@ export const CLIENTES_EXTERNOS_SCHEMA = {
     'Consistencia de Información': 'consistencia_informacion',
     'Comportamiento Cliente': 'comportamiento_cliente',
     'Observaciones': 'observaciones',
-    
     // Campos numéricos (ponderados)
     'Riesgo País (Ponderado)': 'nacionalidad_numerico',
     'Riesgo Profesión/Actividad (Ponderado)': 'riesgo_profesion_actividad_numerico',
