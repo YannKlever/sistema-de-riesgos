@@ -1,29 +1,29 @@
 export const SUCURSALES_SCHEMA = {
   requiredFields: [
     'Oficina',
-    'Ubicación',
+    'Dirección',
     'Departamento',
-    'Riesgo Depto.'
+    'Riesgo Departamento'
   ],
   fieldMappings: {
     'ID': 'id',
+    'Fecha Registro': 'fecha_registro',
     'Oficina': 'oficina',
-    'Ubicación': 'ubicacion',
+    'Dirección': 'ubicacion',
     'Departamento': 'departamento',
-    'Riesgo Depto.': 'riesgo_departamento',
-    'Riesgo Depto. Numérico': 'riesgo_departamento_numerico',
+    'Riesgo Departamento': 'riesgo_departamento',
     'Municipio': 'municipio',
-    'Riesgo Mun.': 'riesgo_municipio',
-    'Riesgo Mun. Numérico': 'riesgo_municipio_numerico',
+    'Riesgo Municipio': 'riesgo_municipio',
     'Zona': 'zona',
     'Riesgo Zona': 'riesgo_zona',
-    'Riesgo Zona Numérico': 'riesgo_zona_numerico',
     'Frontera': 'frontera',
+    'Observaciones': 'observaciones',
     'Riesgo Frontera': 'riesgo_frontera',
-    'Riesgo Frontera Numérico': 'riesgo_frontera_numerico',
-    'Promedio Riesgo': 'promedio_riesgo_zona_geografica',
-    'Fecha Registro': 'fecha_registro',
-    'Observaciones': 'observaciones'
+    'Riesgo Departamento (Ponderado)': 'riesgo_departamento_numerico',
+    'Riesgo Municipio (Ponderado)': 'riesgo_municipio_numerico',
+    'Riesgo Frontera (Ponderado)': 'riesgo_frontera_numerico',
+    'Riesgo Zona (Ponderado)': 'riesgo_zona_numerico',
+    'Riesgo Zona Geográfica': 'promedio_riesgo_zona_geografica'
   }
 };
 
