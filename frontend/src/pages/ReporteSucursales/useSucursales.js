@@ -1,6 +1,10 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { databaseService } from '../../services/database';
-import { COLUMNAS_REPORTE_SUCURSALES, COLUMNAS_NUMERICAS_SUCURSALES } from './constantesSucursales';
+import { 
+    COLUMNAS_REPORTE_SUCURSALES, 
+    COLUMNAS_NUMERICAS_SUCURSALES,
+    COLUMNAS_RIESGO_NUMERICO 
+} from './constantesSucursales';
 
 export const useSucursales = () => {
     const [state, setState] = useState({
@@ -13,19 +17,28 @@ export const useSucursales = () => {
 
     const [sucursalesConRiesgo, setSucursalesConRiesgo] = useState([]);
 
-    const calcularRiesgoSucursales = useCallback((sucursales) => {
+    const calcularRiesgosSucursales = useCallback((sucursales) => {
         const sucursalesActualizadas = sucursales.map(sucursal => {
-            const camposNumericos = COLUMNAS_NUMERICAS_SUCURSALES
-                .map(col => sucursal[col.id])
+            // Calcular probabilidad (promedio de los valores numéricos de riesgo)
+            const valoresRiesgo = COLUMNAS_RIESGO_NUMERICO
+                .map(col => sucursal[col])
                 .filter(val => val !== null && !isNaN(val));
                 
-            const promedio = camposNumericos.length > 0 ? 
-                camposNumericos.reduce((sum, val) => sum + val, 0) / camposNumericos.length : 
+            const probabilidad = valoresRiesgo.length > 0 ? 
+                valoresRiesgo.reduce((sum, val) => sum + val, 0) / valoresRiesgo.length : 
                 0;
+            
+            // Impacto fijo en 4
+            const impacto = 4;
+            
+            // Factor de riesgo es el promedio de probabilidad e impacto
+            const factorRiesgo = (probabilidad + impacto) / 2;
             
             return {
                 ...sucursal,
-                factorRiesgoZonaGeografica: parseFloat(promedio.toFixed(2))
+                probabilidad: parseFloat(probabilidad.toFixed(2)),
+                impacto: impacto,
+                factorRiesgoZonaGeografica: parseFloat(factorRiesgo.toFixed(2))
             };
         });
         
@@ -33,77 +46,81 @@ export const useSucursales = () => {
     }, []);
 
     const validarTodosLosRiesgos = useCallback(async () => {
-    try {
-        setState(prev => ({ ...prev, validandoTodos: true, error: '' }));
-        
-        // Modificar esta línea para incluir todos los registros con riesgo calculado
-        const sucursalesAValidar = sucursalesConRiesgo.filter(
-            s => s.factorRiesgoZonaGeografica !== null && 
-                 s.factorRiesgoZonaGeografica !== undefined
-        );
+        try {
+            setState(prev => ({ ...prev, validandoTodos: true, error: '' }));
+            
+            const sucursalesAValidar = sucursalesConRiesgo.filter(
+                s => s.factorRiesgoZonaGeografica !== null && 
+                     s.factorRiesgoZonaGeografica !== undefined
+            );
 
-        if (sucursalesAValidar.length === 0) {
-            return { success: true, message: 'No hay riesgos calculados para validar' };
-        }
-
-        let successCount = 0;
-        let errorCount = 0;
-        const errors = [];
-
-        for (const sucursal of sucursalesAValidar) {
-            try {
-                const resultado = await databaseService.actualizarSucursal(sucursal.id, {
-                    promedio_riesgo_zona_geografica: sucursal.factorRiesgoZonaGeografica
-                });
-
-                if (resultado.success) {
-                    successCount++;
-                } else {
-                    errorCount++;
-                    errors.push(`Error en sucursal ${sucursal.id}: ${resultado.error}`);
-                }
-            } catch (err) {
-                errorCount++;
-                errors.push(`Error en sucursal ${sucursal.id}: ${err.message}`);
+            if (sucursalesAValidar.length === 0) {
+                return { success: true, message: 'No hay riesgos calculados para validar' };
             }
-        }
 
-        // Actualizar el estado con los cambios
-        const nuevasSucursales = state.sucursales.map(s => {
-            const sucursalValidada = sucursalesAValidar.find(sv => sv.id === s.id);
-            return sucursalValidada ? { 
-                ...s, 
-                promedio_riesgo_zona_geografica: sucursalValidada.factorRiesgoZonaGeografica 
-            } : s;
-        });
+            let successCount = 0;
+            let errorCount = 0;
+            const errors = [];
 
-        setState(prev => ({ ...prev, sucursales: nuevasSucursales }));
-        calcularRiesgoSucursales(nuevasSucursales);
+            for (const sucursal of sucursalesAValidar) {
+                try {
+                    const resultado = await databaseService.actualizarSucursal(sucursal.id, {
+                        probabilidad: sucursal.probabilidad,
+                        impacto: sucursal.impacto,
+                        promedio_riesgo_zona_geografica: sucursal.factorRiesgoZonaGeografica
+                    });
 
-        if (errorCount > 0) {
-            const errorMessage = `Se completaron ${successCount} validaciones con éxito. Errores: ${errors.join('; ')}`;
-            setState(prev => ({ ...prev, error: errorMessage }));
+                    if (resultado.success) {
+                        successCount++;
+                    } else {
+                        errorCount++;
+                        errors.push(`Error en sucursal ${sucursal.id}: ${resultado.error}`);
+                    }
+                } catch (err) {
+                    errorCount++;
+                    errors.push(`Error en sucursal ${sucursal.id}: ${err.message}`);
+                }
+            }
+
+            // Actualizar el estado con los cambios
+            const nuevasSucursales = state.sucursales.map(s => {
+                const sucursalValidada = sucursalesAValidar.find(sv => sv.id === s.id);
+                return sucursalValidada ? { 
+                    ...s, 
+                    probabilidad: sucursalValidada.probabilidad,
+                    impacto: sucursalValidada.impacto,
+                    promedio_riesgo_zona_geografica: sucursalValidada.factorRiesgoZonaGeografica 
+                } : s;
+            });
+
+            setState(prev => ({ ...prev, sucursales: nuevasSucursales }));
+            calcularRiesgosSucursales(nuevasSucursales);
+
+            if (errorCount > 0) {
+                const errorMessage = `Se completaron ${successCount} validaciones con éxito. Errores: ${errors.join('; ')}`;
+                setState(prev => ({ ...prev, error: errorMessage }));
+                return { 
+                    success: false, 
+                    message: errorMessage,
+                    successCount,
+                    errorCount
+                };
+            }
+
             return { 
-                success: false, 
-                message: errorMessage,
-                successCount,
-                errorCount
+                success: true, 
+                message: `Todas las ${successCount} validaciones se completaron con éxito`,
+                successCount
             };
+        } catch (err) {
+            setState(prev => ({ ...prev, error: err.message }));
+            console.error('Error al validar todos los riesgos:', err);
+            return { success: false, error: err.message };
+        } finally {
+            setState(prev => ({ ...prev, validandoTodos: false }));
         }
+    }, [state.sucursales, sucursalesConRiesgo]);
 
-        return { 
-            success: true, 
-            message: `Todas las ${successCount} validaciones se completaron con éxito`,
-            successCount
-        };
-    } catch (err) {
-        setState(prev => ({ ...prev, error: err.message }));
-        console.error('Error al validar todos los riesgos:', err);
-        return { success: false, error: err.message };
-    } finally {
-        setState(prev => ({ ...prev, validandoTodos: false }));
-    }
-}, [state.sucursales, sucursalesConRiesgo]);
     useEffect(() => {
         let isMounted = true;
 
@@ -119,7 +136,7 @@ export const useSucursales = () => {
                             sucursales: resultado.data,
                             loading: false
                         }));
-                        calcularRiesgoSucursales(resultado.data);
+                        calcularRiesgosSucursales(resultado.data);
                     } else {
                         setState(prev => ({
                             ...prev,
@@ -145,7 +162,7 @@ export const useSucursales = () => {
         return () => {
             isMounted = false;
         };
-    }, [calcularRiesgoSucursales]);
+    }, [calcularRiesgosSucursales]);
 
     const filtrarSucursales = useCallback((sucursal) => {
         if (!state.filtro) return true;
@@ -165,8 +182,8 @@ export const useSucursales = () => {
     }, []);
 
     const actualizarReporte = useCallback(() => {
-        calcularRiesgoSucursales(state.sucursales);
-    }, [calcularRiesgoSucursales, state.sucursales]);
+        calcularRiesgosSucursales(state.sucursales);
+    }, [calcularRiesgosSucursales, state.sucursales]);
 
     return {
         state,
@@ -174,9 +191,6 @@ export const useSucursales = () => {
         handleFiltroChange,
         actualizarReporte,
         validarTodosLosRiesgos,
-        COLUMNAS_REPORTE: [...COLUMNAS_REPORTE_SUCURSALES, 
-            { id: 'factorRiesgoZonaGeografica', nombre: 'Factor de riesgo Zona Geográfica' },
-            { id: 'promedio_riesgo_zona_geografica', nombre: 'Promedio Riesgo Validado' }
-        ]
+        COLUMNAS_REPORTE: COLUMNAS_REPORTE_SUCURSALES
     };
 };

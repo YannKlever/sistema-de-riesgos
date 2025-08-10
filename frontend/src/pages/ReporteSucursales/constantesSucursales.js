@@ -12,9 +12,20 @@ export const COLUMNAS_REPORTE_SUCURSALES = [
     { id: 'riesgo_zona_numerico', nombre: 'Riesgo Zona (Núm)' },
     { id: 'frontera', nombre: 'Frontera' },
     { id: 'riesgo_frontera', nombre: 'Riesgo Frontera' },
-    { id: 'riesgo_frontera_numerico', nombre: 'Riesgo Frontera (Núm)' }
+    { id: 'riesgo_frontera_numerico', nombre: 'Riesgo Frontera (Núm)' },
+    { id: 'probabilidad', nombre: 'Probabilidad' },
+    { id: 'impacto', nombre: 'Impacto' },
+    { id: 'factorRiesgoZonaGeografica', nombre: 'Factor Riesgo Zona Geográfica' }
 ];
 
 export const COLUMNAS_NUMERICAS_SUCURSALES = COLUMNAS_REPORTE_SUCURSALES.filter(
     col => col.id.endsWith('_numerico')
 );
+
+// Columnas de riesgo específicas para calcular la probabilidad
+export const COLUMNAS_RIESGO_NUMERICO = [
+    'riesgo_departamento_numerico',
+    'riesgo_municipio_numerico',
+    'riesgo_zona_numerico',
+    'riesgo_frontera_numerico'
+];

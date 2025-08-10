@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-
 import { databaseService } from '../../services/database';
 import { COLUMNAS_REPORTE, COLUMNAS_NUMERICAS } from './constantes';
 
@@ -16,28 +15,56 @@ export const useClientesInternos = () => {
 
     const calcularRiesgoClientes = useCallback((clientes) => {
         const clientesActualizados = clientes.map(cliente => {
-            const camposNumericos = COLUMNAS_NUMERICAS
-                .map(col => cliente[col.id])
+            // Columnas para Probabilidad (excluyendo riesgo_profesion_actividad e ingresos_mensuales)
+            const columnasProbabilidad = COLUMNAS_NUMERICAS
+                .filter(col => !['riesgo_profesion_actividad_numerico', 'ingresos_mensuales_numerico'].includes(col.id))
+                .map(col => col.id);
+            
+            // Columnas para Impacto (solo riesgo_profesion_actividad e ingresos_mensuales)
+            const columnasImpacto = [
+                'riesgo_profesion_actividad_numerico',
+                'ingresos_mensuales_numerico'
+            ];
+            
+            // Calcular Probabilidad
+            const valoresProbabilidad = columnasProbabilidad
+                .map(col => cliente[col])
                 .filter(val => val !== null && !isNaN(val));
                 
-            const promedio = camposNumericos.length > 0 ? 
-                camposNumericos.reduce((sum, val) => sum + val, 0) / camposNumericos.length : 
+            const probabilidad = valoresProbabilidad.length > 0 ? 
+                valoresProbabilidad.reduce((sum, val) => sum + val, 0) / valoresProbabilidad.length : 
                 0;
+            
+            // Calcular Impacto
+            const valoresImpacto = columnasImpacto
+                .map(col => cliente[col])
+                .filter(val => val !== null && !isNaN(val));
+                
+            const impacto = valoresImpacto.length > 0 ? 
+                valoresImpacto.reduce((sum, val) => sum + val, 0) / valoresImpacto.length : 
+                0;
+            
+            // Calcular Factor de Riesgo (promedio de probabilidad e impacto)
+            const factorRiesgo = (probabilidad + impacto) / 2;
             
             return {
                 ...cliente,
-                factorRiesgoClienteInterno: parseFloat(promedio.toFixed(2))
+                probabilidad: parseFloat(probabilidad.toFixed(2)),
+                impacto: parseFloat(impacto.toFixed(2)),
+                factorRiesgoClienteInterno: parseFloat(factorRiesgo.toFixed(2))
             };
         });
         
         setClientesConRiesgo(clientesActualizados);
     }, []);
 
-    const validarRiesgo = useCallback(async (idCliente, factorRiesgo) => {
+    const validarRiesgo = useCallback(async (idCliente, probabilidad, impacto, factorRiesgo) => {
         try {
             setState(prev => ({ ...prev, loading: true, error: '' }));
             
             const resultado = await databaseService.actualizarClienteInterno(idCliente, {
+                probabilidad,
+                impacto,
                 promedio_riesgo_cliente_interno: factorRiesgo
             });
 
@@ -47,7 +74,12 @@ export const useClientesInternos = () => {
                     ...prev,
                     clientes: prev.clientes.map(cliente => 
                         cliente.id === idCliente ? 
-                        { ...cliente, promedio_riesgo_cliente_interno: factorRiesgo } : 
+                        { 
+                            ...cliente, 
+                            probabilidad,
+                            impacto,
+                            promedio_riesgo_cliente_interno: factorRiesgo 
+                        } : 
                         cliente
                     ),
                     loading: false
@@ -57,7 +89,12 @@ export const useClientesInternos = () => {
                 setClientesConRiesgo(prev => 
                     prev.map(cliente => 
                         cliente.id === idCliente ? 
-                        { ...cliente, promedio_riesgo_cliente_interno: factorRiesgo } : 
+                        { 
+                            ...cliente, 
+                            probabilidad,
+                            impacto,
+                            promedio_riesgo_cliente_interno: factorRiesgo 
+                        } : 
                         cliente
                     )
                 );
@@ -92,6 +129,8 @@ export const useClientesInternos = () => {
             // Crear array de promesas para todas las validaciones
             const promesasValidacion = clientesAValidar.map(cliente => 
                 databaseService.actualizarClienteInterno(cliente.id, {
+                    probabilidad: cliente.probabilidad,
+                    impacto: cliente.impacto,
                     promedio_riesgo_cliente_interno: cliente.factorRiesgoClienteInterno
                 })
             );
@@ -113,6 +152,8 @@ export const useClientesInternos = () => {
                     const clienteValidado = clientesAValidar.find(c => c.id === cliente.id);
                     return clienteValidado ? {
                         ...cliente,
+                        probabilidad: clienteValidado.probabilidad,
+                        impacto: clienteValidado.impacto,
                         promedio_riesgo_cliente_interno: clienteValidado.factorRiesgoClienteInterno
                     } : cliente;
                 }),
@@ -125,6 +166,8 @@ export const useClientesInternos = () => {
                     const clienteValidado = clientesAValidar.find(c => c.id === cliente.id);
                     return clienteValidado ? {
                         ...cliente,
+                        probabilidad: clienteValidado.probabilidad,
+                        impacto: clienteValidado.impacto,
                         promedio_riesgo_cliente_interno: clienteValidado.factorRiesgoClienteInterno
                     } : cliente;
                 })
@@ -213,6 +256,8 @@ export const useClientesInternos = () => {
         validarRiesgo,
         validarTodosLosRiesgos,
         COLUMNAS_REPORTE: [...COLUMNAS_REPORTE, 
+            { id: 'probabilidad', nombre: 'Probabilidad' },
+            { id: 'impacto', nombre: 'Impacto' },
             { id: 'factorRiesgoClienteInterno', nombre: 'Factor Riesgo' },
             { id: 'promedio_riesgo_cliente_interno', nombre: 'Riesgo Validado' }
         ]

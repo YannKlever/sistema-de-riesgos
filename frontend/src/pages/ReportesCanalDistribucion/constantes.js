@@ -13,13 +13,16 @@ export const COLUMNAS_REPORTE_CANALES = [
     { id: 'medio_comunicacion', nombre: 'Medio de comunicación' },
     { id: 'medio_comunicacion_numerico', nombre: 'Riesgo de medios de comunicación' },
     { id: 'medio_pago', nombre: 'Medio de pago' },
-    { id: 'medio_pago_numerico', nombre: 'Riesgo de Medio de pago' }
+    { id: 'medio_pago_numerico', nombre: 'Riesgo de Medio de pago' },
+    { id: 'probabilidad_canal_distribucion', nombre: 'Probabilidad' },
+    { id: 'impacto_canal_distribucion', nombre: 'Impacto' }, 
+    { id: 'factor_riesgo_canal_distribucion', nombre: 'Factor Riesgo Canal Distribución' }
 ];
 
-export const COLUMNAS_CALCULO_RIESGO = [
+export const COLUMNAS_CALCULO_PROBABILIDAD = [
     'frecuencia_contacto_fisico_numerico',
     'frecuencia_contacto_digital_numerico',
-    'promedio_riesgo_cliente_interno',
     'medio_comunicacion_numerico',
-    'medio_pago_numerico'
+    'medio_pago_numerico',
+    'promedio_riesgo_cliente_interno'
 ];

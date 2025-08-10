@@ -16,7 +16,7 @@ export const ReporteCanalesDistribucion = () => {
 
     // Función para limpiar el error
     const limpiarError = () => {
-        actualizarReporte(); // Esto actualizará el estado y limpiará cualquier error
+        actualizarReporte();
     };
 
     return (
@@ -54,10 +54,24 @@ export const ReporteCanalesDistribucion = () => {
             {canalesFiltrados.length > 0 && (
                 <div className={styles.resumen}>
                     <p>Total canales: <strong>{canalesFiltrados.length}</strong></p>
-                    <p>Promedio riesgo calculado: <strong>
+                    <p>Promedio probabilidad: <strong>
                         {(
                             canalesFiltrados.reduce((sum, canal) => 
-                                sum + (canal.riesgoCanalDistribucion || 0), 0) / 
+                                sum + (canal.probabilidad_canal_distribucion || 0), 0) / 
+                            canalesFiltrados.length
+                        ).toFixed(2)}
+                    </strong></p>
+                    <p>Promedio impacto: <strong>
+                        {(
+                            canalesFiltrados.reduce((sum, canal) => 
+                                sum + (canal.impacto_canal_distribucion || 0), 0) / 
+                            canalesFiltrados.length
+                        ).toFixed(2)}
+                    </strong></p>
+                    <p>Promedio factor riesgo: <strong>
+                        {(
+                            canalesFiltrados.reduce((sum, canal) => 
+                                sum + (canal.factor_riesgo_canal_distribucion || 0), 0) / 
                             canalesFiltrados.length
                         ).toFixed(2)}
                     </strong></p>

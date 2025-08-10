@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { databaseService } from '../../services/database';
-import { COLUMNAS_REPORTE_CANALES, COLUMNAS_CALCULO_RIESGO } from './constantes';
+import { COLUMNAS_REPORTE_CANALES, COLUMNAS_CALCULO_PROBABILIDAD } from './constantes';
 
 export const useCanalesDistribucion = () => {
     const [state, setState] = useState({
@@ -14,19 +14,26 @@ export const useCanalesDistribucion = () => {
 
     const calcularRiesgoCanales = useCallback((canales) => {
         const canalesActualizados = canales.map(canal => {
-            // Obtener los 5 valores necesarios para el cálculo
-            const valoresRiesgo = COLUMNAS_CALCULO_RIESGO.map(col => {
+            // Calcular Probabilidad (promedio de los valores numéricos)
+            const valoresProbabilidad = COLUMNAS_CALCULO_PROBABILIDAD.map(col => {
                 const valor = canal[col];
                 return valor !== null && !isNaN(valor) ? parseFloat(valor) : 0;
             });
-
-            // Calcular promedio (suma / 5)
-            const suma = valoresRiesgo.reduce((total, valor) => total + valor, 0);
-            const riesgoCanalDistribucion = parseFloat((suma / 5).toFixed(2));
+            
+            const sumaProbabilidad = valoresProbabilidad.reduce((total, valor) => total + valor, 0);
+            const probabilidad = parseFloat((sumaProbabilidad / valoresProbabilidad.length).toFixed(2));
+            
+            // Impacto fijo en 4
+            const impacto = 4;
+            
+            // Calcular Factor de Riesgo (promedio de probabilidad e impacto)
+            const factorRiesgo = parseFloat(((probabilidad + impacto) / 2).toFixed(2));
 
             return {
                 ...canal,
-                riesgoCanalDistribucion,
+                probabilidad_canal_distribucion: probabilidad,
+                impacto_canal_distribucion: impacto,
+                factor_riesgo_canal_distribucion: factorRiesgo,
                 promedio_riesgo_cliente_interno: parseFloat(canal.promedio_riesgo_cliente_interno) || 0
             };
         });
@@ -85,16 +92,16 @@ export const useCanalesDistribucion = () => {
     }, []);
 
     const actualizarReporte = useCallback(() => {
-        calcularRiesgoCanales(state.canales);
-    }, [calcularRiesgoCanales, state.canales]);
+        cargarCanales();
+    }, [cargarCanales]);
 
     const validarTodosLosRiesgos = useCallback(async () => {
         try {
             setState(prev => ({ ...prev, loading: true, error: '' }));
             
             const canalesAValidar = canalesConRiesgo.filter(
-                item => item.riesgoCanalDistribucion !== null && 
-                       item.riesgoCanalDistribucion !== undefined
+                item => item.factor_riesgo_canal_distribucion !== null && 
+                       item.factor_riesgo_canal_distribucion !== undefined
             );
 
             if (canalesAValidar.length === 0) {
@@ -105,7 +112,9 @@ export const useCanalesDistribucion = () => {
             const resultados = await Promise.all(
                 canalesAValidar.map(item => 
                     databaseService.actualizarClienteExterno(item.id, {
-                        promedio_riesgo_canal_distribucion: item.riesgoCanalDistribucion
+                        promedio_riesgo_canal_distribucion: item.factor_riesgo_canal_distribucion,
+                        probabilidad_canal_distribucion: item.probabilidad_canal_distribucion,
+                        impacto_canal_distribucion: item.impacto_canal_distribucion
                     })
                 )
             );
@@ -119,7 +128,9 @@ export const useCanalesDistribucion = () => {
                         const canalValidado = canalesAValidar.find(p => p.id === item.id);
                         return canalValidado ? { 
                             ...item, 
-                            promedio_riesgo_canal_distribucion: canalValidado.riesgoCanalDistribucion 
+                            promedio_riesgo_canal_distribucion: canalValidado.factor_riesgo_canal_distribucion,
+                            probabilidad_canal_distribucion: canalValidado.probabilidad_canal_distribucion,
+                            impacto_canal_distribucion: canalValidado.impacto_canal_distribucion
                         } : item;
                     }),
                     loading: false
@@ -152,10 +163,6 @@ export const useCanalesDistribucion = () => {
         handleFiltroChange,
         actualizarReporte,
         validarTodosLosRiesgos,
-        COLUMNAS_REPORTE: [
-            ...COLUMNAS_REPORTE_CANALES,
-            { id: 'riesgoCanalDistribucion', nombre: 'Riesgo Canal Distribución' },
-            { id: 'promedio_riesgo_canal_distribucion', nombre: 'Riesgo Validado' }
-        ]
+        COLUMNAS_REPORTE: COLUMNAS_REPORTE_CANALES
     };
 };

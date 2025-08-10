@@ -42,13 +42,29 @@ export const ReportesAccionistasSocios = () => {
             <div className={styles.resumen}>
                 <p>Total en reporte: <strong>{accionistasFiltrados.length}</strong></p>
                 {accionistasFiltrados.length > 0 && (
-                    <p>Promedio de riesgo: <strong>
-                        {(
-                            accionistasFiltrados.reduce((sum, accionista) => 
-                                sum + (accionista.factorRiesgoAccionistaSocio || 0), 0) / 
-                            accionistasFiltrados.length
-                        ).toFixed(2)}
-                    </strong></p>
+                    <>
+                        <p>Promedio Probabilidad: <strong>
+                            {(
+                                accionistasFiltrados.reduce((sum, accionista) => 
+                                    sum + (accionista.probabilidad || 0), 0) / 
+                                accionistasFiltrados.length
+                            ).toFixed(2)}
+                        </strong></p>
+                        <p>Promedio Impacto: <strong>
+                            {(
+                                accionistasFiltrados.reduce((sum, accionista) => 
+                                    sum + (accionista.impacto || 0), 0) / 
+                                accionistasFiltrados.length
+                            ).toFixed(2)}
+                        </strong></p>
+                        <p>Promedio Factor Riesgo: <strong>
+                            {(
+                                accionistasFiltrados.reduce((sum, accionista) => 
+                                    sum + (accionista.factorRiesgoAccionistaSocio || 0), 0) / 
+                                accionistasFiltrados.length
+                            ).toFixed(2)}
+                        </strong></p>
+                    </>
                 )}
             </div>
         </div>

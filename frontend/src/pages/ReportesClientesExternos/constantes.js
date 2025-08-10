@@ -28,6 +28,7 @@ export const COLUMNAS_REPORTE = [
     { id: 'categoria_pep_numerico', nombre: 'Riesgo en categoría PEP' },
     { id: 'ramo_seguro', nombre: 'Ramo del producto/servicio' },
     { id: 'ramo_seguro_numerico', nombre: 'Riesgo en el ramo del producto/servicio' },
+    { id: 'promedio_riesgo_producto_servicio', nombre: 'Factor Riesgo Producto/Servicio' },
     { id: 'tipo_documento', nombre: 'Tipo de documento de producto/servicio' },
     { id: 'tipo_documento_numerico', nombre: 'Riesgo en tipo de producto/servicio' },
     { id: 'valor_prima_dolares', nombre: 'Valor de la prima en dolares' },
@@ -45,9 +46,11 @@ export const COLUMNAS_REPORTE = [
     { id: 'comportamiento_cliente', nombre: 'Comportamiento' },
     { id: 'comportamiento_cliente_numerico', nombre: 'Riesgo de Comportamiento' },
     { id: 'promedio_riesgo_canal_distribucion', nombre: 'Promedio Riesgo Canal Distribución' }
+    
 ];
 
 export const COLUMNAS_NUMERICAS = COLUMNAS_REPORTE.filter(col => 
     col.id.endsWith('_numerico') || 
-    col.id === 'promedio_riesgo_canal_distribucion'
+    col.id === 'promedio_riesgo_canal_distribucion' ||
+    col.id === 'promedio_riesgo_producto_servicio'
 );

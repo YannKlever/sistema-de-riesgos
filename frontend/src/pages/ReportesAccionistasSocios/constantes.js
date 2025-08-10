@@ -29,7 +29,30 @@ export const COLUMNAS_REPORTE = [
     { id: 'consistencia_informacion', nombre: 'Consistencia en información' },
     { id: 'consistencia_informacion_numerico', nombre: 'Riesgo de consistencia en información' },
     { id: 'comportamiento_cliente', nombre: 'Comportamiento' },
-    { id: 'comportamiento_cliente_numerico', nombre: 'Riesgo de Comportamiento' }
+    { id: 'comportamiento_cliente_numerico', nombre: 'Riesgo de Comportamiento' },
+    { id: 'probabilidad', nombre: 'Probabilidad' },
+    { id: 'impacto', nombre: 'Impacto' },
+    { id: 'factorRiesgoAccionistaSocio', nombre: 'Factor Riesgo' }
 ];
 
-export const COLUMNAS_NUMERICAS = COLUMNAS_REPORTE.filter(col => col.id.endsWith('_numerico'));
+// Columnas para cálculo de probabilidad
+export const COLUMNAS_PROBABILIDAD = [
+    'nacionalidad_numerico',
+    'riesgo_zona_numerico',
+    'categoria_pep_numerico',
+    'volumen_actividad_numerico',
+    'frecuencia_actividad_numerico',
+    'integridad_documental_numerico',
+    'exactitud_documental_numerico',
+    'vigencia_documental_numerico',
+    'relevancia_informacion_numerico',
+    'consistencia_informacion_numerico',
+    'comportamiento_cliente_numerico'
+];
+
+// Columnas para cálculo de impacto
+export const COLUMNAS_IMPACTO = [
+    'riesgo_actividad_numerico',
+    'ingresos_mensuales_numerico',
+    'participacion_accionaria_numerico'
+];

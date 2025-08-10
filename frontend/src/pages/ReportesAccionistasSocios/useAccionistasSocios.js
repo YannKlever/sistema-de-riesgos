@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { databaseService } from '../../services/database';
-import { COLUMNAS_REPORTE, COLUMNAS_NUMERICAS } from './constantes';
+import { COLUMNAS_REPORTE, COLUMNAS_PROBABILIDAD, COLUMNAS_IMPACTO } from './constantes';
 
 export const useAccionistasSocios = () => {
     const [state, setState] = useState({
@@ -13,19 +13,34 @@ export const useAccionistasSocios = () => {
 
     const [accionistasConRiesgo, setAccionistasConRiesgo] = useState([]);
 
-    const calcularRiesgoAccionistas = useCallback((accionistas) => {
+    const calcularRiesgos = useCallback((accionistas) => {
         const accionistasActualizados = accionistas.map(accionista => {
-            const camposNumericos = COLUMNAS_NUMERICAS
-                .map(col => accionista[col.id])
+            // Calcular Probabilidad
+            const valoresProbabilidad = COLUMNAS_PROBABILIDAD
+                .map(col => accionista[col])
                 .filter(val => val !== null && !isNaN(val));
-                
-            const promedio = camposNumericos.length > 0 ? 
-                camposNumericos.reduce((sum, val) => sum + val, 0) / camposNumericos.length : 
-                0;
             
+            const probabilidad = valoresProbabilidad.length > 0 ? 
+                valoresProbabilidad.reduce((sum, val) => sum + val, 0) / valoresProbabilidad.length : 
+                0;
+
+            // Calcular Impacto
+            const valoresImpacto = COLUMNAS_IMPACTO
+                .map(col => accionista[col])
+                .filter(val => val !== null && !isNaN(val));
+            
+            const impacto = valoresImpacto.length > 0 ? 
+                valoresImpacto.reduce((sum, val) => sum + val, 0) / valoresImpacto.length : 
+                0;
+
+            // Calcular Factor Riesgo (promedio de probabilidad e impacto)
+            const factorRiesgo = (probabilidad + impacto) / 2;
+
             return {
                 ...accionista,
-                factorRiesgoAccionistaSocio: parseFloat(promedio.toFixed(2))
+                probabilidad: parseFloat(probabilidad.toFixed(2)),
+                impacto: parseFloat(impacto.toFixed(2)),
+                factorRiesgoAccionistaSocio: parseFloat(factorRiesgo.toFixed(2))
             };
         });
         
@@ -38,12 +53,13 @@ export const useAccionistasSocios = () => {
         try {
             // Validar cada accionista/socio
             const promises = accionistasConRiesgo.map(async (accionista) => {
-                if (accionista.factorRiesgoAccionistaSocio !== undefined) {
-                    await databaseService.actualizarAccionistaSocio(
-                        accionista.id,
-                        { promedio_riesgo_accionista_socio: accionista.factorRiesgoAccionistaSocio }
-                    );
-                }
+                const datosActualizacion = {
+                    probabilidad: accionista.probabilidad,
+                    impacto: accionista.impacto,
+                    promedio_riesgo_accionista_socio: accionista.factorRiesgoAccionistaSocio
+                };
+                
+                return databaseService.actualizar(accionista.id, datosActualizacion);
             });
             
             await Promise.all(promises);
@@ -56,7 +72,7 @@ export const useAccionistasSocios = () => {
                     accionistasSocios: resultado.data,
                     validando: false
                 }));
-                calcularRiesgoAccionistas(resultado.data);
+                calcularRiesgos(resultado.data);
             } else {
                 setState(prev => ({
                     ...prev,
@@ -72,7 +88,7 @@ export const useAccionistasSocios = () => {
             }));
             console.error('Error al validar riesgos:', err);
         }
-    }, [accionistasConRiesgo, calcularRiesgoAccionistas]);
+    }, [accionistasConRiesgo, calcularRiesgos]);
 
     useEffect(() => {
         let isMounted = true;
@@ -89,7 +105,7 @@ export const useAccionistasSocios = () => {
                             accionistasSocios: resultado.data,
                             loading: false
                         }));
-                        calcularRiesgoAccionistas(resultado.data);
+                        calcularRiesgos(resultado.data);
                     } else {
                         setState(prev => ({
                             ...prev,
@@ -115,7 +131,7 @@ export const useAccionistasSocios = () => {
         return () => {
             isMounted = false;
         };
-    }, [calcularRiesgoAccionistas]);
+    }, [calcularRiesgos]);
 
     const filtrarAccionistas = useCallback((accionista) => {
         if (!state.filtro) return true;
@@ -135,8 +151,8 @@ export const useAccionistasSocios = () => {
     }, []);
 
     const actualizarReporte = useCallback(() => {
-        calcularRiesgoAccionistas(state.accionistasSocios);
-    }, [calcularRiesgoAccionistas, state.accionistasSocios]);
+        calcularRiesgos(state.accionistasSocios);
+    }, [calcularRiesgos, state.accionistasSocios]);
 
     return {
         state,
@@ -144,8 +160,6 @@ export const useAccionistasSocios = () => {
         handleFiltroChange,
         actualizarReporte,
         validarRiesgos,
-        COLUMNAS_REPORTE: [...COLUMNAS_REPORTE, 
-            { id: 'factorRiesgoAccionistaSocio', nombre: 'Factor Riesgo Accionista/Socio' }
-        ]
+        COLUMNAS_REPORTE
     };
 };

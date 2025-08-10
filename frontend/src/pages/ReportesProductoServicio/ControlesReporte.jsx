@@ -8,7 +8,7 @@ export const ControlesReporte = ({
     onActualizar,
     onValidarTodos,
     datos,
-    columnas 
+    columnas // Recibimos las columnas como prop
 }) => {
     const handleExportExcel = () => {
         const excelColumns = columnas.map(col => {
@@ -18,18 +18,12 @@ export const ControlesReporte = ({
             };
             
             // Aplicar formato numérico solo a las columnas que lo requieren
-            if (col.id.endsWith('_numerico') || col.id.includes('riesgoFactor')) {
+            if (col.id.endsWith('_numerico') || col.id.includes('riesgoFactor') || col.tipo === 'numero') {
                 columnDef.format = 'number';
             }
             
             return columnDef;
         });
-        
-        // Agregar columnas adicionales
-        excelColumns.push(
-            { id: 'riesgoFactorProductosServicios', name: 'Riesgo Calculado', format: 'number' },
-            { id: 'promedio_riesgo_producto_servicio', name: 'Riesgo Validado', format: 'number' }
-        );
         
         exportExcelFile(
             datos,

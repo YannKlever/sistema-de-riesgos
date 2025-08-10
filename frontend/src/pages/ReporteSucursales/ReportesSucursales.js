@@ -44,13 +44,40 @@ export const ReportesSucursales = () => {
             <div className={styles.resumen}>
                 <p>Total en reporte: <strong>{sucursalesFiltradas.length}</strong></p>
                 {sucursalesFiltradas.length > 0 && (
-                    <p>Promedio de riesgo zona geográfica: <strong>
-                        {(
-                            sucursalesFiltradas.reduce((sum, sucursal) => 
-                                sum + (sucursal.factorRiesgoZonaGeografica || 0), 0) / 
-                            sucursalesFiltradas.length
-                        ).toFixed(2)}
-                    </strong></p>
+                    <>
+                        <p>Promedio de probabilidad: <strong>
+                            {(
+                                sucursalesFiltradas.reduce((sum, sucursal) => 
+                                    sum + (sucursal.probabilidad || 0), 0) / 
+                                sucursalesFiltradas.length
+                            ).toFixed(2)}
+                        </strong></p>
+                        
+                        <p>Promedio de impacto: <strong>
+                            {(
+                                sucursalesFiltradas.reduce((sum, sucursal) => 
+                                    sum + (sucursal.impacto || 0), 0) / 
+                                sucursalesFiltradas.length
+                            ).toFixed(2)}
+                        </strong></p>
+                        
+                        <p>Promedio de riesgo calculado: <strong>
+                            {(
+                                sucursalesFiltradas.reduce((sum, sucursal) => 
+                                    sum + (sucursal.factorRiesgoZonaGeografica || 0), 0) / 
+                                sucursalesFiltradas.length
+                            ).toFixed(2)}
+                        </strong></p>
+                        
+                        <p>Promedio de riesgo validado: <strong>
+                            {(
+                                sucursalesFiltradas.reduce((sum, sucursal) => 
+                                    sum + (sucursal.promedio_riesgo_zona_geografica || 
+                                           sucursal.factorRiesgoZonaGeografica || 0), 0) / 
+                                sucursalesFiltradas.length
+                            ).toFixed(2)}
+                        </strong></p>
+                    </>
                 )}
             </div>
         </div>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useClientesExternos } from './useClientesExternos';
 import { ControlesReporte } from './ControlesReporte';
 import { TablaReporte } from './TablaReporte';
@@ -13,6 +13,31 @@ export const ReporteClientesExternos = () => {
         validarTodo,
         COLUMNAS_REPORTE
     } = useClientesExternos();
+
+    // Calcular promedios para el resumen
+   
+    const promedios = useMemo(() => {
+        if (clientesFiltrados.length === 0) return {};
+        
+        const suma = clientesFiltrados.reduce((acc, cliente) => ({
+            probabilidad: acc.probabilidad + (cliente.probabilidad || 0),
+            impacto: acc.impacto + (cliente.impacto || 0),
+            factorRiesgo: acc.factorRiesgo + (cliente.factorRiesgoClienteExterno || 0),
+            riesgoProductoServicio: acc.riesgoProductoServicio + (cliente.promedio_riesgo_producto_servicio || 0)
+        }), { 
+            probabilidad: 0, 
+            impacto: 0, 
+            factorRiesgo: 0,
+            riesgoProductoServicio: 0
+        });
+        
+        return {
+            probabilidad: (suma.probabilidad / clientesFiltrados.length).toFixed(2),
+            impacto: (suma.impacto / clientesFiltrados.length).toFixed(2),
+            factorRiesgo: (suma.factorRiesgo / clientesFiltrados.length).toFixed(2),
+            riesgoProductoServicio: (suma.riesgoProductoServicio / clientesFiltrados.length).toFixed(2)
+        };
+    }, [clientesFiltrados]);
 
     return (
         <div className={styles.contenedor}>
@@ -42,13 +67,12 @@ export const ReporteClientesExternos = () => {
             <div className={styles.resumen}>
                 <p>Total de clientes en reporte: <strong>{clientesFiltrados.length}</strong></p>
                 {clientesFiltrados.length > 0 && (
-                    <p>Promedio de riesgo: <strong>
-                        {(
-                            clientesFiltrados.reduce((sum, cliente) => 
-                                sum + (cliente.factorRiesgoClienteExterno || 0), 0) / 
-                            clientesFiltrados.length
-                        ).toFixed(2)}
-                    </strong></p>
+                    <>
+                        <p>Promedio de probabilidad: <strong>{promedios.probabilidad}</strong></p>
+                        <p>Promedio de impacto: <strong>{promedios.impacto}</strong></p>
+                        <p>Promedio de factor de riesgo: <strong>{promedios.factorRiesgo}</strong></p>
+                        <p>Promedio de riesgo producto/servicio: <strong>{promedios.riesgoProductoServicio}</strong></p>
+                    </>
                 )}
             </div>
         </div>
