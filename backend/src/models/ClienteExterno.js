@@ -135,10 +135,10 @@ class ClienteExterno {
     }
 
 
-static async listarClientesExternosConRiesgoInterno() {
-    return new Promise((resolve, reject) => {
-        db.all(
-            `SELECT 
+    static async listarClientesExternosConRiesgoInterno() {
+        return new Promise((resolve, reject) => {
+            db.all(
+                `SELECT 
                 ce.*,
                 ci.promedio_riesgo_cliente_interno,
                 ci.nombres_cliente_interno || ' ' || ci.apellidos_cliente_interno AS ejecutivo_interno
@@ -146,25 +146,54 @@ static async listarClientesExternosConRiesgoInterno() {
              LEFT JOIN "tabla-clientes-internos" ci 
                 ON ce.ejecutivo = (ci.nombres_cliente_interno || ' ' || ci.apellidos_cliente_interno)
              ORDER BY ce.fecha_registro DESC`,
-            [],
-            (err, rows) => {
-                if (err) {
-                    console.error('Error al listar clientes externos con riesgo interno:', err);
-                    reject({ success: false, error: err.message });
-                } else {
-                    const processedRows = rows.map(row => ({
-                        ...row,
-                        promedio_riesgo_cliente_interno: row.promedio_riesgo_cliente_interno
-                            ? parseFloat(row.promedio_riesgo_cliente_interno)
-                            : 0,
-                        ejecutivo_interno: row.ejecutivo_interno || 'admin'
-                    }));
-                    resolve({ success: true, data: processedRows });
+                [],
+                (err, rows) => {
+                    if (err) {
+                        console.error('Error al listar clientes externos con riesgo interno:', err);
+                        reject({ success: false, error: err.message });
+                    } else {
+                        const processedRows = rows.map(row => ({
+                            ...row,
+                            promedio_riesgo_cliente_interno: row.promedio_riesgo_cliente_interno
+                                ? parseFloat(row.promedio_riesgo_cliente_interno)
+                                : 0,
+                            ejecutivo_interno: row.ejecutivo_interno || 'admin'
+                        }));
+                        resolve({ success: true, data: processedRows });
+                    }
                 }
-            }
-        );
-    });
-}
+            );
+        });
+    }
+    //metodo para vincular el riesgo producto servicio
+    static async listarClientesExternosConRiesgoProductoServicio() {
+        return new Promise((resolve, reject) => {
+            db.all(
+                `SELECT 
+                ce.*,
+                ps.promedio_riesgo_producto_servicio
+             FROM "tabla-clientes-externos" ce
+             LEFT JOIN "tabla-productos-servicios" ps 
+                ON ce.ramo_seguro = ps.producto_servicio
+             ORDER BY ce.fecha_registro DESC`,
+                [],
+                (err, rows) => {
+                    if (err) {
+                        console.error('Error al listar clientes externos con riesgo de producto/servicio:', err);
+                        reject({ success: false, error: err.message });
+                    } else {
+                        const processedRows = rows.map(row => ({
+                            ...row,
+                            promedio_riesgo_producto_servicio: row.promedio_riesgo_producto_servicio
+                                ? parseFloat(row.promedio_riesgo_producto_servicio)
+                                : 0
+                        }));
+                        resolve({ success: true, data: processedRows });
+                    }
+                }
+            );
+        });
+    }
 
     static async vincularClienteInterno(idClienteExterno, idClienteInterno) {
         return new Promise((resolve, reject) => {
