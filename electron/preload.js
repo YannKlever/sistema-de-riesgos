@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     bulkCreateClientesExternos: (data) => ipcRenderer.invoke('bulk-create-clientes-externos', data),
     // Nuevos métodos
     listarClientesExternosConRiesgoInterno: () => ipcRenderer.invoke('listar-clientes-externos-con-riesgo-interno'),
+    listarClientesExternosConRiesgoProductoServicio: () => ipcRenderer.invoke('listar-clientes-externos-con-riesgo-producto-servicio'),
     vincularClienteInterno: (idClienteExterno, idClienteInterno) =>
         ipcRenderer.invoke('vincular-cliente-interno', idClienteExterno, idClienteInterno),
     //Tabla accionistas socios
