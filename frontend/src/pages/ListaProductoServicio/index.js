@@ -36,15 +36,7 @@ const ListaProductosServicios = ({ onBack }) => {
       ]);
 
       if (productosRes.success) {
-        const productosConDatos = productosRes.data.map(item => ({
-          ...item,
-          riesgo_producto_numerico: item.riesgo_producto_numerico ||
-            NIVELES_RIESGO.find(n => n.value === item.riesgo_producto)?.valorNumerico || null,
-          riesgo_cliente_numerico: item.riesgo_cliente_numerico ||
-            NIVELES_RIESGO.find(n => n.value === item.riesgo_cliente)?.valorNumerico || null
-        }));
-
-        setState(prev => ({ ...prev, productos: productosConDatos }));
+        setState(prev => ({ ...prev, productos: productosRes.data }));
       } else {
         throw new Error(productosRes.error || 'Error al cargar productos');
       }
@@ -152,47 +144,47 @@ const ListaProductosServicios = ({ onBack }) => {
 
   // Configuración de la tabla
   const columns = useMemo(() => [
-  ...state.columnasVisibles.map(col => ({
-    accessorKey: col.id,
-    header: col.nombre,
-    cell: info => {
-      const value = info.getValue();
-      if (col.id === 'fecha_registro') {
-        return formatDate(value);
-      } else if (col.id === 'riesgo_producto' || col.id === 'riesgo_cliente') {
-        return getLabelRiesgo(value) || '-';
-      }
-      return formatearValor(value);
-    },
-    size: 150
-  })),
-  {
-    id: 'acciones',
-    header: 'Acciones',
-    cell: info => (
-      <div className={styles.acciones}>
-        <button
-          onClick={() => {
-            setEditingId(info.row.original.id);
-            setShowFormModal(true);
-          }}
-          className={styles.botonEditar}
-          disabled={state.loading}
-        >
-          Editar
-        </button>
-        <button
-          onClick={() => handleDelete(info.row.original.id)}
-          className={styles.botonEliminar}
-          disabled={state.loading}
-        >
-          Eliminar
-        </button>
-      </div>
-    ),
-    size: 120
-  }
-], [state.columnasVisibles, state.loading, formatearValor]);
+    ...state.columnasVisibles.map(col => ({
+      accessorKey: col.id,
+      header: col.nombre,
+      cell: info => {
+        const value = info.getValue();
+        if (col.id === 'fecha_registro') {
+          return formatDate(value);
+        } else if (col.id === 'riesgo_producto' || col.id === 'riesgo_cliente') {
+          return getLabelRiesgo(value) || '-';
+        }
+        return formatearValor(value);
+      },
+      size: 150
+    })),
+    {
+      id: 'acciones',
+      header: 'Acciones',
+      cell: info => (
+        <div className={styles.acciones}>
+          <button
+            onClick={() => {
+              setEditingId(info.row.original.id);
+              setShowFormModal(true);
+            }}
+            className={styles.botonEditar}
+            disabled={state.loading}
+          >
+            Editar
+          </button>
+          <button
+            onClick={() => handleDelete(info.row.original.id)}
+            className={styles.botonEliminar}
+            disabled={state.loading}
+          >
+            Eliminar
+          </button>
+        </div>
+      ),
+      size: 120
+    }
+  ], [state.columnasVisibles, state.loading, formatearValor]);
 
   const table = useReactTable({
     data: state.productos,

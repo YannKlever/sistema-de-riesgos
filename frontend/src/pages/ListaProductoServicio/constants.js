@@ -1,5 +1,5 @@
 export const COLUMNAS_PRODUCTOS_SERVICIOS = [
-    { id: 'id', nombre: 'ID', visible: true },
+    { id: 'id', nombre: 'ID', visible: false },
     { id: 'fecha_registro', nombre: 'Fecha Registro', visible: true },
     { id: 'oficina', nombre: 'Oficina', visible: true },
     { id: 'producto_servicio', nombre: 'Producto/Servicio', visible: true },
@@ -10,7 +10,7 @@ export const COLUMNAS_PRODUCTOS_SERVICIOS = [
     { id: 'riesgo_cliente_numerico', nombre: 'Riesgo Cliente (Ponderado)', visible: false },
     { id: 'probabilidad', nombre: 'Probabilidad', visible: false },
     { id: 'impacto', nombre: 'Impacto', visible: false },
-    { id: 'promedio_riesgo_producto_servicio', nombre: 'Riesgo Promedio del Producto Servicio', visible: true }
+    { id: 'promedio_riesgo_producto_servicio', nombre: 'Riesgo Promedio del Producto Servicio', visible: false }
 ];
 
 export const DEFAULT_COLUMNAS_PRODUCTOS = COLUMNAS_PRODUCTOS_SERVICIOS.filter(col => col.visible);
