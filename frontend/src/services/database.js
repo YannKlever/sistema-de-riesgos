@@ -45,6 +45,12 @@ export const databaseService = {
         if (!window.electronAPI) throw new Error('API no disponible');
         return window.electronAPI.listarClientesExternosConRiesgoInterno();
     },
+    //metodo para listar con producto servicio
+
+    async listarClientesExternosConRiesgoProductoServicio() {
+        if (!window.electronAPI) throw new Error('API no disponible');
+        return window.electronAPI.listarClientesExternosConRiesgoProductoServicio();
+    },
 
     async crearClienteExterno(cliente) {
         if (!window.electronAPI) throw new Error('API no disponible');
@@ -104,12 +110,12 @@ export const databaseService = {
 
     //importar
     async importarClientesInternos(data) {
-    if (!window.electronAPI) {
-        console.error('Electron API no disponible');
-        throw new Error('API no disponible');
-    }
-    return window.electronAPI.bulkCreateClientesInternos(data);
-},
+        if (!window.electronAPI) {
+            console.error('Electron API no disponible');
+            throw new Error('API no disponible');
+        }
+        return window.electronAPI.bulkCreateClientesInternos(data);
+    },
 
     async listarClientesInternos() {
         if (!window.electronAPI) {
@@ -198,12 +204,12 @@ export const databaseService = {
 
     /// importar
     async importarProductosServicios(data) {
-    if (!window.electronAPI) {
-        console.error('Electron API no disponible');
-        throw new Error('API no disponible');
-    }
-    return window.electronAPI.bulkCreateProductosServicios(data);
-},
+        if (!window.electronAPI) {
+            console.error('Electron API no disponible');
+            throw new Error('API no disponible');
+        }
+        return window.electronAPI.bulkCreateProductosServicios(data);
+    },
 
 
 
@@ -331,12 +337,12 @@ export const databaseService = {
 
     //importar
     async importarSucursales(data) {
-    if (!window.electronAPI) {
-        console.error('Electron API no disponible');
-        throw new Error('API no disponible');
-    }
-    return window.electronAPI.bulkCreateSucursales(data);
-},
+        if (!window.electronAPI) {
+            console.error('Electron API no disponible');
+            throw new Error('API no disponible');
+        }
+        return window.electronAPI.bulkCreateSucursales(data);
+    },
 
     async listarSucursales() {
         if (!window.electronAPI) {
@@ -409,35 +415,35 @@ export const databaseService = {
 
 
     //metodos para usuarios
-     async crearUsuario(data) {
-    if (!window.electronAPI) throw new Error('API no disponible');
-    return window.electronAPI.crearUsuario(data);
-  },
+    async crearUsuario(data) {
+        if (!window.electronAPI) throw new Error('API no disponible');
+        return window.electronAPI.crearUsuario(data);
+    },
 
-  async listarUsuarios() {
-    if (!window.electronAPI) throw new Error('API no disponible');
-    return window.electronAPI.listarUsuarios();
-  },
+    async listarUsuarios() {
+        if (!window.electronAPI) throw new Error('API no disponible');
+        return window.electronAPI.listarUsuarios();
+    },
 
-  async obtenerUsuario(id) {
-    if (!window.electronAPI) throw new Error('API no disponible');
-    return window.electronAPI.obtenerUsuario(id);
-  },
+    async obtenerUsuario(id) {
+        if (!window.electronAPI) throw new Error('API no disponible');
+        return window.electronAPI.obtenerUsuario(id);
+    },
 
-  async actualizarUsuario(id, data) {
-    if (!window.electronAPI) throw new Error('API no disponible');
-    return window.electronAPI.actualizarUsuario(id, data);
-  },
+    async actualizarUsuario(id, data) {
+        if (!window.electronAPI) throw new Error('API no disponible');
+        return window.electronAPI.actualizarUsuario(id, data);
+    },
 
-  async eliminarUsuario(id) {
-    if (!window.electronAPI) throw new Error('API no disponible');
-    return window.electronAPI.eliminarUsuario(id);
-  },
+    async eliminarUsuario(id) {
+        if (!window.electronAPI) throw new Error('API no disponible');
+        return window.electronAPI.eliminarUsuario(id);
+    },
 
-  async verificarCredenciales(email, password) {
-    if (!window.electronAPI) throw new Error('API no disponible');
-    return window.electronAPI.verificarCredenciales(email, password);
-  }
+    async verificarCredenciales(email, password) {
+        if (!window.electronAPI) throw new Error('API no disponible');
+        return window.electronAPI.verificarCredenciales(email, password);
+    }
 
 };
 
