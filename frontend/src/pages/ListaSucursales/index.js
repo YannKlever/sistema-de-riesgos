@@ -30,18 +30,7 @@ const ListaSucursales = ({ onBack }) => {
             const resultado = await databaseService.listarSucursales();
 
             if (resultado.success) {
-                const sucursalesConDatos = resultado.data.map(item => ({
-                    ...item,
-                    riesgo_departamento_numerico: item.riesgo_departamento_numerico || 
-                        NIVELES_RIESGO.find(n => n.value === item.riesgo_departamento)?.valorNumerico || null,
-                    riesgo_municipio_numerico: item.riesgo_municipio_numerico || 
-                        NIVELES_RIESGO.find(n => n.value === item.riesgo_municipio)?.valorNumerico || null,
-                    riesgo_zona_numerico: item.riesgo_zona_numerico || 
-                        NIVELES_RIESGO.find(n => n.value === item.riesgo_zona)?.valorNumerico || null,
-                    riesgo_frontera_numerico: item.riesgo_frontera_numerico || 
-                        NIVELES_RIESGO.find(n => n.value === item.riesgo_frontera)?.valorNumerico || null
-                }));
-                setState(prev => ({ ...prev, sucursales: sucursalesConDatos }));
+                setState(prev => ({ ...prev, sucursales: resultado.data }));
             } else {
                 setState(prev => ({
                     ...prev,
@@ -188,7 +177,7 @@ const ListaSucursales = ({ onBack }) => {
             ),
             size: 120
         }
-    ], [state.columnasVisibles, state.loading]);
+    ], [state.columnasVisibles, state.loading, formatearValor]);
 
     const table = useReactTable({
         data: state.sucursales,
@@ -254,7 +243,7 @@ const ListaSucursales = ({ onBack }) => {
                     >
                         Importar Excel
                     </button>
-                    
+
                     <button
                         onClick={() => setState(prev => ({ ...prev, mostrarSelectorColumnas: !prev.mostrarSelectorColumnas }))}
                         className={styles.botonColumnas}
@@ -363,8 +352,8 @@ const ListaSucursales = ({ onBack }) => {
                             ) : (
                                 <tr>
                                     <td colSpan={columns.length} className={styles.sinResultados}>
-                                        {state.sucursales.length === 0 
-                                            ? 'No hay sucursales registradas' 
+                                        {state.sucursales.length === 0
+                                            ? 'No hay sucursales registradas'
                                             : 'No se encontraron resultados'}
                                     </td>
                                 </tr>

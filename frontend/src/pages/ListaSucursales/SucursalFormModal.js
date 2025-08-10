@@ -38,11 +38,14 @@ const SucursalFormModal = ({ editingId, sucursales, onClose, onSuccess, onError 
         zona: '',
         frontera: '',
         observaciones: '',
-        ...Object.fromEntries(
-            Object.entries(NIVELES_RIESGO[0]).map(([key]) => 
-                [`riesgo_${key}`, '']
-            )
-        )
+        riesgo_departamento: '',
+        riesgo_departamento_numerico: null,
+        riesgo_municipio: '',
+        riesgo_municipio_numerico: null,
+        riesgo_zona: '',
+        riesgo_zona_numerico: null,
+        riesgo_frontera: '',
+        riesgo_frontera_numerico: null
     });
 
     const [loading, setLoading] = useState(false);
@@ -59,11 +62,14 @@ const SucursalFormModal = ({ editingId, sucursales, onClose, onSuccess, onError 
                     zona: sucursal.zona || '',
                     frontera: sucursal.frontera || '',
                     observaciones: sucursal.observaciones || '',
-                    ...Object.fromEntries(
-                        Object.entries(sucursal).filter(([key]) => 
-                            key.startsWith('riesgo_') && !key.endsWith('_numerico')
-                        )
-                    )
+                    riesgo_departamento: sucursal.riesgo_departamento || '',
+                    riesgo_departamento_numerico: sucursal.riesgo_departamento_numerico || null,
+                    riesgo_municipio: sucursal.riesgo_municipio || '',
+                    riesgo_municipio_numerico: sucursal.riesgo_municipio_numerico || null,
+                    riesgo_zona: sucursal.riesgo_zona || '',
+                    riesgo_zona_numerico: sucursal.riesgo_zona_numerico || null,
+                    riesgo_frontera: sucursal.riesgo_frontera || '',
+                    riesgo_frontera_numerico: sucursal.riesgo_frontera_numerico || null
                 });
             }
         }
@@ -71,32 +77,42 @@ const SucursalFormModal = ({ editingId, sucursales, onClose, onSuccess, onError 
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        if (name.startsWith('riesgo_') && !name.endsWith('_numerico')) {
+            const nivelSeleccionado = NIVELES_RIESGO.find(nivel => nivel.value === value);
+            setFormData(prev => ({
+                ...prev,
+                [name]: value,
+                [`${name}_numerico`]: nivelSeleccionado ? nivelSeleccionado.valorNumerico : null
+            }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (!formData.oficina || !formData.ubicacion || !formData.departamento || !formData.riesgo_departamento) {
             onError('Por favor complete los campos requeridos');
             return;
         }
 
         setLoading(true);
-        
+
         try {
             const datos = {
                 ...formData,
-                ...Object.fromEntries(
-                    NIVELES_RIESGO.map(nivel => [
-                        `riesgo_${nivel.value}_numerico`,
-                        formData[`riesgo_${nivel.value}`] === nivel.value ? nivel.valorNumerico : null
-                    ])
-                ),
-                fecha_registro: editingId 
+                fecha_registro: editingId
                     ? sucursales.find(s => s.id === editingId).fecha_registro
                     : new Date().toISOString()
             };
+
+            // Eliminar campos _numerico si son null para que la base de datos use sus valores por defecto
+            Object.keys(datos).forEach(key => {
+                if (key.endsWith('_numerico') && datos[key] === null) {
+                    delete datos[key];
+                }
+            });
 
             const resultado = editingId
                 ? await databaseService.actualizarSucursal(editingId, datos)
@@ -121,7 +137,7 @@ const SucursalFormModal = ({ editingId, sucursales, onClose, onSuccess, onError 
                         &times;
                     </button>
                 </div>
-                
+
                 <form onSubmit={handleSubmit} className={styles.form}>
                     <div className={styles.formGrid}>
                         <CampoFormulario label="Oficina" required>
@@ -162,8 +178,8 @@ const SucursalFormModal = ({ editingId, sucursales, onClose, onSuccess, onError 
                         </CampoFormulario>
 
                         <CampoFormulario label="Riesgo Depto." required>
-                            <CampoRiesgo 
-                                name="riesgo_departamento" 
+                            <CampoRiesgo
+                                name="riesgo_departamento"
                                 value={formData.riesgo_departamento}
                                 onChange={handleChange}
                             />
@@ -180,8 +196,8 @@ const SucursalFormModal = ({ editingId, sucursales, onClose, onSuccess, onError 
                         </CampoFormulario>
 
                         <CampoFormulario label="Riesgo Mun.">
-                            <CampoRiesgo 
-                                name="riesgo_municipio" 
+                            <CampoRiesgo
+                                name="riesgo_municipio"
                                 value={formData.riesgo_municipio}
                                 onChange={handleChange}
                             />
@@ -198,8 +214,8 @@ const SucursalFormModal = ({ editingId, sucursales, onClose, onSuccess, onError 
                         </CampoFormulario>
 
                         <CampoFormulario label="Riesgo Zona">
-                            <CampoRiesgo 
-                                name="riesgo_zona" 
+                            <CampoRiesgo
+                                name="riesgo_zona"
                                 value={formData.riesgo_zona}
                                 onChange={handleChange}
                             />
@@ -216,8 +232,8 @@ const SucursalFormModal = ({ editingId, sucursales, onClose, onSuccess, onError 
                         </CampoFormulario>
 
                         <CampoFormulario label="Riesgo Frontera">
-                            <CampoRiesgo 
-                                name="riesgo_frontera" 
+                            <CampoRiesgo
+                                name="riesgo_frontera"
                                 value={formData.riesgo_frontera}
                                 onChange={handleChange}
                             />
@@ -235,16 +251,16 @@ const SucursalFormModal = ({ editingId, sucursales, onClose, onSuccess, onError 
                     </div>
 
                     <div className={styles.modalFooter}>
-                        <button 
-                            type="button" 
+                        <button
+                            type="button"
                             onClick={onClose}
                             className={`${styles.modalButton} ${styles.cancelButton}`}
                             disabled={loading}
                         >
                             Cancelar
                         </button>
-                        <button 
-                            type="submit" 
+                        <button
+                            type="submit"
                             className={`${styles.modalButton} ${styles.saveButton}`}
                             disabled={loading}
                         >
