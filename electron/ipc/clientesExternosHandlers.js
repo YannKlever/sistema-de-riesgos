@@ -45,10 +45,17 @@ function setupClientesExternosHandlers(ipcMain) {
             return { success: false, error: error.message };
         }
     });
-
+    // Nuevo handler para listar con riesgo de producto/servicio
+    ipcMain.handle('listar-clientes-externos-con-riesgo-producto-servicio', async () => {
+        try {
+            return await ClienteExterno.listarClientesExternosConRiesgoProductoServicio();
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+    });
 
     //editar cliente externo
-      ipcMain.handle('actualizar-cliente-externo', async (_, id, data) => {
+    ipcMain.handle('actualizar-cliente-externo', async (_, id, data) => {
         try {
             const resultado = await ClienteExterno.actualizar(id, data);
             return resultado;
@@ -65,8 +72,8 @@ function setupClientesExternosHandlers(ipcMain) {
             return { success: false, error: error.message };
         }
     });
- // Handler para importar
-     ipcMain.handle('bulk-create-clientes-externos', async (_, clientes) => {
+    // Handler para importar
+    ipcMain.handle('bulk-create-clientes-externos', async (_, clientes) => {
         try {
             console.log(`Iniciando importación de ${clientes.length} registros de clientes externos`);
             const resultado = await ClienteExterno.bulkCreate(clientes);
