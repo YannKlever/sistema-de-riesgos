@@ -38,6 +38,10 @@ export const databaseService = {
             };
         }
     },
+    async listarClientesConAlertas() {
+        if (!window.electronAPI) throw new Error('API no disponible');
+        return window.electronAPI.listarClientesConAlertas();
+    },
 
 
     // Nuevo método para listar con riesgo interno
@@ -249,11 +253,6 @@ export const databaseService = {
             return { success: false, error: error.message, data: 0 };
         }
     },
-
-
-
-
-
     // Métodos para Evaluaciones LD/FT
     async crearEvaluacionLDFT(data) {
         if (!window.electronAPI) {
