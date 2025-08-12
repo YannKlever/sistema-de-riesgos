@@ -34,6 +34,8 @@ async function createTable(db) {
               consistencia_informacion TEXT,
               comportamiento_cliente TEXT,
               observaciones TEXT,
+              alertas_cliente_interno TEXT,
+              alertas_activos_virtuales TEXT,
               nacionalidad_numerico INTEGER,
               riesgo_profesion_actividad_numerico INTEGER,
               riesgo_zona_numerico INTEGER,
