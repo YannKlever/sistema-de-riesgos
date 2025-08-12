@@ -28,6 +28,8 @@ export const COLUMNAS_CLIENTES_INTERNOS = [
     { id: 'consistencia_informacion', nombre: 'Consistencia Información', visible: false },
     { id: 'comportamiento_cliente', nombre: 'Comportamiento Cliente', visible: false },
     { id: 'observaciones', nombre: 'Observaciones', visible: false },
+    { id: 'alertas_cliente_interno', nombre: 'Alertas de Cliente Interno', visible: false },
+    { id: 'alertas_activos_virtuales', nombre: 'Alertas de Activos Virtuales', visible: false },
     { id: 'nacionalidad_numerico', nombre: 'Nacionalidad (Ponderado)', visible: false },
     { id: 'riesgo_profesion_actividad_numerico', nombre: 'Riesgo Profesión (Ponderado)', visible: false },
     { id: 'riesgo_zona_numerico', nombre: 'Riesgo Zona (Ponderado)', visible: false },
