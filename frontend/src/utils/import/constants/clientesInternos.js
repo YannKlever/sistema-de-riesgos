@@ -34,6 +34,8 @@ export const CLIENTES_INTERNOS_SCHEMA = {
     'Consistencia Información': 'consistencia_informacion',
     'Comportamiento Cliente': 'comportamiento_cliente',
     'Observaciones': 'observaciones',
+    'Alertas de Clientes Internos': 'alertas_cliente_interno',
+    'Alertas de Activos Virtuales': 'alertas_activos_virtuales',
     'Nacionalidad (Ponderado)': 'nacionalidad_numerico',
     'Riesgo Profesión (Ponderado)': 'riesgo_profesion_actividad_numerico',
     'Riesgo Zona (Ponderado)': 'riesgo_zona_numerico',

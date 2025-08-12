@@ -67,6 +67,12 @@ export const CLIENTES_EXTERNOS_SCHEMA = {
     'Consistencia de Información': 'consistencia_informacion',
     'Comportamiento Cliente': 'comportamiento_cliente',
     'Observaciones': 'observaciones',
+    'Autorización por Alta Gerencia': 'autorizado_por_alta_gerencia',
+    'Alertas de Vinculación': 'alertas_vinculacion',
+    /*'Alertas de Pago Prima': 'alertas_pago_prima',*/
+    'Alertas de emisión renovación': 'alertas_emision_renovacion',
+    'Alertas de Rescisión': 'alertas_rescision',
+    'Alertas de Activos Virtuales': 'alertas_activos_virtuales',
     // Campos numéricos (ponderados)
     'Riesgo País (Ponderado)': 'nacionalidad_numerico',
     'Riesgo Profesión/Actividad (Ponderado)': 'riesgo_profesion_actividad_numerico',
