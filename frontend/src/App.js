@@ -16,6 +16,7 @@ import styles from './App.css';
 
 // Componentes de formularios
 import BotonClientes from './components/BotonClientes/BotonClientes';
+//import FormROS from './pages/FormularioROS/FormularioROS';
 import FormularioEmpresaPublica from './pages/FormularioEmpresaPublica/FormularioEmpresaPublica';
 import FormularioPersonaJuridica from './pages/FormularioPersonaJuridica/FormularioPersonaJuridica';
 import FormularioPersonaNatural100 from './pages/FormularioPersonaNatural100/FormularioPersonaNatural100';
@@ -45,6 +46,7 @@ import ReportesSucursales from './pages/ReporteSucursales/ReportesSucursales';
 import ReportesProductosServicios from './pages/ReportesProductoServicio/ReportesProductosServicios';
 import ReportesLDFT from './pages/ReportesFormularioLDFT/ReportesLDFT';
 import ReporteCanalesDistribucion from './pages/ReportesCanalDistribucion/ReporteCanalesDistribucion';
+import ReporteAlertas from './pages/ReporteAlertas/ReporteAlertas';
 
 // Componentes de graficos
 import Graficos from './pages/Graficos/Graficos';
@@ -111,7 +113,6 @@ function App() {
               {/* Rutas principales */}
               <Route path="/home" element={<HomePage />} />
 
-              
               <Route path="/parametros" element={<Parametros />} />
               <Route path="/parametros/formulario-ld-ft" element={<FormularioLDFT />} />
               <Route path="/parametros/lista-producto-servicio" element={<ListaProductoServicio />} />
@@ -120,10 +121,11 @@ function App() {
               <Route path="/parametros/accionistas-directorio/:id?" element={<AccionistasDirectorio />} />
               <Route path="/parametros/clientes-externos" element={<ListaClientesExternos />} />
               <Route path="/parametros/lista-accionistas-socios" element={<ListaAccionistasSocios />} />
-              <Route path='/parametros/lista-clientes-internos' element={<ListaClientesInternos/>}/>
+              <Route path='/parametros/lista-clientes-internos' element={<ListaClientesInternos />} />
 
               {/* Componente de clientes y formularios */}
               <Route path="/clientes" element={<BotonClientes />} />
+              {/*<Route path="/formulario-ros" element={<FormROS />} />*/}
               <Route path="/empresa-publica" element={<FormularioEmpresaPublica />} />
               <Route path="/personaJuridica" element={<FormularioPersonaJuridica />} />
               <Route path="/personaNatural100" element={<FormularioPersonaNatural100 />} />
@@ -133,31 +135,26 @@ function App() {
               <Route path="/formulario-empresa/1000" element={<FormularioEmpresaUnipersonal1000 />} />
               <Route path="/formulario-empresa/5000" element={<FormularioEmpresaUnipersonal5000 />} />
 
-             {/* Componente de reportes */}
+              {/* Componente de reportes */}
               <Route path="/reportes" element={<Reportes />} />
               <Route path="/reportes/clientes-externos" element={<ReporteClienteExterno />} />
               <Route path="/reportes/accionistasSocios" element={<ReporteAccionistaSocio />} />
-              <Route path="/reportes/clientes-internos" element={<ReporteClientesInternos/>}/>
-              <Route path="/reportes/zona-geografica" element={<ReportesSucursales/>}/>
-              <Route path="/reportes/ld-ft" element={<ReportesLDFT/>}/>
-              
-              <Route path="/reportes/productos-servicios" element={<ReportesProductosServicios/>}/>
-              
-              <Route path="/reportes/canales-distribucion" element={<ReporteCanalesDistribucion/>}/>
+              <Route path="/reportes/clientes-internos" element={<ReporteClientesInternos />} />
+              <Route path="/reportes/zona-geografica" element={<ReportesSucursales />} />
+              <Route path="/reportes/ld-ft" element={<ReportesLDFT />} />
+              <Route path="/reportes/alertas" element={<ReporteAlertas />} />
+              <Route path="/reportes/productos-servicios" element={<ReportesProductosServicios />} />
+              <Route path="/reportes/canales-distribucion" element={<ReporteCanalesDistribucion />} />
 
               {/* Componente de graficos */}
               <Route path="/graficos" element={<Graficos />} />
               <Route path="/graficos/accionistasSocios" element={<GraficosAccionistaSocio />} />
               <Route path="/graficos/clientesExternos" element={<GraficosClienteExterno />} />
               <Route path="/graficos/clientesInternos" element={<GraficosClientesInternos />} />
-              <Route path="/graficos/producto-servicio" element={<GraficosProductosServicios/>} />
-              <Route path="/graficos/zona-geografica" element={<GraficosSucursales/>} />
-              <Route path="/graficos/riesgo-ldft" element={<GraficosLDFT/>} />
-              <Route path="/graficos/canales-distribucion" element={<GraficosCanalesDistribucion/>} />
-
-
-
-
+              <Route path="/graficos/producto-servicio" element={<GraficosProductosServicios />} />
+              <Route path="/graficos/zona-geografica" element={<GraficosSucursales />} />
+              <Route path="/graficos/riesgo-ldft" element={<GraficosLDFT />} />
+              <Route path="/graficos/canales-distribucion" element={<GraficosCanalesDistribucion />} />
 
               {/* Configuración de ajustes con sub-rutas */}
               <Route path="/ajustes" element={<Ajustes />}>
