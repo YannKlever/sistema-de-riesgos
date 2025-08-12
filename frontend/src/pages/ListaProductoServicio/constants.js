@@ -22,3 +22,14 @@ export const NIVELES_RIESGO = [
     { value: 'medio alto', label: 'Medio Alto', valorNumerico: 4 },
     { value: 'alto', label: 'Alto', valorNumerico: 5 }
 ];
+export const NIVELES_RIESGO_CLIENTE = [
+    { value: 'natural', label: 'Persona Natural', valorNumerico: 1 },
+    { value: 'empresa unipersonal', label: 'Empresa Unipersonal', valorNumerico: 2 },
+    { value: 'persona juridica', label: 'Persona Jurídica', valorNumerico: 3 },
+    { value: 'empresa publica', label: 'Empresa Pública', valorNumerico: 4 },
+    {
+        value: 'empresas dedicadas a minería, metales preciosos, ong, personas pep, otros con alto riesgo',
+        label: 'Empresas dedicadas a minería, metales preciosos, ONG, Personas PEP, otros con alto riesgo',
+        valorNumerico: 5
+    }
+];

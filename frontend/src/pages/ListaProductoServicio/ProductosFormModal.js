@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { databaseService } from '../../services/database';
-import { NIVELES_RIESGO } from './constants';
+import { NIVELES_RIESGO, NIVELES_RIESGO_CLIENTE } from './constants';
 import styles from './styles.module.css';
 
 const CampoFormulario = ({ label, children, required = false }) => (
@@ -13,7 +13,7 @@ const CampoFormulario = ({ label, children, required = false }) => (
     </div>
 );
 
-const CampoRiesgo = ({ name, value, onChange }) => (
+const CampoRiesgo = ({ name, value, onChange, opciones = NIVELES_RIESGO }) => (
     <select
         name={name}
         value={value}
@@ -21,7 +21,7 @@ const CampoRiesgo = ({ name, value, onChange }) => (
         className={styles.formInput}
     >
         <option value="">Seleccione nivel</option>
-        {NIVELES_RIESGO.map(nivel => (
+        {opciones.map(nivel => (
             <option key={nivel.value} value={nivel.value}>
                 {nivel.label}
             </option>
@@ -53,7 +53,7 @@ const ProductosFormModal = ({ editingId, productos, oficinas, onClose, onSuccess
                         NIVELES_RIESGO.find(n => n.value === producto.riesgo_producto)?.valorNumerico || null,
                     riesgo_cliente: producto.riesgo_cliente,
                     riesgo_cliente_numerico: producto.riesgo_cliente_numerico ||
-                        NIVELES_RIESGO.find(n => n.value === producto.riesgo_cliente)?.valorNumerico || null,
+                        NIVELES_RIESGO_CLIENTE.find(n => n.value === producto.riesgo_cliente)?.valorNumerico || null,
                     oficina: producto.oficina || '',
                     observaciones: producto.observaciones || ''
                 });
@@ -72,7 +72,7 @@ const ProductosFormModal = ({ editingId, productos, oficinas, onClose, onSuccess
                 riesgo_producto_numerico: nivelSeleccionado ? nivelSeleccionado.valorNumerico : null
             }));
         } else if (name === 'riesgo_cliente') {
-            const nivelSeleccionado = NIVELES_RIESGO.find(nivel => nivel.value === value);
+            const nivelSeleccionado = NIVELES_RIESGO_CLIENTE.find(nivel => nivel.value === value);
             setFormData(prev => ({
                 ...prev,
                 riesgo_cliente: value,
@@ -167,6 +167,7 @@ const ProductosFormModal = ({ editingId, productos, oficinas, onClose, onSuccess
                                 name="riesgo_cliente"
                                 value={formData.riesgo_cliente}
                                 onChange={handleChange}
+                                opciones={NIVELES_RIESGO_CLIENTE}
                             />
                         </CampoFormulario>
 
