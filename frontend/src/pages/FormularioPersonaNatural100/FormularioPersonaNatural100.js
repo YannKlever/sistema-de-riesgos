@@ -11,10 +11,12 @@ import SeccionInformacionSeguro from '../../components/CamposFormulario/SeccionI
 import InIngresosAnuales from '../../components/CamposFormulario/InIngresosAnuales/InIngresosAnuales';
 import InVolumenActividad from '../../components/CamposFormulario/InVolumenActividad/InVolumenActividad';
 import InFrecuenciaActividad from '../../components/CamposFormulario/InFrecuenciaActividad/InFrecuenciaActividad';
+import InAutorizacion from '../../components/CamposFormulario/InAutorizacion/InAutorizacion';
 import styles from './formularioPersonaNatural100.module.css';
 import SeccionFrecuenciaContacto from '../../components/CamposFormulario/SeccionFrecuenciaContacto/SeccionFrecuenciaContacto';
 import SeccionEvaluacionRiesgo from '../../components/CamposFormulario/SeccionEvaluacionRiesgo/SeccionEvaluacionRiesgo';
 import { generateFormPDF, downloadPDF } from '../../utils/print/pdfGenerator';
+import SeccionAlertas from '../../components/CamposFormulario/SeccionAlertas/SeccionAlertas';
 
 const printSections = [
     {
@@ -207,6 +209,13 @@ const FormularioPersonaNatural100 = () => {
                                 titulo="Formulario de Persona Natural (Prima $100-$1000)"
                             />
                         </div>
+                        <div className={styles.formRow}>
+                            <div className={styles.fullWidthField}>
+                                <InAutorizacion
+                                    name="autorizado_por_alta_gerencia"
+                                />
+                            </div>
+                        </div>
                         <div className={styles.formSection}>
                             <h5 className={styles.sectionTitle}>
                                 <span className={styles.sectionIcon}>👤</span>
@@ -312,7 +321,7 @@ const FormularioPersonaNatural100 = () => {
                         <SeccionInformacionSeguro />
                         <SeccionFrecuenciaContacto />
                         <SeccionEvaluacionRiesgo />
-
+                        <SeccionAlertas />
                         <div className={styles.formActions}>
                             <button
                                 type="reset"
@@ -328,7 +337,7 @@ const FormularioPersonaNatural100 = () => {
                             >
                                 {isSubmitting ? 'Enviando...' : 'Enviar Formulario'}
                             </button>
-                            
+
                         </div>
                     </form>
                 </div>

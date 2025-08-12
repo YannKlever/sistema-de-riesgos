@@ -17,6 +17,8 @@ import SeccionInformacionSeguro from '../../components/CamposFormulario/SeccionI
 import SeccionFrecuenciaContacto from '../../components/CamposFormulario/SeccionFrecuenciaContacto/SeccionFrecuenciaContacto';
 import SeccionEvaluacionRiesgo from '../../components/CamposFormulario/SeccionEvaluacionRiesgo/SeccionEvaluacionRiesgo';
 import { generateFormPDF, downloadPDF } from '../../utils/print/pdfGenerator';
+import InAutorizacion from '../../components/CamposFormulario/InAutorizacion/InAutorizacion';
+import SeccionAlertas from '../../components/CamposFormulario/SeccionAlertas/SeccionAlertas';
 
 // Definición de las secciones para el PDF
 const printSections = [
@@ -206,6 +208,13 @@ const FormularioPersonaJuridica = () => {
                         <div className={styles.header}>
                             <HeaderInfoRegistro titulo="Formulario de Empresa Jurídica" />
                         </div>
+                        <div className={styles.formRow}>
+                            <div className={styles.fullWidthField}>
+                                <InAutorizacion
+                                    name="autorizado_por_alta_gerencia"
+                                />
+                            </div>
+                        </div>
                         {/* Sección Datos de la Empresa */}
                         <div className={styles.section}>
                             <h3 className={styles.sectionTitle}>
@@ -357,6 +366,7 @@ const FormularioPersonaJuridica = () => {
                         <SeccionInformacionSeguro />
                         <SeccionFrecuenciaContacto />
                         <SeccionEvaluacionRiesgo />
+                        <SeccionAlertas />
 
                         <div className={styles.buttons}>
                             <button

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import InTexto from '../../components/CamposFormulario/InTexto/InTexto';
 import InPersona from '../../components/CamposFormulario/InPersona/InPersona';
@@ -12,6 +12,7 @@ import InIngresosAnuales from '../../components/CamposFormulario/InIngresosAnual
 import InVolumenActividad from '../../components/CamposFormulario/InVolumenActividad/InVolumenActividad';
 import InFrecuenciaActividad from '../../components/CamposFormulario/InFrecuenciaActividad/InFrecuenciaActividad';
 import SeccionEvaluacionRiesgo from '../../components/CamposFormulario/SeccionEvaluacionRiesgo/SeccionEvaluacionRiesgo';
+import SeccionAlertasCi from '../../components/CamposFormulario/SeccionAlertasCi/SeccionAlertasCi';
 import styles from './formularioClienteInterno.module.css';
 import { databaseService } from '../../services/database';
 
@@ -21,6 +22,8 @@ const FormularioClienteInterno = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [initialData, setInitialData] = useState(null);
     const navigate = useNavigate();
+    const alertasRef = useRef();
+
 
     useEffect(() => {
         if (id) {
@@ -56,6 +59,10 @@ const FormularioClienteInterno = () => {
         const formData = new FormData(e.target);
         const formValues = Object.fromEntries(formData.entries());
 
+        const alertasData = alertasRef.current?.getAlertasData() || {
+            alertas_cliente_interno: '',
+            alertas_activos_virtuales: ''
+        };
         const mappedData = {
             oficina: formValues.oficina,
             ejecutivo: formValues.ejecutivo,
@@ -96,7 +103,11 @@ const FormularioClienteInterno = () => {
             consistencia_informacion_numerico: formValues.consistencia_informacion_numerico,
             comportamiento_cliente: formValues.comportamiento_cliente,
             comportamiento_cliente_numerico: formValues.comportamiento_cliente_numerico,
-            observaciones: formValues.observaciones
+            observaciones: formValues.observaciones,
+            ...formValues,
+            ...alertasData,
+            alertas_cliente_interno: alertasData.alertas_cliente_interno,
+            alertas_activos_virtuales: alertasData.alertas_activos_virtuales
         };
 
         try {
@@ -281,6 +292,13 @@ const FormularioClienteInterno = () => {
                                 comportamiento_cliente: initialData?.comportamiento_cliente,
                                 comportamiento_cliente_numerico: initialData?.comportamiento_cliente_numerico,
                                 observaciones: initialData?.observaciones
+                            }}
+                        />
+                        <SeccionAlertasCi
+                            ref={alertasRef}
+                            defaultValue={{
+                                alertas_cliente_interno: initialData?.alertas_cliente_interno,
+                                alertas_activos_virtuales: initialData?.alertas_activos_virtuales
                             }}
                         />
 

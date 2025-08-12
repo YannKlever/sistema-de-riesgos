@@ -15,6 +15,8 @@ import styles from './formularioEmpresaUnipersonal1000.module.css';
 import SeccionFrecuenciaContacto from '../../components/CamposFormulario/SeccionFrecuenciaContacto/SeccionFrecuenciaContacto';
 import SeccionEvaluacionRiesgo from '../../components/CamposFormulario/SeccionEvaluacionRiesgo/SeccionEvaluacionRiesgo';
 import { generateFormPDF, downloadPDF } from '../../utils/print/pdfGenerator';
+import InAutorizacion from '../../components/CamposFormulario/InAutorizacion/InAutorizacion';
+import SeccionAlertas from '../../components/CamposFormulario/SeccionAlertas/SeccionAlertas';
 
 // Definición de las secciones para el PDF
 const printSections = [
@@ -218,6 +220,13 @@ const FormularioEmpresaUnipersonal1000 = () => {
                         <div className={styles.cardHeader}>
                             <HeaderInfoRegistro titulo="Formulario de Empresa Unipersonal (Prima $1000-$5000)" />
                         </div>
+                        <div className={styles.formRow}>
+                            <div className={styles.fullWidthField}>
+                                <InAutorizacion
+                                    name="autorizado_por_alta_gerencia"
+                                />
+                            </div>
+                        </div>
                         <SeccionDatosEmpresa />
 
                         <div className={styles.formSection}>
@@ -343,6 +352,7 @@ const FormularioEmpresaUnipersonal1000 = () => {
                         <SeccionInformacionSeguro />
                         <SeccionFrecuenciaContacto />
                         <SeccionEvaluacionRiesgo />
+                        <SeccionAlertas />
 
                         <div className={styles.formActions}>
                             <button

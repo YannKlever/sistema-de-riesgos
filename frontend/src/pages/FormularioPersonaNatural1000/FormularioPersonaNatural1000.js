@@ -16,6 +16,8 @@ import SeccionFrecuenciaContacto from '../../components/CamposFormulario/Seccion
 import SeccionEvaluacionRiesgo from '../../components/CamposFormulario/SeccionEvaluacionRiesgo/SeccionEvaluacionRiesgo';
 import styles from './formularioPersonaNatural1000.module.css';
 import { generateFormPDF, downloadPDF } from '../../utils/print/pdfGenerator';
+import InAutorizacion from '../../components/CamposFormulario/InAutorizacion/InAutorizacion';
+import SeccionAlertas from '../../components/CamposFormulario/SeccionAlertas/SeccionAlertas';
 
 const printSections = [
     {
@@ -217,6 +219,13 @@ const FormularioPersonaNatural1000 = () => {
                                 titulo="Formulario de Persona Natural (Prima $1000-$5000)"
                             />
                         </div>
+                        <div className={styles.formRow}>
+                            <div className={styles.fullWidthField}>
+                                <InAutorizacion
+                                    name="autorizado_por_alta_gerencia"
+                                />
+                            </div>
+                        </div>
                         {/* Sección Datos Personales */}
                         <div className={styles.formSection}>
                             <h5 className={styles.sectionTitle}>
@@ -380,6 +389,7 @@ const FormularioPersonaNatural1000 = () => {
                         <SeccionInformacionSeguro />
                         <SeccionFrecuenciaContacto />
                         <SeccionEvaluacionRiesgo />
+                        <SeccionAlertas />
 
                         <div className={styles.formActions}>
                             <button
