@@ -31,6 +31,8 @@ class ClienteInterno {
             consistencia_informacion: cliente.consistencia_informacion || null,
             comportamiento_cliente: cliente.comportamiento_cliente || null,
             observaciones: cliente.observaciones || null,
+            alertas_cliente_interno: cliente.alertas_cliente_interno || null,
+            alertas_activos_virtuales: cliente.alertas_activos_virtuales || null,
             nacionalidad_numerico: cliente.nacionalidad_numerico || null,
             riesgo_profesion_actividad_numerico: cliente.riesgo_profesion_actividad_numerico || null,
             riesgo_zona_numerico: cliente.riesgo_zona_numerico || null,

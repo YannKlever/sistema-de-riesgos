@@ -65,6 +65,12 @@ class ClienteExterno {
             consistencia_informacion: cliente.consistencia_informacion || null,
             comportamiento_cliente: cliente.comportamiento_cliente || null,
             observaciones: cliente.observaciones || null,
+            autorizado_por_alta_gerencia: cliente.autorizado_por_alta_gerencia || null,
+            alertas_vinculacion: cliente.alertas_vinculacion || null,
+            /*alertas_pago_prima: cliente.alertas_pago_prima || null,*/
+            alertas_emision_renovacion: cliente.alertas_emision_renovacion || null,
+            alertas_rescision: cliente.alertas_rescision || null,
+            alertas_activos_virtuales: cliente.alertas_activos_virtuales || null,
             nacionalidad_numerico: cliente.nacionalidad_numerico || null,
             riesgo_profesion_actividad_numerico: cliente.riesgo_profesion_actividad_numerico || null,
             riesgo_zona_numerico: cliente.riesgo_zona_numerico || null,
@@ -407,5 +413,27 @@ class ClienteExterno {
             });
         });
     }
+    static async listarClientesConAlertas() {
+        return new Promise((resolve, reject) => {
+            db.all(
+                `SELECT * FROM "tabla-clientes-externos" 
+             WHERE alertas_vinculacion IS NOT NULL 
+                OR alertas_emision_renovacion IS NOT NULL
+                OR alertas_rescision IS NOT NULL
+                OR alertas_activos_virtuales IS NOT NULL
+             ORDER BY fecha_registro DESC`,
+                [],
+                (err, rows) => {
+                    if (err) {
+                        console.error('Error al listar clientes con alertas:', err);
+                        reject({ success: false, error: err.message });
+                    } else {
+                        resolve({ success: true, data: rows });
+                    }
+                }
+            );
+        });
+    }
 }
+
 module.exports = ClienteExterno;
