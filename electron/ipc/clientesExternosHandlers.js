@@ -94,6 +94,14 @@ function setupClientesExternosHandlers(ipcMain) {
             };
         }
     });
+
+    ipcMain.handle('listar-clientes-con-alertas', async () => {
+        try {
+            return await ClienteExterno.listarClientesConAlertas();
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+    });
 }
 
 module.exports = setupClientesExternosHandlers;
