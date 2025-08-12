@@ -51,12 +51,17 @@ const Reportes = () => {
             description: 'Reportes de riesgo por canales de distribución y venta',
             path: '/reportes/canales-distribucion'
         },
-        // Nueva opción para Reportes LDFT
         {
             icon: '💰',
             title: 'Reporte LD/FT',
             description: 'Reportes de evaluación de riesgo de Lavado de Dinero y Financiamiento al Terrorismo',
             path: '/reportes/ld-ft'
+        },
+        {
+            icon: '⚠️',
+            title: 'Reporte de Alertas',
+            description: 'Reportes de alertas generadas en el sistema',
+            path: '/reportes/alertas'
         }
     ];
 
