@@ -4,6 +4,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     //Tabla clientes externos
     crearCliente: (data) => ipcRenderer.invoke('crear-cliente', data),
     listarClientesExternos: () => ipcRenderer.invoke('listar-clientes-externos'),
+    listarClientesConAlertas: () => ipcRenderer.invoke('listar-clientes-con-alertas'),
     crearClienteExterno: (cliente) => ipcRenderer.invoke('crear-cliente-externo', cliente),
     eliminarClienteExterno: (id) => ipcRenderer.invoke('eliminar-cliente-externo', id),
     actualizarClienteExterno: (id, data) => ipcRenderer.invoke('actualizar-cliente-externo', id, data),
