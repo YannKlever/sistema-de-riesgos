@@ -3,10 +3,12 @@ import styles from './styles.module.css';
 
 const categoriasPep = {
     'no pep': { texto: 'No es PEP', valor: 1 },
-    'pep nacional': { texto: 'PEP Nacional', valor: 2 },
-    'pep extranjero': { texto: 'PEP Extranjero', valor: 3 },
-    'familia pep': { texto: 'Familiar de PEP', valor: 4 },
-    'asociado pep': { texto: 'Asociado cercano de PEP', valor: 5 }
+    'asociado pep': { texto: 'Asociado cercano de PEP', valor: 2 },
+    
+    'familia pep': { texto: 'Familiar de PEP', valor: 3 },
+    
+    'pep extranjero': { texto: 'PEP Extranjero', valor: 4 },
+    'pep nacional': { texto: 'PEP Nacional', valor: 5 }
 };
 
 const InPep = ({ 

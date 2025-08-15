@@ -3,6 +3,7 @@ import InTipoDocumento from '../InTipoDocumento/InTipoDocumento';
 import InVigenciaSeguro from '../InVigenciaSeguro/InVigenciaSeguro';
 import InTexto from '../InTexto/InTexto';
 import InPrima from '../InPrima/InPrima';
+import InZonaSeguro from '../InZonaSeguro/InZonaSeguro'; 
 import styles from './styles.module.css';
 
 const SeccionInformacionSeguro = () => {
@@ -42,6 +43,14 @@ const SeccionInformacionSeguro = () => {
                     <InPrima
                         label="Valor de la prima en Dólares"
                         name="valor_prima_dolares"
+                        required
+                    />
+                </div>
+                {}
+                <div className={styles.campoWrapper}>
+                    <InZonaSeguro
+                        label="Zona de uso del seguro"
+                        name="riesgo_zona_uso_seguro"
                         required
                     />
                 </div>

@@ -5,8 +5,7 @@ import styles from './styles.module.css';
 const initialFrecuenciaState = {
     frecuencia_contacto_fisico: '',
     frecuencia_contacto_digital: '',
-    medio_comunicacion: '',
-    medio_pago: ''
+    medio_comunicacion: ''
 };
 
 const SeccionFrecuenciaContacto = () => {
@@ -29,14 +28,6 @@ const SeccionFrecuenciaContacto = () => {
         { value: 'totalmente digital', label: 'Totalmente digital', valor: 5 }
     ];
 
-    const opcionesMedioPago = [
-        { value: 'transferencia', label: 'Transferencia bancaria directa', valor: 1 },
-        { value: 'tarjeta', label: 'Tarjeta de crédito/débito', valor: 2 },
-        { value: 'electronico', label: 'Pago electrónico', valor: 3 },
-        { value: 'criptomonedas', label: 'Criptomonedas', valor: 5 },
-        { value: 'efectivo', label: 'Efectivo', valor: 4 }
-    ];
-
     const handleSelectChange = (fieldName, value) => {
         setFrecuenciaState(prev => ({
             ...prev,
@@ -54,8 +45,6 @@ const SeccionFrecuenciaContacto = () => {
             opciones = opcionesFrecuencia;
         } else if (fieldName === 'medio_comunicacion') {
             opciones = opcionesMedioComunicacion;
-        } else if (fieldName === 'medio_pago') {
-            opciones = opcionesMedioPago;
         }
 
         const opcion = opciones.find(o => o.value === value);
@@ -126,25 +115,6 @@ const SeccionFrecuenciaContacto = () => {
                         type="hidden" 
                         name="medio_comunicacion_numerico" 
                         value={getValorNumerico('medio_comunicacion')} 
-                    />
-                </div>
-                
-                <div className={styles.campoWrapper}>
-                    <div className={styles.labelContainer}>
-                        <span className={styles.labelText}>Medio de pago</span>
-                        <span className={styles.requiredAsterisk}>*</span>
-                    </div>
-                    <InSelect
-                        name="medio_pago"
-                        options={opcionesMedioPago}
-                        value={frecuenciaState.medio_pago}
-                        onChange={(value) => handleSelectChange('medio_pago', value)}
-                        required
-                    />
-                    <input 
-                        type="hidden" 
-                        name="medio_pago_numerico" 
-                        value={getValorNumerico('medio_pago')} 
                     />
                 </div>
             </div>
