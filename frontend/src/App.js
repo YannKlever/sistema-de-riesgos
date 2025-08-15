@@ -57,6 +57,8 @@ import GraficosProductosServicios from './pages/GraficoProductoServicio/Graficos
 import GraficosSucursales from './pages/GraficoZonaGeografica/GraficosZonaGeografica';
 import GraficosLDFT from './pages/GraficosLDFT/GraficosLDFT';
 import GraficosCanalesDistribucion from './pages/GraficosCanalesDistribucion/GraficosCanalesDistribucion';
+import FactorRiesgoCliente from './pages/GraficosClientes/FactorRiesgoCliente';
+import RiesgoTotal from './pages/GraficoRiesgoTotal/RiesgoTotal';
 
 function App() {
   const [authChecked, setAuthChecked] = useState(false);
@@ -155,6 +157,8 @@ function App() {
               <Route path="/graficos/zona-geografica" element={<GraficosSucursales />} />
               <Route path="/graficos/riesgo-ldft" element={<GraficosLDFT />} />
               <Route path="/graficos/canales-distribucion" element={<GraficosCanalesDistribucion />} />
+              <Route path="/graficos/riesgo-cliente" element={<FactorRiesgoCliente />} />
+              <Route path="/graficos/riesgo-total" element={<RiesgoTotal />} />
 
               {/* Configuración de ajustes con sub-rutas */}
               <Route path="/ajustes" element={<Ajustes />}>
