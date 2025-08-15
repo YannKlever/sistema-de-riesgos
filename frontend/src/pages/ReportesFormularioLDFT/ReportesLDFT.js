@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
+import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, flexRender } from '@tanstack/react-table';
 import { useReportesLDFT } from './useReporteLDFT';
-import { ControlesReporte } from './ControlesReporte';
-import { TablaReporte } from './TablaReporte';
 import styles from './reportesLDFT.module.css';
 import { databaseService } from '../../services/database';
 
@@ -14,6 +13,79 @@ export const ReportesLDFT = ({ onNuevaEvaluacion, onEditarEvaluacion }) => {
         actualizarEvaluacionLocal,
         COLUMNAS_REPORTE
     } = useReportesLDFT();
+
+    // Función para limpiar errores
+    const limpiarError = () => {
+        handleFiltroChange({ target: { value: '' } }); // Esto limpia el filtro
+        actualizarReporte(); // Esto recarga los datos
+    };
+
+    // Configuración de columnas para react-table
+    const columnasConPromedio = useMemo(() => [
+        ...COLUMNAS_REPORTE.filter(col => col.id !== 'promedio_riesgo').map(col => ({
+            accessorKey: col.id,
+            header: col.nombre,
+            cell: info => {
+                const value = info.getValue();
+                if (value == null) return '-';
+                if (typeof value === 'string' && value.length > 20) {
+                    return `${value.substring(0, 17)}...`;
+                }
+                return value;
+            },
+            size: col.ancho || 150
+        })),
+        {
+            accessorKey: 'promedio_frontend',
+            header: 'Promedio Calculado',
+            cell: info => info.getValue()?.toFixed(2) || '-',
+            size: 150
+        },
+        {
+            accessorKey: 'promedio_riesgo',
+            header: 'Promedio Validado',
+            cell: info => info.getValue()?.toFixed(2) || '-',
+            size: 150
+        },
+        {
+            id: 'acciones',
+            header: 'Acciones',
+            cell: info => (
+                <button 
+                    onClick={() => onEditarEvaluacion(info.row.original)}
+                    className={styles.botonEditar}
+                >
+                    Editar
+                </button>
+            ),
+            size: 120
+        }
+    ], [COLUMNAS_REPORTE, onEditarEvaluacion]);
+
+    // Configuración de la tabla
+    const table = useReactTable({
+        data: evaluacionesFiltradas,
+        columns: columnasConPromedio,
+        state: {
+            globalFilter: state.filtro
+        },
+        onGlobalFilterChange: handleFiltroChange,
+        getCoreRowModel: getCoreRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        globalFilterFn: (row, columnId, filterValue) => {
+            const value = row.getValue(columnId);
+            if (value === undefined || value === null) return false;
+            const safeValue = String(value).toLowerCase();
+            const safeFilter = filterValue.toLowerCase();
+            return safeValue.includes(safeFilter);
+        },
+        initialState: {
+            pagination: {
+                pageSize: 20
+            }
+        }
+    });
 
     const calcularPromedioGeneral = () => {
         if (evaluacionesFiltradas.length === 0) return '0.00';
@@ -31,7 +103,6 @@ export const ReportesLDFT = ({ onNuevaEvaluacion, onEditarEvaluacion }) => {
 
     const handleValidarTodo = async () => {
         try {
-            // Filtrar solo los registros que tienen promedio_frontend pero no tienen promedio_riesgo
             const registrosAValidar = evaluacionesFiltradas.filter(
                 e => e.promedio_frontend && !e.promedio_riesgo
             );
@@ -41,12 +112,10 @@ export const ReportesLDFT = ({ onNuevaEvaluacion, onEditarEvaluacion }) => {
                 return;
             }
 
-            // Confirmar con el usuario
             if (!window.confirm(`¿Está seguro que desea validar ${registrosAValidar.length} registros?`)) {
                 return;
             }
 
-            // Procesar todas las validaciones
             const resultados = await Promise.all(
                 registrosAValidar.map(async (item) => {
                     const resultado = await databaseService.actualizarEvaluacionLDFT(item.id, {
@@ -56,7 +125,6 @@ export const ReportesLDFT = ({ onNuevaEvaluacion, onEditarEvaluacion }) => {
                 })
             );
 
-            // Actualizar el estado local con los resultados
             resultados.forEach(({ id, success }) => {
                 if (success) {
                     actualizarEvaluacionLocal(id, {
@@ -73,22 +141,6 @@ export const ReportesLDFT = ({ onNuevaEvaluacion, onEditarEvaluacion }) => {
         }
     };
 
-    const columnasConPromedio = useMemo(() => {
-        return [
-            ...COLUMNAS_REPORTE.filter(col => col.id !== 'promedio_riesgo'),
-            { 
-                id: 'promedio_frontend', 
-                nombre: 'Promedio Calculado', 
-                format: 'number' 
-            },
-            { 
-                id: 'promedio_riesgo', 
-                nombre: 'Promedio Validado', 
-                format: 'number' 
-            }
-        ];
-    }, [COLUMNAS_REPORTE]);
-
     return (
         <div className={styles.contenedor}>
             <header className={styles.header}>
@@ -96,31 +148,168 @@ export const ReportesLDFT = ({ onNuevaEvaluacion, onEditarEvaluacion }) => {
                 <p>Histórico de evaluaciones de riesgo</p>
             </header>
 
-            {state.error && <div className={styles.error}>{state.error}</div>}
+            {state.error && (
+                <div className={styles.error}>
+                    {state.error}
+                    <button 
+                        onClick={limpiarError}
+                        className={styles.botonCerrarError}
+                    >
+                        ×
+                    </button>
+                </div>
+            )}
 
-            <ControlesReporte
-                filtro={state.filtro}
-                onFiltroChange={handleFiltroChange}
-                onActualizar={actualizarReporte}
-                datos={evaluacionesFiltradas}
-                columnas={columnasConPromedio}
-                onNuevaEvaluacion={onNuevaEvaluacion}
-                onValidarTodo={handleValidarTodo}
-            />
+            <div className={styles.controles}>
+                <input
+                    type="text"
+                    placeholder="Buscar evaluaciones..."
+                    value={state.filtro}
+                    onChange={(e) => handleFiltroChange(e)}
+                    className={styles.buscador}
+                    disabled={state.loading}
+                />
 
-            <TablaReporte
-                columnas={columnasConPromedio}
-                datos={evaluacionesFiltradas}
-                loading={state.loading}
-                onEditar={onEditarEvaluacion}
-            />
+                <div className={styles.controlesDerecha}>
+                    <button
+                        onClick={onNuevaEvaluacion}
+                        className={styles.botonNuevo}
+                    >
+                        Nueva Evaluación
+                    </button>
+
+                    <button
+                        onClick={actualizarReporte}
+                        className={styles.botonActualizar}
+                        disabled={state.loading}
+                    >
+                        Actualizar
+                    </button>
+                    
+                    <button
+                        onClick={handleValidarTodo}
+                        className={styles.botonValidar}
+                        disabled={state.loading}
+                    >
+                        Validar Todo
+                    </button>
+                </div>
+            </div>
+
+            <div className={styles.tablaContenedor}>
+                <table className={styles.tabla}>
+                    <thead>
+                        {table.getHeaderGroups().map(headerGroup => (
+                            <tr key={headerGroup.id}>
+                                {headerGroup.headers.map(header => (
+                                    <th key={header.id} style={{ width: header.getSize() }}>
+                                        {flexRender(
+                                            header.column.columnDef.header,
+                                            header.getContext()
+                                        )}
+                                    </th>
+                                ))}
+                            </tr>
+                        ))}
+                    </thead>
+                    <tbody>
+                        {table.getRowModel().rows.length > 0 ? (
+                            table.getRowModel().rows.map(row => (
+                                <tr key={row.id}>
+                                    {row.getVisibleCells().map(cell => (
+                                        <td key={cell.id}>
+                                            {flexRender(
+                                                cell.column.columnDef.cell,
+                                                cell.getContext()
+                                            )}
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan={columnasConPromedio.length} className={styles.sinResultados}>
+                                    {state.loading 
+                                        ? 'Cargando evaluaciones...' 
+                                        : evaluacionesFiltradas.length === 0 
+                                            ? 'No hay evaluaciones registradas' 
+                                            : 'No se encontraron resultados con los filtros aplicados'}
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+
+                {table.getFilteredRowModel().rows.length > 0 && (
+                    <div className={styles.paginacion}>
+                        <button
+                            onClick={() => table.setPageIndex(0)}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            {'<<'}
+                        </button>
+                        <button
+                            onClick={() => table.previousPage()}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            {'<'}
+                        </button>
+                        <button
+                            onClick={() => table.nextPage()}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            {'>'}
+                        </button>
+                        <button
+                            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            {'>>'}
+                        </button>
+
+                        <span>
+                            Página{' '}
+                            <strong>
+                                {table.getState().pagination.pageIndex + 1} de{' '}
+                                {table.getPageCount()}
+                            </strong>
+                        </span>
+
+                        <select
+                            value={table.getState().pagination.pageSize}
+                            onChange={e => {
+                                table.setPageSize(Number(e.target.value))
+                            }}
+                        >
+                            {[10, 20, 30, 40, 50].map(pageSize => (
+                                <option key={pageSize} value={pageSize}>
+                                    Mostrar {pageSize}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                )}
+            </div>
 
             <div className={styles.resumen}>
-                <p>Total en reporte: <strong>{evaluacionesFiltradas.length}</strong></p>
+                <div className={styles.resumenItem}>
+                    <span>Total en reporte:</span>
+                    <strong>{evaluacionesFiltradas.length}</strong>
+                </div>
+                
                 {evaluacionesFiltradas.length > 0 && (
                     <>
-                        <p>Promedio general: <strong>{calcularPromedioGeneral()}</strong></p>
-                        <p>Evaluación más reciente: <strong>{obtenerFechaMasReciente()}</strong></p>
+                        <div className={styles.resumenItem}>
+                            <span>Promedio general:</span>
+                            <strong className={styles.valorNumerico}>
+                                {calcularPromedioGeneral()}
+                            </strong>
+                        </div>
+                        
+                        <div className={styles.resumenItem}>
+                            <span>Evaluación más reciente:</span>
+                            <strong>{obtenerFechaMasReciente()}</strong>
+                        </div>
                     </>
                 )}
             </div>

@@ -59,7 +59,7 @@ export const useAccionistasSocios = () => {
                     promedio_riesgo_accionista_socio: accionista.factorRiesgoAccionistaSocio
                 };
                 
-                return databaseService.actualizar(accionista.id, datosActualizacion);
+                return databaseService.actualizarAccionistaSocio(accionista.id, datosActualizacion);
             });
             
             await Promise.all(promises);

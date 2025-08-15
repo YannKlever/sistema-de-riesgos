@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, flexRender } from '@tanstack/react-table';
 import { useAccionistasSocios } from './useAccionistasSocios';
-import { ControlesReporte } from './ControlesReporte';
-import { TablaReporte } from './TablaReporte';
 import styles from './reportesAccionistasSocios.module.css';
 
 export const ReportesAccionistasSocios = () => {
@@ -11,8 +10,65 @@ export const ReportesAccionistasSocios = () => {
         handleFiltroChange,
         actualizarReporte,
         validarRiesgos,
-        COLUMNAS_REPORTE
+        COLUMNAS_REPORTE,
+        setState
     } = useAccionistasSocios();
+
+    // Configuración de columnas para react-table
+    const columns = useMemo(() => 
+        COLUMNAS_REPORTE.map(col => ({
+            accessorKey: col.id,
+            header: col.nombre,
+            cell: info => {
+                const value = info.getValue();
+                if (value == null) return '-';
+                if (typeof value === 'string' && value.length > 20) {
+                    return `${value.substring(0, 17)}...`;
+                }
+                return value;
+            },
+            size: col.ancho || 150,
+            enableColumnFilter: col.filtrable !== false
+        }))
+    , [COLUMNAS_REPORTE]);
+
+    // Configuración de la tabla
+    const table = useReactTable({
+        data: accionistasFiltrados,
+        columns,
+        state: {
+            globalFilter: state.filtro
+        },
+        onGlobalFilterChange: handleFiltroChange,
+        getCoreRowModel: getCoreRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        globalFilterFn: (row, columnId, filterValue) => {
+            const value = row.getValue(columnId);
+            
+            if (value === undefined || value === null) {
+                return false;
+            }
+            
+            const safeValue = String(value).toLowerCase();
+            const safeFilter = filterValue.toLowerCase();
+            
+            return safeValue.includes(safeFilter);
+        },
+        initialState: {
+            pagination: {
+                pageSize: 20
+            }
+        }
+    });
+
+    // Calcular promedios
+    const calcularPromedio = (campo) => {
+        if (accionistasFiltrados.length === 0) return '0.00';
+        const total = accionistasFiltrados.reduce((sum, accionista) => 
+            sum + (accionista[campo] || 0), 0);
+        return (total / accionistasFiltrados.length).toFixed(2);
+    };
 
     return (
         <div className={styles.contenedor}>
@@ -21,49 +77,170 @@ export const ReportesAccionistasSocios = () => {
                 <p>Información formal de evaluación de riesgos</p>
             </header>
 
-            {state.error && <div className={styles.error}>{state.error}</div>}
+            {state.error && (
+                <div className={styles.error}>
+                    {state.error}
+                    <button 
+                        onClick={() => setState(prev => ({ ...prev, error: '' }))}
+                        className={styles.botonCerrarError}
+                    >
+                        ×
+                    </button>
+                </div>
+            )}
 
-            <ControlesReporte
-                filtro={state.filtro}
-                onFiltroChange={handleFiltroChange}
-                onActualizar={actualizarReporte}
-                onValidarRiesgo={validarRiesgos}
-                accionistas={accionistasFiltrados}
-                columnas={COLUMNAS_REPORTE}
-                validando={state.validando}
-            />
+            <div className={styles.controles}>
+                <input
+                    type="text"
+                    placeholder="Buscar en todos los campos..."
+                    value={state.filtro}
+                    onChange={(e) => handleFiltroChange(e.target.value)}
+                    className={styles.buscador}
+                    disabled={state.loading}
+                />
 
-            <TablaReporte
-                columnas={COLUMNAS_REPORTE}
-                accionistas={accionistasFiltrados}
-                loading={state.loading}
-            />
+                <div className={styles.controlesDerecha}>
+                    <button
+                        onClick={actualizarReporte}
+                        className={styles.botonExportar}
+                        disabled={state.loading}
+                    >
+                        Actualizar Reporte
+                    </button>
+                    
+                    <button
+                        onClick={validarRiesgos}
+                        className={styles.botonValidar}
+                        disabled={state.loading || state.validando}
+                    >
+                        {state.validando ? 'Validando...' : 'Validar Riesgos'}
+                    </button>
+                </div>
+            </div>
+
+            <div className={styles.tablaContenedor}>
+                <table className={styles.tabla}>
+                    <thead>
+                        {table.getHeaderGroups().map(headerGroup => (
+                            <tr key={headerGroup.id}>
+                                {headerGroup.headers.map(header => (
+                                    <th key={header.id} style={{ width: header.getSize() }}>
+                                        {flexRender(
+                                            header.column.columnDef.header,
+                                            header.getContext()
+                                        )}
+                                    </th>
+                                ))}
+                            </tr>
+                        ))}
+                    </thead>
+                    <tbody>
+                        {table.getRowModel().rows.length > 0 ? (
+                            table.getRowModel().rows.map(row => (
+                                <tr key={row.id}>
+                                    {row.getVisibleCells().map(cell => (
+                                        <td key={cell.id}>
+                                            {flexRender(
+                                                cell.column.columnDef.cell,
+                                                cell.getContext()
+                                            )}
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan={columns.length} className={styles.sinResultados}>
+                                    {state.loading 
+                                        ? 'Cargando datos...' 
+                                        : accionistasFiltrados.length === 0 
+                                            ? 'No hay accionistas/socios registrados' 
+                                            : 'No se encontraron resultados con los filtros aplicados'}
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+
+                {table.getFilteredRowModel().rows.length > 0 && (
+                    <div className={styles.paginacion}>
+                        <button
+                            onClick={() => table.setPageIndex(0)}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            {'<<'}
+                        </button>
+                        <button
+                            onClick={() => table.previousPage()}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            {'<'}
+                        </button>
+                        <button
+                            onClick={() => table.nextPage()}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            {'>'}
+                        </button>
+                        <button
+                            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            {'>>'}
+                        </button>
+
+                        <span>
+                            Página{' '}
+                            <strong>
+                                {table.getState().pagination.pageIndex + 1} de{' '}
+                                {table.getPageCount()}
+                            </strong>
+                        </span>
+
+                        <select
+                            value={table.getState().pagination.pageSize}
+                            onChange={e => {
+                                table.setPageSize(Number(e.target.value))
+                            }}
+                        >
+                            {[10, 20, 30, 40, 50].map(pageSize => (
+                                <option key={pageSize} value={pageSize}>
+                                    Mostrar {pageSize}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                )}
+            </div>
 
             <div className={styles.resumen}>
-                <p>Total en reporte: <strong>{accionistasFiltrados.length}</strong></p>
+                <div className={styles.resumenItem}>
+                    <span>Total en reporte:</span>
+                    <strong>{accionistasFiltrados.length}</strong>
+                </div>
+                
                 {accionistasFiltrados.length > 0 && (
                     <>
-                        <p>Promedio Probabilidad: <strong>
-                            {(
-                                accionistasFiltrados.reduce((sum, accionista) => 
-                                    sum + (accionista.probabilidad || 0), 0) / 
-                                accionistasFiltrados.length
-                            ).toFixed(2)}
-                        </strong></p>
-                        <p>Promedio Impacto: <strong>
-                            {(
-                                accionistasFiltrados.reduce((sum, accionista) => 
-                                    sum + (accionista.impacto || 0), 0) / 
-                                accionistasFiltrados.length
-                            ).toFixed(2)}
-                        </strong></p>
-                        <p>Promedio Factor Riesgo: <strong>
-                            {(
-                                accionistasFiltrados.reduce((sum, accionista) => 
-                                    sum + (accionista.factorRiesgoAccionistaSocio || 0), 0) / 
-                                accionistasFiltrados.length
-                            ).toFixed(2)}
-                        </strong></p>
+                        <div className={styles.resumenItem}>
+                            <span>Promedio Probabilidad:</span>
+                            <strong className={styles.valorNumerico}>
+                                {calcularPromedio('probabilidad')}
+                            </strong>
+                        </div>
+                        
+                        <div className={styles.resumenItem}>
+                            <span>Promedio Impacto:</span>
+                            <strong className={styles.valorNumerico}>
+                                {calcularPromedio('impacto')}
+                            </strong>
+                        </div>
+                        
+                        <div className={styles.resumenItem}>
+                            <span>Promedio Factor Riesgo:</span>
+                            <strong className={styles.valorNumerico}>
+                                {calcularPromedio('factorRiesgoAccionistaSocio')}
+                            </strong>
+                        </div>
                     </>
                 )}
             </div>

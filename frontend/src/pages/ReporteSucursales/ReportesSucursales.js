@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, flexRender } from '@tanstack/react-table';
 import { useSucursales } from './useSucursales';
-import { ControlesReporte } from './ControlesReporte';
-import { TablaReporte } from './TablaReporte';
 import styles from './reportesZonaGeografica.module.css';
 
 export const ReportesSucursales = () => {
@@ -11,8 +10,65 @@ export const ReportesSucursales = () => {
         handleFiltroChange,
         actualizarReporte,
         validarTodosLosRiesgos,
-        COLUMNAS_REPORTE
+        COLUMNAS_REPORTE,
+        setState
     } = useSucursales();
+
+    // Configuración de columnas para react-table
+    const columns = useMemo(() => 
+        COLUMNAS_REPORTE.map(col => ({
+            accessorKey: col.id,
+            header: col.nombre,
+            cell: info => {
+                const value = info.getValue();
+                if (value == null) return '-';
+                if (typeof value === 'string' && value.length > 20) {
+                    return `${value.substring(0, 17)}...`;
+                }
+                return value;
+            },
+            size: col.ancho || 150,
+            enableColumnFilter: col.filtrable !== false
+        }))
+    , [COLUMNAS_REPORTE]);
+
+    // Configuración de la tabla
+    const table = useReactTable({
+        data: sucursalesFiltradas,
+        columns,
+        state: {
+            globalFilter: state.filtro
+        },
+        onGlobalFilterChange: handleFiltroChange,
+        getCoreRowModel: getCoreRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        globalFilterFn: (row, columnId, filterValue) => {
+            const value = row.getValue(columnId);
+            
+            if (value === undefined || value === null) {
+                return false;
+            }
+            
+            const safeValue = String(value).toLowerCase();
+            const safeFilter = filterValue.toLowerCase();
+            
+            return safeValue.includes(safeFilter);
+        },
+        initialState: {
+            pagination: {
+                pageSize: 20
+            }
+        }
+    });
+
+    // Calcular promedios
+    const calcularPromedio = (campo, campoAlternativo = null) => {
+        if (sucursalesFiltradas.length === 0) return '0.00';
+        const total = sucursalesFiltradas.reduce((sum, sucursal) => 
+            sum + (sucursal[campo] || (campoAlternativo ? sucursal[campoAlternativo] : 0) || 0), 0);
+        return (total / sucursalesFiltradas.length).toFixed(2);
+    };
 
     return (
         <div className={styles.contenedor}>
@@ -21,62 +77,177 @@ export const ReportesSucursales = () => {
                 <p>Evaluación de riesgos por ubicación geográfica</p>
             </header>
 
-            {state.error && <div className={styles.error}>{state.error}</div>}
+            {state.error && (
+                <div className={styles.error}>
+                    {state.error}
+                    <button 
+                        onClick={() => setState(prev => ({ ...prev, error: '' }))}
+                        className={styles.botonCerrarError}
+                    >
+                        ×
+                    </button>
+                </div>
+            )}
 
-            <ControlesReporte
-                filtro={state.filtro}
-                onFiltroChange={handleFiltroChange}
-                onActualizar={actualizarReporte}
-                onValidarTodos={validarTodosLosRiesgos}
-                datos={sucursalesFiltradas}
-                columnas={COLUMNAS_REPORTE}
-                nombreReporte="reporte_sucursales"
-                nombreHoja="Sucursales"
-                validandoTodos={state.validandoTodos}
-            />
+            <div className={styles.controles}>
+                <input
+                    type="text"
+                    placeholder="Buscar en todos los campos..."
+                    value={state.filtro}
+                    onChange={(e) => handleFiltroChange(e.target.value)}
+                    className={styles.buscador}
+                    disabled={state.loading}
+                />
 
-            <TablaReporte
-                columnas={COLUMNAS_REPORTE}
-                datos={sucursalesFiltradas}
-                loading={state.loading}
-            />
+                <div className={styles.controlesDerecha}>
+                    <button
+                        onClick={actualizarReporte}
+                        className={styles.botonActualizar}
+                        disabled={state.loading}
+                    >
+                        Actualizar Reporte
+                    </button>
+                    
+                    <button
+                        onClick={validarTodosLosRiesgos}
+                        className={styles.botonValidar}
+                        disabled={state.loading || state.validandoTodos}
+                    >
+                        {state.validandoTodos ? 'Validando...' : 'Validar Todos'}
+                    </button>
+                </div>
+            </div>
+
+            <div className={styles.tablaContenedor}>
+                <table className={styles.tabla}>
+                    <thead>
+                        {table.getHeaderGroups().map(headerGroup => (
+                            <tr key={headerGroup.id}>
+                                {headerGroup.headers.map(header => (
+                                    <th key={header.id} style={{ width: header.getSize() }}>
+                                        {flexRender(
+                                            header.column.columnDef.header,
+                                            header.getContext()
+                                        )}
+                                    </th>
+                                ))}
+                            </tr>
+                        ))}
+                    </thead>
+                    <tbody>
+                        {table.getRowModel().rows.length > 0 ? (
+                            table.getRowModel().rows.map(row => (
+                                <tr key={row.id}>
+                                    {row.getVisibleCells().map(cell => (
+                                        <td key={cell.id}>
+                                            {flexRender(
+                                                cell.column.columnDef.cell,
+                                                cell.getContext()
+                                            )}
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan={columns.length} className={styles.sinResultados}>
+                                    {state.loading 
+                                        ? 'Cargando datos...' 
+                                        : sucursalesFiltradas.length === 0 
+                                            ? 'No hay sucursales registradas' 
+                                            : 'No se encontraron resultados con los filtros aplicados'}
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+
+                {table.getFilteredRowModel().rows.length > 0 && (
+                    <div className={styles.paginacion}>
+                        <button
+                            onClick={() => table.setPageIndex(0)}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            {'<<'}
+                        </button>
+                        <button
+                            onClick={() => table.previousPage()}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            {'<'}
+                        </button>
+                        <button
+                            onClick={() => table.nextPage()}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            {'>'}
+                        </button>
+                        <button
+                            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            {'>>'}
+                        </button>
+
+                        <span>
+                            Página{' '}
+                            <strong>
+                                {table.getState().pagination.pageIndex + 1} de{' '}
+                                {table.getPageCount()}
+                            </strong>
+                        </span>
+
+                        <select
+                            value={table.getState().pagination.pageSize}
+                            onChange={e => {
+                                table.setPageSize(Number(e.target.value))
+                            }}
+                        >
+                            {[10, 20, 30, 40, 50].map(pageSize => (
+                                <option key={pageSize} value={pageSize}>
+                                    Mostrar {pageSize}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                )}
+            </div>
 
             <div className={styles.resumen}>
-                <p>Total en reporte: <strong>{sucursalesFiltradas.length}</strong></p>
+                <div className={styles.resumenItem}>
+                    <span>Total en reporte:</span>
+                    <strong>{sucursalesFiltradas.length}</strong>
+                </div>
+                
                 {sucursalesFiltradas.length > 0 && (
                     <>
-                        <p>Promedio de probabilidad: <strong>
-                            {(
-                                sucursalesFiltradas.reduce((sum, sucursal) => 
-                                    sum + (sucursal.probabilidad || 0), 0) / 
-                                sucursalesFiltradas.length
-                            ).toFixed(2)}
-                        </strong></p>
+                        <div className={styles.resumenItem}>
+                            <span>Promedio de probabilidad:</span>
+                            <strong className={styles.valorNumerico}>
+                                {calcularPromedio('probabilidad')}
+                            </strong>
+                        </div>
                         
-                        <p>Promedio de impacto: <strong>
-                            {(
-                                sucursalesFiltradas.reduce((sum, sucursal) => 
-                                    sum + (sucursal.impacto || 0), 0) / 
-                                sucursalesFiltradas.length
-                            ).toFixed(2)}
-                        </strong></p>
+                        <div className={styles.resumenItem}>
+                            <span>Promedio de impacto:</span>
+                            <strong className={styles.valorNumerico}>
+                                {calcularPromedio('impacto')}
+                            </strong>
+                        </div>
                         
-                        <p>Promedio de riesgo calculado: <strong>
-                            {(
-                                sucursalesFiltradas.reduce((sum, sucursal) => 
-                                    sum + (sucursal.factorRiesgoZonaGeografica || 0), 0) / 
-                                sucursalesFiltradas.length
-                            ).toFixed(2)}
-                        </strong></p>
+                        <div className={styles.resumenItem}>
+                            <span>Promedio de riesgo calculado:</span>
+                            <strong className={styles.valorNumerico}>
+                                {calcularPromedio('factorRiesgoZonaGeografica')}
+                            </strong>
+                        </div>
                         
-                        <p>Promedio de riesgo validado: <strong>
-                            {(
-                                sucursalesFiltradas.reduce((sum, sucursal) => 
-                                    sum + (sucursal.promedio_riesgo_zona_geografica || 
-                                           sucursal.factorRiesgoZonaGeografica || 0), 0) / 
-                                sucursalesFiltradas.length
-                            ).toFixed(2)}
-                        </strong></p>
+                        <div className={styles.resumenItem}>
+                            <span>Promedio de riesgo validado:</span>
+                            <strong className={styles.valorNumerico}>
+                                {calcularPromedio('promedio_riesgo_zona_geografica', 'factorRiesgoZonaGeografica')}
+                            </strong>
+                        </div>
                     </>
                 )}
             </div>

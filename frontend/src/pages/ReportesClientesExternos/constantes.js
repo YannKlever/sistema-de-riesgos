@@ -29,6 +29,9 @@ export const COLUMNAS_REPORTE = [
     { id: 'ramo_seguro', nombre: 'Ramo del producto/servicio' },
     { id: 'ramo_seguro_numerico', nombre: 'Riesgo en el ramo del producto/servicio' },
     { id: 'promedio_riesgo_producto_servicio', nombre: 'Factor Riesgo Producto/Servicio' },
+    { id: 'riesgo_zona_uso_seguro', nombre: 'Zona de uso del seguro' },
+    { id: 'riesgo_zona_uso_seguro_numerico', nombre: 'Riesgo de Zona de uso del seguro' },
+    
     { id: 'tipo_documento', nombre: 'Tipo de documento de producto/servicio' },
     { id: 'tipo_documento_numerico', nombre: 'Riesgo en tipo de producto/servicio' },
     { id: 'valor_prima_dolares', nombre: 'Valor de la prima en dolares' },

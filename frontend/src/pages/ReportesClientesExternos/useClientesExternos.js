@@ -21,7 +21,9 @@ export const useClientesExternos = () => {
         'volumen_actividad_numerico',
         'frecuencia_actividad_numerico',
         'categoria_pep_numerico',
+
         'promedio_riesgo_producto_servicio',
+        'riesgo_zona_uso_seguro_numerico',   
         'promedio_riesgo_canal_distribucion',
         'integridad_documental_numerico',
         'exactitud_documental_numerico',
