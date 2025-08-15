@@ -13,6 +13,7 @@ import {
     Title,
     Colors
 } from 'chart.js';
+import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel } from '@tanstack/react-table';
 import styles from './graficosLDFT.module.css';
 
 ChartJS.register(
@@ -31,6 +32,36 @@ const GraficosLDFT = () => {
     const { state, evaluacionesFiltradas, handleFiltroChange, COLUMNAS_REPORTE } = useReportesLDFT();
     const [busqueda, setBusqueda] = useState('');
 
+    // Configuración de la tabla para paginación
+    const table = useReactTable({
+        data: evaluacionesFiltradas,
+        columns: [],
+        state: {
+            globalFilter: busqueda
+        },
+        onGlobalFilterChange: setBusqueda,
+        getCoreRowModel: getCoreRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        globalFilterFn: (row, columnId, filterValue) => {
+            const evaluacion = row.original;
+            if (!filterValue) return true;
+            
+            const termino = filterValue.toLowerCase();
+            return `${evaluacion.usuario || ''} ${evaluacion.fecha_evaluacion || ''}`
+                .toLowerCase()
+                .includes(termino);
+        },
+        initialState: {
+            pagination: {
+                pageSize: 10
+            }
+        }
+    });
+
+    // Obtener las evaluaciones paginadas y filtradas
+    const evaluacionesPaginadas = table.getRowModel().rows.map(row => row.original);
+
     // Obtener columnas numéricas
     const COLUMNAS_NUMERICAS = COLUMNAS_REPORTE.filter(col => col.id.endsWith('_numerico'));
 
@@ -39,21 +70,10 @@ const GraficosLDFT = () => {
         return Math.round(valor);
     };
 
-    const evaluacionesFiltradasBusqueda = useMemo(() => {
-        if (!busqueda) return evaluacionesFiltradas;
-
-        const termino = busqueda.toLowerCase();
-        return evaluacionesFiltradas.filter(evaluacion =>
-            `${evaluacion.usuario || ''} ${evaluacion.fecha_evaluacion || ''}`
-                .toLowerCase()
-                .includes(termino)
-        );
-    }, [evaluacionesFiltradas, busqueda]);
-
     const prepararDatosGrafico = () => {
-        if (!evaluacionesFiltradasBusqueda.length) return { labels: [], datasets: [] };
+        if (!evaluacionesPaginadas.length) return { labels: [], datasets: [] };
 
-        const evaluacionesOrdenadas = [...evaluacionesFiltradasBusqueda]
+        const evaluacionesOrdenadas = [...evaluacionesPaginadas]
             .sort((a, b) => (b.promedio_riesgo || 0) - (a.promedio_riesgo || 0));
 
         const labels = evaluacionesOrdenadas.map(evaluacion => {
@@ -125,9 +145,6 @@ const GraficosLDFT = () => {
                         info.push(`Usuario: ${evaluacion.usuario || 'N/A'}`);
                         info.push(`Fecha: ${new Date(evaluacion.fecha_evaluacion).toLocaleDateString() || 'N/A'}`);
                         
-                        // Mostrar campos numéricos de riesgo
-                        
-                        
                         return info;
                     }
                 }
@@ -173,7 +190,6 @@ const GraficosLDFT = () => {
                     onChange={(e) => setBusqueda(e.target.value)}
                     className={styles.buscador}
                 />
-                
             </div>
 
             {state.loading ? (
@@ -217,14 +233,63 @@ const GraficosLDFT = () => {
                         </div>
                     </div>
 
+                    {/* Controles de paginación */}
+                    <div className={styles.paginacion}>
+                        <button
+                            onClick={() => table.setPageIndex(0)}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            {'<<'}
+                        </button>
+                        <button
+                            onClick={() => table.previousPage()}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            {'<'}
+                        </button>
+                        <button
+                            onClick={() => table.nextPage()}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            {'>'}
+                        </button>
+                        <button
+                            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            {'>>'}
+                        </button>
+
+                        <span>
+                            Página{' '}
+                            <strong>
+                                {table.getState().pagination.pageIndex + 1} de{' '}
+                                {table.getPageCount()}
+                            </strong>
+                        </span>
+
+                        <select
+                            value={table.getState().pagination.pageSize}
+                            onChange={e => {
+                                table.setPageSize(Number(e.target.value))
+                            }}
+                        >
+                            {[5, 10, 20, 30, 50].map(pageSize => (
+                                <option key={pageSize} value={pageSize}>
+                                    Mostrar {pageSize}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
                     <div className={styles.resumen}>
-                        <p>Total de evaluaciones en gráfico: <strong>{evaluacionesFiltradasBusqueda.length}</strong></p>
-                        {evaluacionesFiltradasBusqueda.length > 0 && (
+                        <p>Total de evaluaciones: <strong>{evaluacionesFiltradas.length}</strong> (mostrando {evaluacionesPaginadas.length})</p>
+                        {evaluacionesFiltradas.length > 0 && (
                             <p>Promedio general de riesgo: <strong>
                                 {(
-                                    evaluacionesFiltradasBusqueda.reduce((sum, evaluacion) => 
+                                    evaluacionesFiltradas.reduce((sum, evaluacion) => 
                                         sum + (evaluacion.promedio_riesgo || 0), 0) / 
-                                    evaluacionesFiltradasBusqueda.length
+                                    evaluacionesFiltradas.length
                                 ).toFixed(2)}
                             </strong></p>
                         )}

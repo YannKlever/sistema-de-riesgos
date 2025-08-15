@@ -24,7 +24,9 @@ const Graficos = () => {
         { text: "Gráficos de Clientes Externos", path: '/graficos/clientesExternos' },
         { text: "Gráficos de Clientes Internos", path: '/graficos/clientesInternos' },
         { text: "Gráficos de Accionistas o socios", path: '/graficos/accionistasSocios' },
-        { text: "Gráficos de Clientes", path: '/graficos/circulares' },
+        { text: "Gráficos de Clientes", path: '/graficos/riesgo-cliente' },
+        { text: "Gráficos de Riesgo Total", path: '/graficos/riesgo-total' }
+
     ];
 
     const chartOptions = [

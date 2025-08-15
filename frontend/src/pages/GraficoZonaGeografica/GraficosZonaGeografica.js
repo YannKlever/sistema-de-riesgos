@@ -13,6 +13,7 @@ import {
     Title,
     Colors
 } from 'chart.js';
+import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel } from '@tanstack/react-table';
 import styles from './graficosZonaGeografica.module.css';
 
 ChartJS.register(
@@ -33,15 +34,45 @@ const GraficosSucursales = () => {
     // Obtener columnas numéricas del hook o definirlas localmente
     const COLUMNAS_NUMERICAS = COLUMNAS_REPORTE.filter(col => col.id.endsWith('_numerico'));
 
+    // Configuración de la tabla para paginación
+    const table = useReactTable({
+        data: sucursalesFiltradas,
+        columns: [],
+        state: {
+            globalFilter: state.filtro
+        },
+        onGlobalFilterChange: handleFiltroChange,
+        getCoreRowModel: getCoreRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        globalFilterFn: (row, columnId, filterValue) => {
+            const sucursal = row.original;
+            if (!filterValue) return true;
+            
+            const termino = filterValue.toLowerCase();
+            return `${sucursal.oficina || ''} ${sucursal.municipio || ''} ${sucursal.departamento || ''}`
+                .toLowerCase()
+                .includes(termino);
+        },
+        initialState: {
+            pagination: {
+                pageSize: 10
+            }
+        }
+    });
+
+    // Obtener las sucursales paginadas y filtradas
+    const sucursalesPaginadas = table.getRowModel().rows.map(row => row.original);
+
     const redondearRiesgo = (valor) => {
         if (valor == null) return 0;
         return Math.round(valor);
     };
 
     const prepararDatosGrafico = () => {
-        if (!sucursalesFiltradas.length) return { labels: [], datasets: [] };
+        if (!sucursalesPaginadas.length) return { labels: [], datasets: [] };
 
-        const sucursalesOrdenadas = [...sucursalesFiltradas]
+        const sucursalesOrdenadas = [...sucursalesPaginadas]
             .sort((a, b) => (b.factorRiesgoZonaGeografica || 0) - (a.factorRiesgoZonaGeografica || 0));
 
         const labels = sucursalesOrdenadas.map(sucursal => {
@@ -109,10 +140,6 @@ const GraficosSucursales = () => {
                     afterLabel: (context) => {
                         const sucursal = sucursales[context.dataIndex];
                         const info = [];
-                        
-                    
-                        
-                        
                         return info;
                     }
                 }
@@ -201,8 +228,57 @@ const GraficosSucursales = () => {
                         </div>
                     </div>
 
+                    {/* Controles de paginación */}
+                    <div className={styles.paginacion}>
+                        <button
+                            onClick={() => table.setPageIndex(0)}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            {'<<'}
+                        </button>
+                        <button
+                            onClick={() => table.previousPage()}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            {'<'}
+                        </button>
+                        <button
+                            onClick={() => table.nextPage()}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            {'>'}
+                        </button>
+                        <button
+                            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            {'>>'}
+                        </button>
+
+                        <span>
+                            Página{' '}
+                            <strong>
+                                {table.getState().pagination.pageIndex + 1} de{' '}
+                                {table.getPageCount()}
+                            </strong>
+                        </span>
+
+                        <select
+                            value={table.getState().pagination.pageSize}
+                            onChange={e => {
+                                table.setPageSize(Number(e.target.value))
+                            }}
+                        >
+                            {[5, 10, 20, 30, 50].map(pageSize => (
+                                <option key={pageSize} value={pageSize}>
+                                    Mostrar {pageSize}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
                     <div className={styles.resumen}>
-                        <p>Total de sucursales en gráfico: <strong>{sucursalesFiltradas.length}</strong></p>
+                        <p>Total de sucursales: <strong>{sucursalesFiltradas.length}</strong> (mostrando {sucursalesPaginadas.length})</p>
                         {sucursalesFiltradas.length > 0 && (
                             <p>Promedio de riesgo geográfico: <strong>
                                 {(

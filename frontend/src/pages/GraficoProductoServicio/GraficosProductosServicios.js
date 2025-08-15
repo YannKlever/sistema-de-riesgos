@@ -13,6 +13,7 @@ import {
     Title,
     Colors
 } from 'chart.js';
+import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel } from '@tanstack/react-table';
 import styles from './graficosProductosServicios.module.css';
 
 ChartJS.register(
@@ -31,30 +32,48 @@ const GraficosProductosServicios = () => {
     const { productosFiltrados } = useProductosServicios();
     const [busqueda, setBusqueda] = useState('');
 
+    // Configuración de la tabla para paginación
+    const table = useReactTable({
+        data: productosFiltrados,
+        columns: [],
+        state: {
+            globalFilter: busqueda
+        },
+        onGlobalFilterChange: setBusqueda,
+        getCoreRowModel: getCoreRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        globalFilterFn: (row, columnId, filterValue) => {
+            const producto = row.original;
+            if (!filterValue) return true;
+            
+            const termino = filterValue.toLowerCase();
+            return `${producto.producto_servicio || ''} ${producto.oficina || ''} ${producto.riesgo_producto || ''} ${producto.riesgo_cliente || ''}`
+                .toLowerCase()
+                .includes(termino);
+        },
+        initialState: {
+            pagination: {
+                pageSize: 10
+            }
+        }
+    });
+
+    // Obtener los productos paginados y filtrados
+    const productosPaginados = table.getRowModel().rows.map(row => row.original);
+
     // Función para redondear matemáticamente a entero (0.5 hacia arriba)
     const redondearRiesgo = (valor) => {
         if (valor == null) return 0;
         return Math.round(valor);
     };
 
-    // Filtrar productos según la búsqueda
-    const productosFiltradosBusqueda = useMemo(() => {
-        if (!busqueda) return productosFiltrados;
-
-        const termino = busqueda.toLowerCase();
-        return productosFiltrados.filter(producto =>
-            `${producto.producto_servicio || ''} ${producto.oficina || ''} ${producto.riesgo_producto || ''} ${producto.riesgo_cliente || ''}`
-                .toLowerCase()
-                .includes(termino)
-        );
-    }, [productosFiltrados, busqueda]);
-
     // Preparar datos para el gráfico
     const prepararDatosGrafico = () => {
-        if (!productosFiltradosBusqueda.length) return { labels: [], datasets: [] };
+        if (!productosPaginados.length) return { labels: [], datasets: [] };
 
         // Ordenar por riesgo (mayor a menor)
-        const productosOrdenados = [...productosFiltradosBusqueda]
+        const productosOrdenados = [...productosPaginados]
             .sort((a, b) => (b.promedio_riesgo_producto_servicio || 0) - (a.promedio_riesgo_producto_servicio || 0));
 
         // Preparar etiquetas con nombre del producto/servicio y oficina
@@ -128,7 +147,6 @@ const GraficosProductosServicios = () => {
                         
                         info.push(`Producto/Servicio: ${producto.producto_servicio || 'N/A'}`);
                         info.push(`Oficina: ${producto.oficina || 'N/A'}`);
-                        
                         
                         return info;
                     }
@@ -212,6 +230,59 @@ const GraficosProductosServicios = () => {
                                 </div>
                             ))}
                         </div>
+                    </div>
+
+                    {/* Controles de paginación */}
+                    <div className={styles.paginacion}>
+                        <button
+                            onClick={() => table.setPageIndex(0)}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            {'<<'}
+                        </button>
+                        <button
+                            onClick={() => table.previousPage()}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            {'<'}
+                        </button>
+                        <button
+                            onClick={() => table.nextPage()}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            {'>'}
+                        </button>
+                        <button
+                            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            {'>>'}
+                        </button>
+
+                        <span>
+                            Página{' '}
+                            <strong>
+                                {table.getState().pagination.pageIndex + 1} de{' '}
+                                {table.getPageCount()}
+                            </strong>
+                        </span>
+
+                        <select
+                            value={table.getState().pagination.pageSize}
+                            onChange={e => {
+                                table.setPageSize(Number(e.target.value))
+                            }}
+                        >
+                            {[5, 10, 20, 30, 50].map(pageSize => (
+                                <option key={pageSize} value={pageSize}>
+                                    Mostrar {pageSize}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className={styles.resumen}>
+                        <p>Total de productos/servicios: <strong>{productosFiltrados.length}</strong> (mostrando {productosPaginados.length})</p>
                     </div>
                 </div>
             ) : (

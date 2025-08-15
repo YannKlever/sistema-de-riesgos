@@ -13,6 +13,7 @@ import {
     Title,
     Colors
 } from 'chart.js';
+import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel } from '@tanstack/react-table';
 import styles from './graficosCanalesDistribucion.module.css';
 
 ChartJS.register(
@@ -31,29 +32,47 @@ const GraficosCanalesDistribucion = () => {
     const { state, canalesFiltrados } = useCanalesDistribucion();
     const [busqueda, setBusqueda] = useState('');
 
+    // Configuración de la tabla para paginación
+    const table = useReactTable({
+        data: canalesFiltrados,
+        columns: [],
+        state: {
+            globalFilter: busqueda
+        },
+        onGlobalFilterChange: setBusqueda,
+        getCoreRowModel: getCoreRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        globalFilterFn: (row, columnId, filterValue) => {
+            const cliente = row.original;
+            if (!filterValue) return true;
+            
+            const termino = filterValue.toLowerCase();
+            return `${cliente.nombres_propietario || ''} ${cliente.apellidos_propietario || ''} ${cliente.nro_documento_propietario || ''} ${cliente.razon_social || ''} ${cliente.nit || ''}`
+                .toLowerCase()
+                .includes(termino);
+        },
+        initialState: {
+            pagination: {
+                pageSize: 10
+            }
+        }
+    });
+
+    // Obtener los clientes paginados y filtrados
+    const clientesPaginados = table.getRowModel().rows.map(row => row.original);
+
     const redondearRiesgo = (valor) => {
         if (valor == null) return 0;
         return Math.round(valor);
     };
 
-    // Filtrar clientes según la búsqueda
-    const clientesFiltradosBusqueda = useMemo(() => {
-        if (!busqueda) return canalesFiltrados;
-
-        const termino = busqueda.toLowerCase();
-        return canalesFiltrados.filter(cliente =>
-            `${cliente.nombres_propietario || ''} ${cliente.apellidos_propietario || ''} ${cliente.nro_documento_propietario || ''} ${cliente.razon_social || ''} ${cliente.nit || ''}`
-                .toLowerCase()
-                .includes(termino)
-        );
-    }, [canalesFiltrados, busqueda]);
-
-    // Preparar datos para el gráfico mostrando TODOS los clientes
+    // Preparar datos para el gráfico usando solo los clientes paginados
     const prepararDatosGrafico = () => {
-        if (!clientesFiltradosBusqueda.length) return { labels: [], datasets: [] };
+        if (!clientesPaginados.length) return { labels: [], datasets: [] };
 
-        // Ordenar por riesgo (mayor a menor) - sin limitar a 3
-        const clientesOrdenados = [...clientesFiltradosBusqueda]
+        // Ordenar por riesgo (mayor a menor)
+        const clientesOrdenados = [...clientesPaginados]
             .sort((a, b) => (b.promedio_riesgo_cliente_externo || 0) - (a.promedio_riesgo_cliente_externo || 0));
 
         // Preparar etiquetas con los 3 campos más importantes: nombre/razón social, documento/NIT y riesgo
@@ -187,7 +206,7 @@ const GraficosCanalesDistribucion = () => {
                 <div className={styles.cargando}>Cargando datos...</div>
             ) : datasets?.length > 0 ? (
                 <div className={styles.chartContainer}>
-                    <div className={styles.chartWrapper} style={{ height: `${Math.max(500, clientes.length * 40)}px` }}>
+                    <div className={styles.chartWrapper} style={{ height: `${Math.max(500, labels.length * 40)}px` }}>
                         <Chart
                             type='bar'
                             data={{ labels, datasets }}
@@ -222,6 +241,59 @@ const GraficosCanalesDistribucion = () => {
                                 </div>
                             ))}
                         </div>
+                    </div>
+
+                    {/* Controles de paginación */}
+                    <div className={styles.paginacion}>
+                        <button
+                            onClick={() => table.setPageIndex(0)}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            {'<<'}
+                        </button>
+                        <button
+                            onClick={() => table.previousPage()}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            {'<'}
+                        </button>
+                        <button
+                            onClick={() => table.nextPage()}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            {'>'}
+                        </button>
+                        <button
+                            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            {'>>'}
+                        </button>
+
+                        <span>
+                            Página{' '}
+                            <strong>
+                                {table.getState().pagination.pageIndex + 1} de{' '}
+                                {table.getPageCount()}
+                            </strong>
+                        </span>
+
+                        <select
+                            value={table.getState().pagination.pageSize}
+                            onChange={e => {
+                                table.setPageSize(Number(e.target.value))
+                            }}
+                        >
+                            {[5, 10, 20, 30, 50].map(pageSize => (
+                                <option key={pageSize} value={pageSize}>
+                                    Mostrar {pageSize}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className={styles.resumen}>
+                        <p>Total de canales: <strong>{canalesFiltrados.length}</strong> (mostrando {clientesPaginados.length})</p>
                     </div>
                 </div>
             ) : (

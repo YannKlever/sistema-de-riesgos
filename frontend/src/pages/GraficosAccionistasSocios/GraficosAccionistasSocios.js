@@ -13,6 +13,7 @@ import {
     Title,
     Colors
 } from 'chart.js';
+import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel } from '@tanstack/react-table';
 import styles from './graficosAccionistasSocios.module.css';
 
 ChartJS.register(
@@ -31,26 +32,45 @@ const GraficosAccionistasSocios = () => {
     const { accionistasFiltrados } = useAccionistasSocios();
     const [busqueda, setBusqueda] = useState('');
 
+    // Configuración de la tabla para paginación
+    const table = useReactTable({
+        data: accionistasFiltrados,
+        columns: [],
+        state: {
+            globalFilter: busqueda
+        },
+        onGlobalFilterChange: setBusqueda,
+        getCoreRowModel: getCoreRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        globalFilterFn: (row, columnId, filterValue) => {
+            const acc = row.original;
+            if (!filterValue) return true;
+            
+            const termino = filterValue.toLowerCase();
+            return `${acc.nombres_accionistas_socios} ${acc.apellidos_accionistas_socios} ${acc.nro_documento_accionistas_socios}`
+                .toLowerCase()
+                .includes(termino);
+        },
+        initialState: {
+            pagination: {
+                pageSize: 10
+            }
+        }
+    });
+
+    // Obtener los accionistas paginados y filtrados
+    const accionistasPaginados = table.getRowModel().rows.map(row => row.original);
+
     const redondearRiesgo = (valor) => {
         if (valor == null) return 0;
         return Math.round(valor);
     };
 
-    const accionistasFiltradosBusqueda = useMemo(() => {
-        if (!busqueda) return accionistasFiltrados;
-
-        const termino = busqueda.toLowerCase();
-        return accionistasFiltrados.filter(acc =>
-            `${acc.nombres_accionistas_socios} ${acc.apellidos_accionistas_socios} ${acc.nro_documento_accionistas_socios}`
-                .toLowerCase()
-                .includes(termino)
-        );
-    }, [accionistasFiltrados, busqueda]);
-
     const prepararDatosHeatmap = () => {
-        if (!accionistasFiltradosBusqueda.length) return { labels: [], datasets: [] };
+        if (!accionistasPaginados.length) return { labels: [], datasets: [] };
 
-        const accionistasOrdenados = [...accionistasFiltradosBusqueda]
+        const accionistasOrdenados = [...accionistasPaginados]
             .sort((a, b) => (b.factorRiesgoAccionistaSocio || 0) - (a.factorRiesgoAccionistaSocio || 0));
 
         const labels = accionistasOrdenados.map(acc =>
@@ -196,6 +216,59 @@ const GraficosAccionistasSocios = () => {
                                 </div>
                             ))}
                         </div>
+                    </div>
+
+                    {/* Controles de paginación */}
+                    <div className={styles.paginacion}>
+                        <button
+                            onClick={() => table.setPageIndex(0)}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            {'<<'}
+                        </button>
+                        <button
+                            onClick={() => table.previousPage()}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            {'<'}
+                        </button>
+                        <button
+                            onClick={() => table.nextPage()}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            {'>'}
+                        </button>
+                        <button
+                            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            {'>>'}
+                        </button>
+
+                        <span>
+                            Página{' '}
+                            <strong>
+                                {table.getState().pagination.pageIndex + 1} de{' '}
+                                {table.getPageCount()}
+                            </strong>
+                        </span>
+
+                        <select
+                            value={table.getState().pagination.pageSize}
+                            onChange={e => {
+                                table.setPageSize(Number(e.target.value))
+                            }}
+                        >
+                            {[5, 10, 20, 30, 50].map(pageSize => (
+                                <option key={pageSize} value={pageSize}>
+                                    Mostrar {pageSize}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className={styles.resumen}>
+                        <p>Total de accionistas/socios: <strong>{accionistasFiltrados.length}</strong> (mostrando {accionistasPaginados.length})</p>
                     </div>
                 </div>
             ) : (

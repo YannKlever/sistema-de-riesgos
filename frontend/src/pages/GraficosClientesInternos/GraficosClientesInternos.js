@@ -13,6 +13,7 @@ import {
     Title,
     Colors
 } from 'chart.js';
+import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel } from '@tanstack/react-table';
 import styles from './graficosClientesInternos.module.css';
 
 ChartJS.register(
@@ -37,24 +38,42 @@ const GraficosClientesInternos = () => {
         return Math.round(valor);
     };
 
-    // Filtrar clientes según la búsqueda
-    const clientesFiltradosBusqueda = useMemo(() => {
-        if (!busqueda) return clientesFiltrados;
-
-        const termino = busqueda.toLowerCase();
-        return clientesFiltrados.filter(cliente =>
-            `${cliente.nombres_cliente_interno || ''} ${cliente.apellidos_cliente_interno || ''} ${cliente.nro_documento_cliente_interno || ''} ${cliente.oficina || ''} ${cliente.categoria_pep || ''}`
+    // Configuración de la tabla para paginación
+    const table = useReactTable({
+        data: clientesFiltrados,
+        columns: [],
+        state: {
+            globalFilter: busqueda
+        },
+        onGlobalFilterChange: setBusqueda,
+        getCoreRowModel: getCoreRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        globalFilterFn: (row, columnId, filterValue) => {
+            const value = row.original;
+            if (!filterValue) return true;
+            
+            const termino = filterValue.toLowerCase();
+            return `${value.nombres_cliente_interno || ''} ${value.apellidos_cliente_interno || ''} ${value.nro_documento_cliente_interno || ''} ${value.oficina || ''} ${value.categoria_pep || ''}`
                 .toLowerCase()
-                .includes(termino)
-        );
-    }, [clientesFiltrados, busqueda]);
+                .includes(termino);
+        },
+        initialState: {
+            pagination: {
+                pageSize: 10
+            }
+        }
+    });
 
-    // Preparar datos para el gráfico
+    // Obtener los clientes paginados y filtrados
+    const clientesPaginados = table.getRowModel().rows.map(row => row.original);
+
+    // Preparar datos para el gráfico usando solo los clientes paginados
     const prepararDatosGrafico = () => {
-        if (!clientesFiltradosBusqueda.length) return { labels: [], datasets: [] };
+        if (!clientesPaginados.length) return { labels: [], datasets: [] };
 
         // Ordenar por riesgo (mayor a menor)
-        const clientesOrdenados = [...clientesFiltradosBusqueda]
+        const clientesOrdenados = [...clientesPaginados]
             .sort((a, b) => (b.promedio_riesgo_cliente_interno || 0) - (a.promedio_riesgo_cliente_interno || 0));
 
         // Preparar etiquetas con nombre completo, documento y cargo/oficina
@@ -125,9 +144,7 @@ const GraficosClientesInternos = () => {
                     afterLabel: (context) => {
                         const cliente = clientes[context.dataIndex];
                         return [
-                            
                             `Riesgo Profesión: ${cliente.riesgo_profesion_actividad || 'N/A'}`,
-                            
                         ];
                     }
                 }
@@ -210,6 +227,55 @@ const GraficosClientesInternos = () => {
                                 </div>
                             ))}
                         </div>
+                    </div>
+
+                    {/* Controles de paginación */}
+                    <div className={styles.paginacion}>
+                        <button
+                            onClick={() => table.setPageIndex(0)}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            {'<<'}
+                        </button>
+                        <button
+                            onClick={() => table.previousPage()}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            {'<'}
+                        </button>
+                        <button
+                            onClick={() => table.nextPage()}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            {'>'}
+                        </button>
+                        <button
+                            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            {'>>'}
+                        </button>
+
+                        <span>
+                            Página{' '}
+                            <strong>
+                                {table.getState().pagination.pageIndex + 1} de{' '}
+                                {table.getPageCount()}
+                            </strong>
+                        </span>
+
+                        <select
+                            value={table.getState().pagination.pageSize}
+                            onChange={e => {
+                                table.setPageSize(Number(e.target.value))
+                            }}
+                        >
+                            {[5, 10, 20, 30, 50].map(pageSize => (
+                                <option key={pageSize} value={pageSize}>
+                                    Mostrar {pageSize}
+                                </option>
+                            ))}
+                        </select>
                     </div>
                 </div>
             ) : (

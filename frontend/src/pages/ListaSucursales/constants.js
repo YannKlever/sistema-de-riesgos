@@ -30,8 +30,8 @@ export const DEFAULT_COLUMNAS_SUCURSALES = COLUMNAS_SUCURSALES.filter(col => col
 
 export const NIVELES_RIESGO = [
     { value: 'bajo', label: 'Bajo', valorNumerico: 1 },
-    { value: 'medio_bajo', label: 'Medio Bajo', valorNumerico: 2 },
+    { value: 'medio bajo', label: 'Medio Bajo', valorNumerico: 2 },
     { value: 'medio', label: 'Medio', valorNumerico: 3 },
-    { value: 'medio_alto', label: 'Medio Alto', valorNumerico: 4 },
+    { value: 'medio alto', label: 'Medio Alto', valorNumerico: 4 },
     { value: 'alto', label: 'Alto', valorNumerico: 5 }
 ];
