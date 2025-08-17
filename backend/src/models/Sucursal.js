@@ -20,6 +20,7 @@ class Sucursal {
             riesgo_zona_numerico: sucursal.riesgo_zona_numerico || null,
             riesgo_frontera_numerico: sucursal.riesgo_frontera_numerico || null,
             probabilidad: sucursal.probabilidad || null,
+            impacto_texto: sucursal.impacto_texto || null,
             impacto: sucursal.impacto || null,
             promedio_riesgo_zona_geografica: sucursal.promedio_riesgo_zona_geografica || null
         };

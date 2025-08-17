@@ -12,6 +12,7 @@ class ProductoServicio {
             riesgo_producto_numerico: producto.riesgo_producto_numerico || null,
             riesgo_cliente_numerico: producto.riesgo_cliente_numerico || null,
             probabilidad: producto.probabilidad || null,
+            impacto_texto:producto.impacto_texto || null,
             impacto: producto.impacto || null,
             promedio_riesgo_producto_servicio: producto.promedio_riesgo_producto_servicio || null, 
         };
