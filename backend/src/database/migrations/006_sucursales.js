@@ -23,6 +23,7 @@ async function createTable(db) {
               riesgo_zona_numerico INTEGER,
               riesgo_frontera_numerico INTEGER,
               probabilidad REAL,
+              impacto_texto TEXT,
               impacto REAL,
               promedio_riesgo_zona_geografica REAL)`,
             function (err) {

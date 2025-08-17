@@ -15,6 +15,7 @@ async function createTable(db) {
               riesgo_producto_numerico INTEGER,
               riesgo_cliente_numerico INTEGER,
               probabilidad REAL,
+              impacto_texto TEXT,
               impacto REAL,
               promedio_riesgo_producto_servicio REAL
               )`,
