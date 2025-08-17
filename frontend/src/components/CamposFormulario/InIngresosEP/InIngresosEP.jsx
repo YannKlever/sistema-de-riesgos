@@ -2,14 +2,14 @@ import { useState, useEffect } from 'react';
 import styles from './styles.module.css';
 
 const rangosIngresos = [
-    { texto: "Menos de Bs 3,000", valor: 1 },
-    { texto: "Bs 3,001 - Bs 6,000", valor: 2 },
-    { texto: "Bs 6,001 - Bs 10,000", valor: 3 },
-    { texto: "Bs 10,001 - Bs 25,000", valor: 4 },
-    { texto: "Más de Bs 25,000", valor: 5 }
+    { texto: "Menos de Bs 15,000", valor: 1 },
+    { texto: "Bs 15,000 - Bs 30,000", valor: 2 },
+    { texto: "Bs 30,001 - Bs 50,000", valor: 3 },
+    { texto: "Bs 50,001 - Bs 70,000", valor: 4 },
+    { texto: "Más de Bs 70,000", valor: 5 }
 ];
 
-const InIngresosAnuales = ({ 
+const InIngresosEP = ({ 
     label, 
     name, 
     nameNumerico = `${name}_numerico`,
@@ -60,4 +60,4 @@ const InIngresosAnuales = ({
     );
 };
 
-export default InIngresosAnuales;
+export default InIngresosEP;

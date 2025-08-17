@@ -4,9 +4,7 @@ import styles from './styles.module.css';
 const categoriasPep = {
     'no pep': { texto: 'No es PEP', valor: 1 },
     'asociado pep': { texto: 'Asociado cercano de PEP', valor: 2 },
-    
     'familia pep': { texto: 'Familiar de PEP', valor: 3 },
-    
     'pep extranjero': { texto: 'PEP Extranjero', valor: 4 },
     'pep nacional': { texto: 'PEP Nacional', valor: 5 }
 };

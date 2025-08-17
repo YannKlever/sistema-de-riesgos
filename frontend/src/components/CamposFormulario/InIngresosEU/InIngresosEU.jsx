@@ -3,13 +3,13 @@ import styles from './styles.module.css';
 
 const rangosIngresos = [
     { texto: "Menos de Bs 3,000", valor: 1 },
-    { texto: "Bs 3,001 - Bs 6,000", valor: 2 },
-    { texto: "Bs 6,001 - Bs 10,000", valor: 3 },
-    { texto: "Bs 10,001 - Bs 25,000", valor: 4 },
-    { texto: "Más de Bs 25,000", valor: 5 }
+    { texto: "Bs 3,000 - Bs 7,000", valor: 2 },
+    { texto: "Bs 7,001 - Bs 15,000", valor: 3 },
+    { texto: "Bs 15,000 - Bs 30,000", valor: 4 },
+    { texto: "Más de Bs 30,000", valor: 5 }
 ];
 
-const InIngresosAnuales = ({ 
+const InIngresosEU = ({ 
     label, 
     name, 
     nameNumerico = `${name}_numerico`,
@@ -60,4 +60,4 @@ const InIngresosAnuales = ({
     );
 };
 
-export default InIngresosAnuales;
+export default InIngresosEU;
