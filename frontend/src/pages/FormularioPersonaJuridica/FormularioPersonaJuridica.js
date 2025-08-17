@@ -5,7 +5,6 @@ import InTelefono from '../../components/CamposFormulario/InTelefono/InTelefono'
 import InPersonaCargo from '../../components/CamposFormulario/InPersonaCargo/InPersonaCargo';
 import InTipoSociedad from '../../components/CamposFormulario/InTipoSociedad/InTipoSociedad';
 import InDomicilioSucursales from '../../components/CamposFormulario/InDomicilioSucursales/InDomicilioSucursales';
-import InIngresosAnuales from '../../components/CamposFormulario/InIngresosAnuales/InIngresosAnuales';
 import InRiesgo from '../../components/CamposFormulario/InRiesgo/InRiesgo';
 import InPais from '../../components/CamposFormulario/InPais/InPais';
 import InPep from '../../components/CamposFormulario/InPep/InPep';
@@ -19,6 +18,7 @@ import SeccionEvaluacionRiesgo from '../../components/CamposFormulario/SeccionEv
 import { generateFormPDF, downloadPDF } from '../../utils/print/pdfGenerator';
 import InAutorizacion from '../../components/CamposFormulario/InAutorizacion/InAutorizacion';
 import SeccionAlertas from '../../components/CamposFormulario/SeccionAlertas/SeccionAlertas';
+import InIngresosPJ from '../../components/CamposFormulario/InIngresosPJ/InIngresosPJ';
 
 // Definición de las secciones para el PDF
 const printSections = [
@@ -326,7 +326,7 @@ const FormularioPersonaJuridica = () => {
 
                             <div className={styles.row}>
                                 <div className={styles.field}>
-                                    <InIngresosAnuales
+                                    <InIngresosPJ
                                         label="Nivel de Ingresos Mensuales"
                                         name="ingresos_mensuales"
                                         required

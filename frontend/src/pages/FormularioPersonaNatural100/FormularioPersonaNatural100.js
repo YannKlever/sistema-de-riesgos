@@ -279,7 +279,7 @@ const FormularioPersonaNatural100 = () => {
                                 </div>
                                 <div className={styles.formCol}>
                                     <InIngresosAnuales
-                                        label="Nivel de Ingresos mensuales"
+                                        label="Nivel Promedio de Ingresos mensuales"
                                         name="ingresos_mensuales"
                                         required
                                     />

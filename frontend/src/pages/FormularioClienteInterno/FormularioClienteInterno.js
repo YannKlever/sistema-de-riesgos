@@ -231,7 +231,7 @@ const FormularioClienteInterno = () => {
                                 </div>
                                 <div className={styles.formCol}>
                                     <InIngresosAnuales
-                                        label="Nivel de Ingresos mensuales"
+                                        label="Nivel Promedio de Ingresos mensuales"
                                         name="ingresos_mensuales"
                                         required
                                         defaultValue={initialData?.ingresos_mensuales}

@@ -3,7 +3,7 @@ export const COLUMNAS_REPORTE_LDFT = [
     { id: 'usuario', nombre: 'Usuario' },
     
     // Sección 1: Administración del Riesgo
-    { id: 'p1_1', nombre: '1.1 - Área independiente LGI/FT/DP' },
+    { id: 'p1_1', nombre: '1.1 - Área independiente LGI/FT-FPADM' },
     { id: 'p1_1_numerico', nombre: '1.1 - Valor' },
     { id: 'p1_2', nombre: '1.2 - Implementación gestión riesgos' },
     { id: 'p1_2_numerico', nombre: '1.2 - Valor' },

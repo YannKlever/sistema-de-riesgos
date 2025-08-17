@@ -35,3 +35,10 @@ export const NIVELES_RIESGO = [
     { value: 'medio alto', label: 'Medio Alto', valorNumerico: 4 },
     { value: 'alto', label: 'Alto', valorNumerico: 5 }
 ];
+export const OPCIONES_IMPACTO = [
+    { value: 'legal', label: 'Legal', peso: 1 },
+    { value: 'economico', label: 'Afectación económica', peso: 1 },
+    { value: 'reputacional', label: 'Reputacional', peso: 1 },
+    { value: 'contagio', label: 'Contagio', peso: 1 },
+    { value: 'multas', label: 'Multas', peso: 1 }
+];

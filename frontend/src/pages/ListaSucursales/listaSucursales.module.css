@@ -378,18 +378,21 @@ button:disabled {
 .formInput {
     width: 90%;
     padding: 0.625rem 1rem;
-    border: 1px solid var(--clr-gris-claro);
+    border: 1px solid var(--clr-prim-osc);
     border-radius: 0.375rem;
     font-size: 1rem;
     transition: all 0.2s;
 }
+
 .formTextarea {
-    width: 190%;
+    width: 90%;
     padding: 0.625rem 1rem;
-    border: 1px solid var(--clr-gris-claro);
+    border: 1px solid var(--clr-prim-osc);
     border-radius: 0.375rem;
     font-size: 1rem;
     transition: all 0.2s;
+    min-height: 100px;
+    resize: vertical;
 }
 
 .formInput:focus,
@@ -437,6 +440,36 @@ button:disabled {
 
 .saveButton:hover:not(:disabled) {
     background-color: var(--clr-prim-osc);
+}
+
+.checklistContainer {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background-color: var(--clr-gris-muy-claro);
+    border-radius: 0.375rem;
+}
+
+.checklistLabel {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-weight: normal;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s;
+}
+
+.checklistLabel:hover {
+    background-color: var(--clr-gris-claro);
+}
+
+.checklistInput {
+    margin: 0;
+    cursor: pointer;
 }
 
 /* Responsive */

@@ -6,7 +6,7 @@ import InPersona from '../../components/CamposFormulario/InPersona/InPersona';
 import InRiesgo from '../../components/CamposFormulario/InRiesgo/InRiesgo';
 import InPais from '../../components/CamposFormulario/InPais/InPais';
 import InPep from '../../components/CamposFormulario/InPep/InPep';
-import InIngresosAnuales from '../../components/CamposFormulario/InIngresosAnuales/InIngresosAnuales';
+import InIngresosEP from '../../components/CamposFormulario/InIngresosEP/InIngresosEP'
 import InVolumenActividad from '../../components/CamposFormulario/InVolumenActividad/InVolumenActividad';
 import InFrecuenciaActividad from '../../components/CamposFormulario/InFrecuenciaActividad/InFrecuenciaActividad';
 import HeaderInfoRegistro from '../../components/CamposFormulario/HeaderInfoRegistro/HeaderInfoRegistro';
@@ -309,7 +309,7 @@ const FormularioEmpresaPublica = () => {
                                 </div>
 
                                 <div className={styles.formCol}>
-                                    <InIngresosAnuales
+                                    <InIngresosEP
                                         label="Nivel de Ingresos Mensuales"
                                         name="ingresos_mensuales"
                                         required

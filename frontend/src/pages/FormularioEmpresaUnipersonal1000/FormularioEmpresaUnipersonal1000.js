@@ -8,7 +8,6 @@ import InPersona from '../../components/CamposFormulario/InPersona/InPersona';
 import InPais from '../../components/CamposFormulario/InPais/InPais';
 import InPep from '../../components/CamposFormulario/InPep/InPep';
 import HeaderInfoRegistro from '../../components/CamposFormulario/HeaderInfoRegistro/HeaderInfoRegistro';
-import InIngresosAnuales from '../../components/CamposFormulario/InIngresosAnuales/InIngresosAnuales';
 import InVolumenActividad from '../../components/CamposFormulario/InVolumenActividad/InVolumenActividad';
 import InFrecuenciaActividad from '../../components/CamposFormulario/InFrecuenciaActividad/InFrecuenciaActividad';
 import styles from './formularioEmpresaUnipersonal1000.module.css';
@@ -17,6 +16,7 @@ import SeccionEvaluacionRiesgo from '../../components/CamposFormulario/SeccionEv
 import { generateFormPDF, downloadPDF } from '../../utils/print/pdfGenerator';
 import InAutorizacion from '../../components/CamposFormulario/InAutorizacion/InAutorizacion';
 import SeccionAlertas from '../../components/CamposFormulario/SeccionAlertas/SeccionAlertas';
+import InIngresosEU from '../../components/CamposFormulario/InIngresosEU/InIngresosEU';
 
 // Definición de las secciones para el PDF
 const printSections = [
@@ -281,8 +281,8 @@ const FormularioEmpresaUnipersonal1000 = () => {
                                     />
                                 </div>
                                 <div className={styles.formCol}>
-                                    <InIngresosAnuales
-                                        label="Nivel de Ingresos o Promedio de ingresos mensuales"
+                                    <InIngresosEU
+                                        label="Nivel Promedio de ingresos mensuales"
                                         name="ingresos_mensuales"
                                         required
                                     />

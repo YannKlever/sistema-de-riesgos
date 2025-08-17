@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { databaseService } from '../../services/database';
-import { NIVELES_RIESGO, DEPARTAMENTOS_BOLIVIA } from './constants';
+import { NIVELES_RIESGO, DEPARTAMENTOS_BOLIVIA, OPCIONES_IMPACTO } from './constants';
 import styles from './listaSucursales.module.css';
 
 const CampoFormulario = ({ label, children, required = false }) => (
@@ -45,7 +45,9 @@ const SucursalFormModal = ({ editingId, sucursales, onClose, onSuccess, onError 
         riesgo_zona: '',
         riesgo_zona_numerico: null,
         riesgo_frontera: '',
-        riesgo_frontera_numerico: null
+        riesgo_frontera_numerico: null,
+        impacto_texto: [], // Nuevo campo para opciones seleccionadas
+        impacto: 0
     });
 
     const [loading, setLoading] = useState(false);
@@ -69,11 +71,35 @@ const SucursalFormModal = ({ editingId, sucursales, onClose, onSuccess, onError 
                     riesgo_zona: sucursal.riesgo_zona || '',
                     riesgo_zona_numerico: sucursal.riesgo_zona_numerico || null,
                     riesgo_frontera: sucursal.riesgo_frontera || '',
-                    riesgo_frontera_numerico: sucursal.riesgo_frontera_numerico || null
+                    riesgo_frontera_numerico: sucursal.riesgo_frontera_numerico || null,
+                    impacto_texto: sucursal.impacto_texto ? sucursal.impacto_texto.split(',') : [],
+                    impacto: sucursal.impacto || 0
                 });
             }
         }
     }, [editingId, sucursales]);
+    const handleImpactoChange = (e) => {
+        const { value, checked } = e.target;
+        let nuevosValores = [...formData.impacto_texto];
+
+        if (checked) {
+            nuevosValores.push(value);
+        } else {
+            nuevosValores = nuevosValores.filter(item => item !== value);
+        }
+
+        // Calcula el impacto sumando los pesos de las opciones seleccionadas
+        const nuevoImpacto = nuevosValores.reduce((total, valor) => {
+            const opcion = OPCIONES_IMPACTO.find(o => o.value === valor);
+            return total + (opcion ? opcion.peso : 0);
+        }, 0);
+
+        setFormData(prev => ({
+            ...prev,
+            impacto_texto: nuevosValores,
+            impacto: nuevoImpacto
+        }));
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -92,8 +118,9 @@ const SucursalFormModal = ({ editingId, sucursales, onClose, onSuccess, onError 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!formData.oficina || !formData.ubicacion || !formData.departamento || !formData.riesgo_departamento) {
-            onError('Por favor complete los campos requeridos');
+        if (!formData.oficina || !formData.ubicacion || !formData.departamento ||
+            !formData.riesgo_departamento || formData.impacto_texto.length === 0) {
+            onError('Por favor complete todos los campos requeridos');
             return;
         }
 
@@ -102,6 +129,7 @@ const SucursalFormModal = ({ editingId, sucursales, onClose, onSuccess, onError 
         try {
             const datos = {
                 ...formData,
+                impacto_texto: formData.impacto_texto.join(','), // Convertimos a string separado por comas
                 fecha_registro: editingId
                     ? sucursales.find(s => s.id === editingId).fecha_registro
                     : new Date().toISOString()
@@ -236,6 +264,27 @@ const SucursalFormModal = ({ editingId, sucursales, onClose, onSuccess, onError 
                                 name="riesgo_frontera"
                                 value={formData.riesgo_frontera}
                                 onChange={handleChange}
+                            />
+                        </CampoFormulario>
+                        <CampoFormulario label="Impacto" required>
+                            <div className={styles.checklistContainer}>
+                                {OPCIONES_IMPACTO.map(opcion => (
+                                    <label key={opcion.value} className={styles.checklistLabel}>
+                                        <input
+                                            type="checkbox"
+                                            value={opcion.value}
+                                            checked={formData.impacto_texto.includes(opcion.value)}
+                                            onChange={handleImpactoChange}
+                                            className={styles.checklistInput}
+                                        />
+                                        {opcion.label}
+                                    </label>
+                                ))}
+                            </div>
+                            <input
+                                type="hidden"
+                                name="impacto"
+                                value={formData.impacto}
                             />
                         </CampoFormulario>
 
