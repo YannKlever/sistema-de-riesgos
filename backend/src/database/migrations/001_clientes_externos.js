@@ -1,6 +1,5 @@
 async function up(db) {
     await createTable(db);
-    // Aquí podrías añadir futuras migraciones para esta tabla
 }
 
 async function createTable(db) {
@@ -53,16 +52,16 @@ async function createTable(db) {
               extension_representante TEXT,
               otra_extension_representante TEXT,
               ramo_seguro TEXT,
-              riesgo_zona_uso_seguro TEXT,
               tipo_documento TEXT,
               fecha_inicio TEXT,
               fecha_fin TEXT,
               nro_poliza TEXT,
               valor_prima_dolares REAL,
+              zona_uso_seguro TEXT,
+              riesgo_zona_uso_seguro TEXT,
               frecuencia_contacto_fisico TEXT,
               frecuencia_contacto_digital TEXT,
               medio_comunicacion TEXT,
-              medio_pago TEXT,
               integridad_documental TEXT,
               exactitud_documental TEXT,
               vigencia_documental TEXT,
@@ -83,14 +82,10 @@ async function createTable(db) {
               volumen_actividad_numerico INTEGER,
               frecuencia_actividad_numerico INTEGER,
               categoria_pep_numerico INTEGER,
-              ramo_seguro_numerico INTEGER,
               riesgo_zona_uso_seguro_numerico INTEGER,
-              tipo_documento_numerico INTEGER,
-              valor_prima_dolares_numerico INTEGER,
               frecuencia_contacto_fisico_numerico INTEGER,
               frecuencia_contacto_digital_numerico INTEGER,
               medio_comunicacion_numerico INTEGER,
-              medio_pago_numerico INTEGER,
               integridad_documental_numerico INTEGER,
               exactitud_documental_numerico INTEGER,
               vigencia_documental_numerico INTEGER,
@@ -102,7 +97,11 @@ async function createTable(db) {
               promedio_riesgo_canal_distribucion REAL,
               probabilidad_cliente_externo REAL,
               impacto_cliente_externo REAL,
-              promedio_riesgo_cliente_externo REAL,
+              riesgo_inherente REAL,
+              mitigacion TEXT,
+              mitigacion_numerico REAL,
+              mitigacion_adicional TEXT,
+              riesgo_residual REAL,
 
               FOREIGN KEY(cliente_interno_id) REFERENCES "tabla-clientes-internos"(id) 
               )`,

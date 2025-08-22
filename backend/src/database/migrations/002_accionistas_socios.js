@@ -19,6 +19,7 @@ async function createTable(db) {
               lugar_nacimiento TEXT,
               nacionalidad TEXT,
               estado_civil TEXT,
+              domicilio_persona TEXT,
               actividad TEXT,
               riesgo_actividad TEXT,
               riesgo_zona TEXT,
@@ -27,7 +28,6 @@ async function createTable(db) {
               volumen_actividad REAL,
               frecuencia_actividad TEXT,
               participacion_accionaria TEXT,
-              domicilio_persona TEXT,
               integridad_documental TEXT,
               exactitud_documental TEXT,
               vigencia_documental TEXT,
@@ -51,7 +51,11 @@ async function createTable(db) {
               comportamiento_cliente_numerico INTEGER,
               probabilidad REAL,
               impacto REAL,
-              promedio_riesgo_accionista_socio REAL
+              riesgo_inherente REAL,
+              mitigacion TEXT,
+              mitigacion_numerico REAL,
+              mitigacion_adicional TEXT,
+              riesgo_residual REAL
               )`,
             function (err) {
                 if (err) {

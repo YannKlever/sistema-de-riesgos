@@ -21,6 +21,8 @@ async function createTable(db) {
               estado_civil TEXT,
               profesion TEXT,
               riesgo_profesion_actividad TEXT,
+              otra_actividad TEXT,
+              riesgo_otra_actividad TEXT,
               domicilio_persona_sucursal TEXT,
               riesgo_zona TEXT,
               categoria_pep TEXT,
@@ -38,6 +40,7 @@ async function createTable(db) {
               alertas_activos_virtuales TEXT,
               nacionalidad_numerico INTEGER,
               riesgo_profesion_actividad_numerico INTEGER,
+              otra_actividad_numerico INTEGER,
               riesgo_zona_numerico INTEGER,
               categoria_pep_numerico INTEGER,
               ingresos_mensuales_numerico INTEGER,
@@ -49,9 +52,13 @@ async function createTable(db) {
               relevancia_informacion_numerico INTEGER,
               consistencia_informacion_numerico INTEGER,
               comportamiento_cliente_numerico INTEGER,
-              impacto REAL,
               probabilidad REAL,
-              promedio_riesgo_cliente_interno REAL     
+              impacto REAL,
+              riesgo_inherente REAL,
+              mitigacion TEXT,
+              mitigacion_numerico REAL,
+              mitigacion_adicional TEXT,
+              riesgo_residual REAL
               )`,
             function (err) {
                 if (err) {

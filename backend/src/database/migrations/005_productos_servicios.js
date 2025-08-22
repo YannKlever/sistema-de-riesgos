@@ -7,9 +7,9 @@ async function createTable(db) {
         db.run(`CREATE TABLE IF NOT EXISTS "tabla-productos-servicios" (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               fecha_registro TEXT DEFAULT CURRENT_TIMESTAMP,
+              oficina TEXT,
               producto_servicio TEXT NOT NULL,
               riesgo_producto TEXT NOT NULL,
-              oficina TEXT,
               riesgo_cliente TEXT NOT NULL,
               observaciones TEXT,
               riesgo_producto_numerico INTEGER,
