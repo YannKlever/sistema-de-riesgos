@@ -17,9 +17,9 @@ export const ACCIONISTAS_SCHEMA = {
     'Otra Extensión': 'otra_extension_accionistas_socios',
     'Fecha Nacimiento': 'fecha_nacimiento',
     'Lugar Nacimiento': 'lugar_nacimiento',
+    'Domicilio': 'domicilio_persona',
     'Nacionalidad': 'nacionalidad',
     'Estado Civil': 'estado_civil',
-    'Domicilio': 'domicilio_persona',
     'Actividad': 'actividad',
     'Riesgo Actividad': 'riesgo_actividad',
     'Riesgo Zona': 'riesgo_zona',
@@ -38,10 +38,10 @@ export const ACCIONISTAS_SCHEMA = {
     'Riesgo Nacionalidad': 'nacionalidad_numerico',
     'Riesgo Actividad (Ponderado)': 'riesgo_actividad_numerico',
     'Riesgo Zona (Ponderado)': 'riesgo_zona_numerico',
+    'Riesgo PEP (Ponderado)': 'categoria_pep_numerico',
     'Riesgo Ingresos (Ponderado)': 'ingresos_mensuales_numerico',
     'Riesgo Volumen (Ponderado)': 'volumen_actividad_numerico',
     'Riesgo Frecuencia (Ponderado)': 'frecuencia_actividad_numerico',
-    'Riesgo PEP (Ponderado)': 'categoria_pep_numerico',
     'Riesgo Participación (Ponderado)': 'participacion_accionaria_numerico',
     'Riesgo Integridad (Ponderado)': 'integridad_documental_numerico',
     'Riesgo Exactitud (Ponderado)': 'exactitud_documental_numerico',
@@ -49,6 +49,9 @@ export const ACCIONISTAS_SCHEMA = {
     'Riesgo Relevancia (Ponderado)': 'relevancia_informacion_numerico',
     'Riesgo Consistencia (Ponderado)': 'consistencia_informacion_numerico',
     'Riesgo Comportamiento (Ponderado)': 'comportamiento_cliente_numerico',
+    'Mitigación': 'mitigacion',
+    'Mitigación Relativa': 'mitigacion_numerico',
+    'Detalle de la Mitigación': 'mitigacion_adicional'
   }
 };
 

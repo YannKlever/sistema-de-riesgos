@@ -56,10 +56,11 @@ export const CLIENTES_EXTERNOS_SCHEMA = {
     'Fecha de Fin': 'fecha_fin',
     'Nro. de Póliza': 'nro_poliza',
     'Valor Prima (USD)': 'valor_prima_dolares',
+    'Zona de Uso del Seguro': 'zona_uso_seguro',
+    'Riesgo de Zona de Uso del Seguro': 'riesgo_zona_uso_seguro',
     'Frecuencia Contacto Físico': 'frecuencia_contacto_fisico',
     'Frecuencia Contacto Digital': 'frecuencia_contacto_digital',
     'Medio de Comunicación': 'medio_comunicacion',
-    'Medio de Pago': 'medio_pago',
     'Integridad Documental': 'integridad_documental',
     'Exactitud Documental': 'exactitud_documental',
     'Vigencia Documental': 'vigencia_documental',
@@ -81,19 +82,19 @@ export const CLIENTES_EXTERNOS_SCHEMA = {
     'Riesgo Volumen Actividad (Ponderado)': 'volumen_actividad_numerico',
     'Riesgo Frecuencia Actividad (Ponderado)': 'frecuencia_actividad_numerico',
     'Riesgo Categoría PEP (Ponderado)': 'categoria_pep_numerico',
-    'Riesgo Ramo Seguro (Ponderado)': 'ramo_seguro_numerico',
-    'Riesgo Tipo Documento (Ponderado)': 'tipo_documento_numerico',
-    'Riesgo Valor Prima (Ponderado)': 'valor_prima_dolares_numerico',
+    'Riesgo de Zona de Uso del Seguro (Ponderado)': 'riesgo_zona_uso_seguro_numerico',
     'Riesgo Contacto Físico (Ponderado)': 'frecuencia_contacto_fisico_numerico',
     'Riesgo Contacto Digital (Ponderado)': 'frecuencia_contacto_digital_numerico',
     'Riesgo Medio Comunicación (Ponderado)': 'medio_comunicacion_numerico',
-    'Riesgo Medio Pago (Ponderado)': 'medio_pago_numerico',
     'Riesgo Integridad Documental (Ponderado)': 'integridad_documental_numerico',
     'Riesgo Exactitud Documental (Ponderado)': 'exactitud_documental_numerico',
     'Riesgo Vigencia Documental (Ponderado)': 'vigencia_documental_numerico',
     'Riesgo Relevancia Información (Ponderado)': 'relevancia_informacion_numerico',
     'Riesgo Consistencia Información (Ponderado)': 'consistencia_informacion_numerico',
-    'Riesgo Comportamiento Cliente (Ponderado)': 'comportamiento_cliente_numerico'
+    'Riesgo Comportamiento Cliente (Ponderado)': 'comportamiento_cliente_numerico',
+    'Mitigación': 'mitigacion',
+    'Mitigación Relativa': 'mitigacion_numerico',
+    'Detalle de la Mitigación': 'mitigacion_adicional'
   }
 };
 

@@ -21,6 +21,8 @@ export const CLIENTES_INTERNOS_SCHEMA = {
     'Estado Civil': 'estado_civil',
     'Profesión': 'profesion',
     'Riesgo Profesión/Actividad': 'riesgo_profesion_actividad',
+    'Otra Actividad': 'otra_actividad',
+    'Riesgo otra actividad': 'riesgo_otra_actividad',
     'Domicilio': 'domicilio_persona_sucursal',
     'Riesgo Zona': 'riesgo_zona',
     'PEP': 'categoria_pep',
@@ -34,10 +36,11 @@ export const CLIENTES_INTERNOS_SCHEMA = {
     'Consistencia Información': 'consistencia_informacion',
     'Comportamiento Cliente': 'comportamiento_cliente',
     'Observaciones': 'observaciones',
-    'Alertas de Clientes Internos': 'alertas_cliente_interno',
+    'Alertas de Cliente Interno': 'alertas_cliente_interno',
     'Alertas de Activos Virtuales': 'alertas_activos_virtuales',
     'Nacionalidad (Ponderado)': 'nacionalidad_numerico',
     'Riesgo Profesión (Ponderado)': 'riesgo_profesion_actividad_numerico',
+    'Riesgo Otra Actividad (Ponderado)': 'otra_actividad_numerico',
     'Riesgo Zona (Ponderado)': 'riesgo_zona_numerico',
     'PEP (Ponderado)': 'categoria_pep_numerico',
     'Ingresos Mensuales (Ponderado)': 'ingresos_mensuales_numerico',
@@ -49,6 +52,9 @@ export const CLIENTES_INTERNOS_SCHEMA = {
     'Relevancia Información (Ponderado)': 'relevancia_informacion_numerico',
     'Consistencia Información (Ponderado)': 'consistencia_informacion_numerico',
     'Comportamiento Cliente (Ponderado)': 'comportamiento_cliente_numerico',
+    'Mitigación': 'mitigacion',
+    'Mitigación Relativa': 'mitigacion_numerico',
+    'Detalle de la Mitigación': 'mitigacion_adicional'
   }
 };
 

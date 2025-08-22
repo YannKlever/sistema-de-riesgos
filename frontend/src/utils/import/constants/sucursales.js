@@ -17,13 +17,14 @@ export const SUCURSALES_SCHEMA = {
     'Zona': 'zona',
     'Riesgo Zona': 'riesgo_zona',
     'Frontera': 'frontera',
-    'Observaciones': 'observaciones',
     'Riesgo Frontera': 'riesgo_frontera',
+    'Observaciones': 'observaciones',
     'Riesgo Departamento (Ponderado)': 'riesgo_departamento_numerico',
     'Riesgo Municipio (Ponderado)': 'riesgo_municipio_numerico',
     'Riesgo Frontera (Ponderado)': 'riesgo_frontera_numerico',
     'Riesgo Zona (Ponderado)': 'riesgo_zona_numerico',
-    'Riesgo Zona Geográfica': 'promedio_riesgo_zona_geografica'
+    'Valores de Impacto': 'impacto_texto',
+    'Impacto': 'impacto',
   }
 };
 

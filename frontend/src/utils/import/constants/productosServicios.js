@@ -2,7 +2,7 @@ export const PRODUCTOS_SERVICIOS_SCHEMA = {
   requiredFields: [
     'Producto/Servicio',
     'Riesgo Producto/Servicio',
-    'Riesgo Cliente'
+    'Tipo de cliente recurrente'
   ],
   fieldMappings: {
     'ID': 'id',
@@ -10,10 +10,12 @@ export const PRODUCTOS_SERVICIOS_SCHEMA = {
     'Oficina': 'oficina',
     'Producto/Servicio': 'producto_servicio',
     'Riesgo Producto/Servicio': 'riesgo_producto',
-    'Riesgo Cliente': 'riesgo_cliente',
+    'Tipo de cliente recurrente': 'riesgo_cliente',
     'Observaciones': 'observaciones',
     'Riesgo Producto/Servicio (Ponderado)': 'riesgo_producto_numerico',
     'Riesgo Cliente (Ponderado)': 'riesgo_cliente_numerico',
+    'Valores de Impacto': 'impacto_texto',
+    'Impacto': 'impacto',
   },
   fieldValidations: {
     'Riesgo Producto/Servicio': {
