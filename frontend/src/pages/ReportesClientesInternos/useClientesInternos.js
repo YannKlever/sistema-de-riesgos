@@ -1,188 +1,189 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { databaseService } from '../../services/database';
-import { COLUMNAS_REPORTE, COLUMNAS_NUMERICAS } from './constantes';
+import { COLUMNAS_REPORTE, COLUMNAS_PROBABILIDAD, COLUMNAS_IMPACTO } from './constantes';
 
 export const useClientesInternos = () => {
     const [state, setState] = useState({
-        clientes: [],
+        clientesInternos: [],
         loading: true,
         error: '',
         filtro: '',
-        validandoTodos: false
+        validando: false
     });
 
     const [clientesConRiesgo, setClientesConRiesgo] = useState([]);
+    const [modalMitigacion, setModalMitigacion] = useState({
+        isOpen: false,
+        clienteId: null,
+        mitigacionExistente: '',
+        mitigacionNumericoExistente: 0,
+        mitigacionAdicionalExistente: ''
+    });
 
-    const calcularRiesgoClientes = useCallback((clientes) => {
+    // Función para calcular riesgos (igual que en accionistas/socios)
+    const calcularRiesgos = useCallback((clientes) => {
         const clientesActualizados = clientes.map(cliente => {
-            // Columnas para Probabilidad (excluyendo riesgo_profesion_actividad e ingresos_mensuales)
-            const columnasProbabilidad = COLUMNAS_NUMERICAS
-                .filter(col => !['riesgo_profesion_actividad_numerico', 'ingresos_mensuales_numerico'].includes(col.id))
-                .map(col => col.id);
-            
-            // Columnas para Impacto (solo riesgo_profesion_actividad e ingresos_mensuales)
-            const columnasImpacto = [
-                'riesgo_profesion_actividad_numerico',
-                'ingresos_mensuales_numerico'
-            ];
-            
             // Calcular Probabilidad
-            const valoresProbabilidad = columnasProbabilidad
+            const valoresProbabilidad = COLUMNAS_PROBABILIDAD
                 .map(col => cliente[col])
                 .filter(val => val !== null && !isNaN(val));
-                
-            const probabilidad = valoresProbabilidad.length > 0 ? 
-                valoresProbabilidad.reduce((sum, val) => sum + val, 0) / valoresProbabilidad.length : 
+
+            const probabilidad = valoresProbabilidad.length > 0 ?
+                valoresProbabilidad.reduce((sum, val) => sum + val, 0) / valoresProbabilidad.length :
                 0;
-            
+
             // Calcular Impacto
-            const valoresImpacto = columnasImpacto
+            const valoresImpacto = COLUMNAS_IMPACTO
                 .map(col => cliente[col])
                 .filter(val => val !== null && !isNaN(val));
-                
-            const impacto = valoresImpacto.length > 0 ? 
-                valoresImpacto.reduce((sum, val) => sum + val, 0) / valoresImpacto.length : 
+
+            const impacto = valoresImpacto.length > 0 ?
+                valoresImpacto.reduce((sum, val) => sum + val, 0) / valoresImpacto.length :
                 0;
-            
-            // Calcular Factor de Riesgo (promedio de probabilidad e impacto)
-            const factorRiesgo = (probabilidad + impacto) / 2;
-            
+
+            // Calcular Riesgo Inherente (promedio de probabilidad e impacto)
+            const riesgoInherente = (probabilidad + impacto) / 2;
+
+            // Calcular Riesgo Residual considerando la mitigación
+            let riesgoResidual = riesgoInherente;
+            if (cliente.mitigacion_numerico) {
+                riesgoResidual = riesgoInherente - (riesgoInherente * (cliente.mitigacion_numerico / 100));
+                riesgoResidual = Math.max(1, riesgoResidual); // Mínimo 1
+            }
+
             return {
                 ...cliente,
                 probabilidad: parseFloat(probabilidad.toFixed(2)),
                 impacto: parseFloat(impacto.toFixed(2)),
-                factorRiesgoClienteInterno: parseFloat(factorRiesgo.toFixed(2))
+                riesgo_inherente: parseFloat(riesgoInherente.toFixed(2)),
+                riesgo_residual: parseFloat(riesgoResidual.toFixed(2))
             };
         });
-        
+
         setClientesConRiesgo(clientesActualizados);
     }, []);
 
-    const validarRiesgo = useCallback(async (idCliente, probabilidad, impacto, factorRiesgo) => {
-        try {
-            setState(prev => ({ ...prev, loading: true, error: '' }));
-            
-            const resultado = await databaseService.actualizarClienteInterno(idCliente, {
-                probabilidad,
-                impacto,
-                promedio_riesgo_cliente_interno: factorRiesgo
-            });
-
-            if (resultado.success) {
-                // Actualizar el estado local
-                setState(prev => ({
-                    ...prev,
-                    clientes: prev.clientes.map(cliente => 
-                        cliente.id === idCliente ? 
-                        { 
-                            ...cliente, 
-                            probabilidad,
-                            impacto,
-                            promedio_riesgo_cliente_interno: factorRiesgo 
-                        } : 
-                        cliente
-                    ),
-                    loading: false
-                }));
-                
-                // Actualizar clientes con riesgo calculado
-                setClientesConRiesgo(prev => 
-                    prev.map(cliente => 
-                        cliente.id === idCliente ? 
-                        { 
-                            ...cliente, 
-                            probabilidad,
-                            impacto,
-                            promedio_riesgo_cliente_interno: factorRiesgo 
-                        } : 
-                        cliente
-                    )
-                );
-                
-                return { success: true };
-            } else {
-                throw new Error(resultado.error || 'Error al validar riesgo');
-            }
-        } catch (error) {
-            setState(prev => ({
-                ...prev,
-                error: error.message,
-                loading: false
-            }));
-            return { success: false, error: error.message };
-        }
+    const abrirModalMitigacion = useCallback((cliente) => {
+        setModalMitigacion({
+            isOpen: true,
+            clienteId: cliente.id,
+            mitigacionExistente: cliente.mitigacion || '',
+            mitigacionNumericoExistente: cliente.mitigacion_numerico || 0,
+            mitigacionAdicionalExistente: cliente.mitigacion_adicional || ''
+        });
     }, []);
 
-    const validarTodosLosRiesgos = useCallback(async () => {
-        try {
-            setState(prev => ({ ...prev, validandoTodos: true, error: '' }));
-            
-            // Filtrar solo clientes que tienen factorRiesgoClienteInterno calculado
-            const clientesAValidar = clientesConRiesgo
-                .filter(cliente => cliente.factorRiesgoClienteInterno !== null && 
-                                 cliente.factorRiesgoClienteInterno !== undefined);
-            
-            if (clientesAValidar.length === 0) {
-                throw new Error('No hay clientes con riesgo calculado para validar');
-            }
+    const cerrarModalMitigacion = useCallback(() => {
+        setModalMitigacion(prev => ({ ...prev, isOpen: false }));
+    }, []);
 
-            // Crear array de promesas para todas las validaciones
-            const promesasValidacion = clientesAValidar.map(cliente => 
-                databaseService.actualizarClienteInterno(cliente.id, {
+    const actualizarReporte = useCallback(() => {
+        calcularRiesgos(state.clientesInternos);
+    }, [calcularRiesgos, state.clientesInternos]);
+
+    const handleMitigacionGuardada = useCallback(async (clienteActualizado) => {
+        try {
+            // Actualización optimista del estado local
+            setState(prev => ({
+                ...prev,
+                clientesInternos: prev.clientesInternos.map(cli =>
+                    cli.id === clienteActualizado.id 
+                        ? { ...cli, ...clienteActualizado }
+                        : cli
+                )
+            }));
+            
+            // Recalcular riesgos para este cliente específico
+            setClientesConRiesgo(prev => prev.map(cli => {
+                if (cli.id === clienteActualizado.id) {
+                    // Recalcular riesgos con la nueva mitigación
+                    const valoresProbabilidad = COLUMNAS_PROBABILIDAD
+                        .map(col => cli[col])
+                        .filter(val => val !== null && !isNaN(val));
+                    
+                    const probabilidad = valoresProbabilidad.length > 0 ? 
+                        valoresProbabilidad.reduce((sum, val) => sum + val, 0) / valoresProbabilidad.length : 0;
+
+                    const valoresImpacto = COLUMNAS_IMPACTO
+                        .map(col => cli[col])
+                        .filter(val => val !== null && !isNaN(val));
+                    
+                    const impacto = valoresImpacto.length > 0 ? 
+                        valoresImpacto.reduce((sum, val) => sum + val, 0) / valoresImpacto.length : 0;
+
+                    const riesgoInherente = (probabilidad + impacto) / 2;
+                    
+                    let riesgoResidual = riesgoInherente;
+                    if (clienteActualizado.mitigacion_numerico) {
+                        riesgoResidual = riesgoInherente - (riesgoInherente * (clienteActualizado.mitigacion_numerico / 100));
+                        riesgoResidual = Math.max(1, riesgoResidual);
+                    }
+
+                    return {
+                        ...cli,
+                        ...clienteActualizado,
+                        probabilidad: parseFloat(probabilidad.toFixed(2)),
+                        impacto: parseFloat(impacto.toFixed(2)),
+                        riesgo_inherente: parseFloat(riesgoInherente.toFixed(2)),
+                        riesgo_residual: parseFloat(riesgoResidual.toFixed(2))
+                    };
+                }
+                return cli;
+            }));
+            
+        } catch (error) {
+            console.error('Error al actualizar estado después de mitigación:', error);
+            // Si falla, recargar desde la base de datos
+            actualizarReporte();
+        }
+    }, [actualizarReporte]);
+
+    const validarRiesgos = useCallback(async () => {
+        setState(prev => ({ ...prev, validando: true, error: '' }));
+        
+        try {
+            // Validar cada cliente interno
+            const promises = clientesConRiesgo.map(async (cliente) => {
+                const datosActualizacion = {
                     probabilidad: cliente.probabilidad,
                     impacto: cliente.impacto,
-                    promedio_riesgo_cliente_interno: cliente.factorRiesgoClienteInterno
-                })
-            );
-
-            // Ejecutar todas las validaciones en paralelo
-            const resultados = await Promise.all(promesasValidacion);
-
-            // Verificar si todas las validaciones fueron exitosas
-            const todasExitosas = resultados.every(r => r.success);
-            if (!todasExitosas) {
-                const errores = resultados.filter(r => !r.success).map(r => r.error);
-                throw new Error(`Algunas validaciones fallaron: ${errores.join(', ')}`);
+                    riesgo_inherente: cliente.riesgo_inherente,
+                    riesgo_residual: cliente.riesgo_residual,
+                    mitigacion: cliente.mitigacion,
+                    mitigacion_numerico: cliente.mitigacion_numerico,
+                    mitigacion_adicional: cliente.mitigacion_adicional
+                };
+                
+                return databaseService.actualizarClienteInterno(cliente.id, datosActualizacion);
+            });
+            
+            await Promise.all(promises);
+            
+            // Recargar los datos después de la validación
+            const resultado = await databaseService.listarClientesInternos();
+            if (resultado.success) {
+                setState(prev => ({
+                    ...prev,
+                    clientesInternos: resultado.data,
+                    validando: false
+                }));
+                calcularRiesgos(resultado.data);
+            } else {
+                setState(prev => ({
+                    ...prev,
+                    error: resultado.error || 'Error al actualizar riesgos',
+                    validando: false
+                }));
             }
-
-            // Actualizar el estado local con los nuevos valores validados
+        } catch (err) {
             setState(prev => ({
                 ...prev,
-                clientes: prev.clientes.map(cliente => {
-                    const clienteValidado = clientesAValidar.find(c => c.id === cliente.id);
-                    return clienteValidado ? {
-                        ...cliente,
-                        probabilidad: clienteValidado.probabilidad,
-                        impacto: clienteValidado.impacto,
-                        promedio_riesgo_cliente_interno: clienteValidado.factorRiesgoClienteInterno
-                    } : cliente;
-                }),
-                validandoTodos: false
+                error: 'Error al validar riesgos: ' + err.message,
+                validando: false
             }));
-
-            // Actualizar clientes con riesgo calculado
-            setClientesConRiesgo(prev => 
-                prev.map(cliente => {
-                    const clienteValidado = clientesAValidar.find(c => c.id === cliente.id);
-                    return clienteValidado ? {
-                        ...cliente,
-                        probabilidad: clienteValidado.probabilidad,
-                        impacto: clienteValidado.impacto,
-                        promedio_riesgo_cliente_interno: clienteValidado.factorRiesgoClienteInterno
-                    } : cliente;
-                })
-            );
-
-            return { success: true };
-        } catch (error) {
-            setState(prev => ({
-                ...prev,
-                error: error.message,
-                validandoTodos: false
-            }));
-            return { success: false, error: error.message };
+            console.error('Error al validar riesgos:', err);
         }
-    }, [clientesConRiesgo]);
+    }, [clientesConRiesgo, calcularRiesgos]);
 
     useEffect(() => {
         let isMounted = true;
@@ -196,14 +197,14 @@ export const useClientesInternos = () => {
                     if (resultado.success) {
                         setState(prev => ({
                             ...prev,
-                            clientes: resultado.data,
+                            clientesInternos: resultado.data,
                             loading: false
                         }));
-                        calcularRiesgoClientes(resultado.data);
+                        calcularRiesgos(resultado.data);
                     } else {
                         setState(prev => ({
                             ...prev,
-                            error: resultado.error || 'Error al cargar clientes',
+                            error: resultado.error || 'Error al cargar clientes internos',
                             loading: false
                         }));
                     }
@@ -225,7 +226,7 @@ export const useClientesInternos = () => {
         return () => {
             isMounted = false;
         };
-    }, [calcularRiesgoClientes]);
+    }, [calcularRiesgos]);
 
     const filtrarClientes = useCallback((cliente) => {
         if (!state.filtro) return true;
@@ -240,26 +241,21 @@ export const useClientesInternos = () => {
         return clientesConRiesgo.filter(filtrarClientes);
     }, [clientesConRiesgo, filtrarClientes]);
 
-    const handleFiltroChange = useCallback((e) => {
-        setState(prev => ({ ...prev, filtro: e.target.value }));
+    const handleFiltroChange = useCallback((filterValue) => {
+        setState(prev => ({ ...prev, filtro: filterValue }));
     }, []);
-
-    const actualizarReporte = useCallback(() => {
-        calcularRiesgoClientes(state.clientes);
-    }, [calcularRiesgoClientes, state.clientes]);
 
     return {
         state,
         clientesFiltrados,
         handleFiltroChange,
         actualizarReporte,
-        validarRiesgo,
-        validarTodosLosRiesgos,
-        COLUMNAS_REPORTE: [...COLUMNAS_REPORTE, 
-            { id: 'probabilidad', nombre: 'Probabilidad' },
-            { id: 'impacto', nombre: 'Impacto' },
-            { id: 'factorRiesgoClienteInterno', nombre: 'Factor Riesgo' },
-            { id: 'promedio_riesgo_cliente_interno', nombre: 'Riesgo Validado' }
-        ]
+        validarRiesgos,
+        modalMitigacion,
+        abrirModalMitigacion,
+        cerrarModalMitigacion,
+        handleMitigacionGuardada,
+        COLUMNAS_REPORTE,
+        setState
     };
 };

@@ -4,7 +4,7 @@ import { useReportesLDFT } from './useReporteLDFT';
 import styles from './reportesLDFT.module.css';
 import { databaseService } from '../../services/database';
 
-export const ReportesLDFT = ({ onNuevaEvaluacion, onEditarEvaluacion }) => {
+export const ReportesLDFT = ({ onNuevaEvaluacion }) => {
     const {
         state,
         evaluacionesFiltradas,
@@ -16,8 +16,8 @@ export const ReportesLDFT = ({ onNuevaEvaluacion, onEditarEvaluacion }) => {
 
     // Función para limpiar errores
     const limpiarError = () => {
-        handleFiltroChange({ target: { value: '' } }); // Esto limpia el filtro
-        actualizarReporte(); // Esto recarga los datos
+        handleFiltroChange({ target: { value: '' } });
+        actualizarReporte();
     };
 
     // Configuración de columnas para react-table
@@ -46,21 +46,8 @@ export const ReportesLDFT = ({ onNuevaEvaluacion, onEditarEvaluacion }) => {
             header: 'Promedio Validado',
             cell: info => info.getValue()?.toFixed(2) || '-',
             size: 150
-        },
-        {
-            id: 'acciones',
-            header: 'Acciones',
-            cell: info => (
-                <button 
-                    onClick={() => onEditarEvaluacion(info.row.original)}
-                    className={styles.botonEditar}
-                >
-                    Editar
-                </button>
-            ),
-            size: 120
         }
-    ], [COLUMNAS_REPORTE, onEditarEvaluacion]);
+    ], [COLUMNAS_REPORTE]);
 
     // Configuración de la tabla
     const table = useReactTable({
@@ -144,7 +131,7 @@ export const ReportesLDFT = ({ onNuevaEvaluacion, onEditarEvaluacion }) => {
     return (
         <div className={styles.contenedor}>
             <header className={styles.header}>
-                <h1>Reporte de Evaluaciones LD/FT</h1>
+                <h1>Reporte de Evaluaciones LGI/FT-FPADM</h1>
                 <p>Histórico de evaluaciones de riesgo</p>
             </header>
 
@@ -171,12 +158,12 @@ export const ReportesLDFT = ({ onNuevaEvaluacion, onEditarEvaluacion }) => {
                 />
 
                 <div className={styles.controlesDerecha}>
-                    <button
+                   {/* <button
                         onClick={onNuevaEvaluacion}
                         className={styles.botonNuevo}
                     >
                         Nueva Evaluación
-                    </button>
+                    </button>*/}
 
                     <button
                         onClick={actualizarReporte}

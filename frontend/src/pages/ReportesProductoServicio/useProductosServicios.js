@@ -19,71 +19,75 @@ export const useProductosServicios = () => {
 
     const [productosConRiesgo, setProductosConRiesgo] = useState([]);
 
-    const calcularRiesgoProductos = useCallback(async (productos) => {
-        const productosConRiesgos = await Promise.all(
-            productos.map(async (producto) => {
-                try {
-                    // 1. Obtener riesgo de zona geográfica
-                    const riesgoZona = await databaseService.obtenerRiesgoZonaGeografica(producto.oficina);
-                    
-                    // 2. Calcular probabilidad (promedio de valores numéricos)
-                    let valoresParaProbabilidad = [];
-                    
-                    // Agregar riesgo producto numérico si existe
-                    if (producto.riesgo_producto_numerico !== null && !isNaN(producto.riesgo_producto_numerico)) {
-                        valoresParaProbabilidad.push(Number(producto.riesgo_producto_numerico));
-                    }
-                    
-                    // Agregar riesgo cliente numérico si existe
-                    if (producto.riesgo_cliente_numerico !== null && !isNaN(producto.riesgo_cliente_numerico)) {
-                        valoresParaProbabilidad.push(Number(producto.riesgo_cliente_numerico));
-                    }
-                    
-                    // Agregar riesgo zona geográfica si existe
-                    if (riesgoZona.success && !isNaN(riesgoZona.data)) {
-                        valoresParaProbabilidad.push(Number(riesgoZona.data));
-                    }
-                    
-                    // Calcular probabilidad solo si hay valores
-                    const probabilidad = valoresParaProbabilidad.length > 0 
-                        ? valoresParaProbabilidad.reduce((sum, val) => sum + val, 0) / valoresParaProbabilidad.length
-                        : 0;
-                    
-                    // 3. Impacto fijo en 4 como solicitado
-                    const impacto = 4;
-                    
-                    // 4. Calcular factor de riesgo (promedio de probabilidad e impacto)
-                    const factorRiesgo = (probabilidad + impacto) / 2;
-                    
-                    // Debug: Mostrar cálculo
-                    console.log('Cálculo para', producto.id, {
-                        valores: valoresParaProbabilidad,
-                        probabilidad,
-                        impacto,
-                        factorRiesgo
-                    });
-                    
-                    return {
-                        ...producto,
-                        probabilidad: parseFloat(probabilidad.toFixed(2)),
-                        impacto: impacto,
-                        riesgoFactorProductosServicios: parseFloat(factorRiesgo.toFixed(2)),
-                        riesgoFactorZonaGeografica: riesgoZona.success ? parseFloat(riesgoZona.data.toFixed(2)) : 0
-                    };
-                } catch (error) {
-                    console.error('Error calculando riesgo:', producto.id, error);
-                    return {
-                        ...producto,
-                        probabilidad: 0,
-                        impacto: 4,
-                        riesgoFactorProductosServicios: 2, // (0+4)/2 = 2
-                        riesgoFactorZonaGeografica: 0
-                    };
+const calcularRiesgoProductos = useCallback(async (productos) => {
+    const productosConRiesgos = await Promise.all(
+        productos.map(async (producto) => {
+            try {
+                // 1. Obtener riesgo de zona geográfica
+                const riesgoZona = await databaseService.obtenerRiesgoZonaGeografica(producto.oficina);
+                
+                // 2. Calcular probabilidad (promedio de valores numéricos)
+                let valoresParaProbabilidad = [];
+                
+                // Agregar riesgo producto numérico si existe
+                if (producto.riesgo_producto_numerico !== null && !isNaN(producto.riesgo_producto_numerico)) {
+                    valoresParaProbabilidad.push(Number(producto.riesgo_producto_numerico));
                 }
-            })
-        );
-        setProductosConRiesgo(productosConRiesgos);
-    }, []);
+                
+                // Agregar riesgo cliente numérico si existe
+                if (producto.riesgo_cliente_numerico !== null && !isNaN(producto.riesgo_cliente_numerico)) {
+                    valoresParaProbabilidad.push(Number(producto.riesgo_cliente_numerico));
+                }
+                
+                // Agregar riesgo zona geográfica si existe
+                if (riesgoZona.success && !isNaN(riesgoZona.data)) {
+                    valoresParaProbabilidad.push(Number(riesgoZona.data));
+                }
+                
+                // Calcular probabilidad solo si hay valores
+                const probabilidad = valoresParaProbabilidad.length > 0 
+                    ? valoresParaProbabilidad.reduce((sum, val) => sum + val, 0) / valoresParaProbabilidad.length
+                    : 0;
+                
+                // 3. Usar el valor real de impacto de la base de datos, con fallback a 4 si no existe
+                const impacto = producto.impacto !== null && producto.impacto !== undefined 
+                    ? producto.impacto 
+                    : 4;
+                
+                // 4. Calcular factor de riesgo (promedio de probabilidad e impacto)
+                const factorRiesgo = (probabilidad + impacto) / 2;
+                
+                // Debug: Mostrar cálculo
+                console.log('Cálculo para', producto.id, {
+                    valores: valoresParaProbabilidad,
+                    probabilidad,
+                    impacto,
+                    factorRiesgo
+                });
+                
+                return {
+                    ...producto,
+                    probabilidad: parseFloat(probabilidad.toFixed(2)),
+                    impacto: impacto,
+                    riesgoFactorProductosServicios: parseFloat(factorRiesgo.toFixed(2)),
+                    riesgoFactorZonaGeografica: riesgoZona.success ? parseFloat(riesgoZona.data.toFixed(2)) : 0
+                };
+            } catch (error) {
+                console.error('Error calculando riesgo:', producto.id, error);
+                return {
+                    ...producto,
+                    probabilidad: 0,
+                    impacto: producto.impacto !== null && producto.impacto !== undefined 
+                        ? producto.impacto 
+                        : 4,
+                    riesgoFactorProductosServicios: 2, // (0+4)/2 = 2
+                    riesgoFactorZonaGeografica: 0
+                };
+            }
+        })
+    );
+    setProductosConRiesgo(productosConRiesgos);
+}, []);
 
     const cargarProductos = useCallback(async () => {
         try {

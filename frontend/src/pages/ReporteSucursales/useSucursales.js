@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { databaseService } from '../../services/database';
-import { 
-    COLUMNAS_REPORTE_SUCURSALES, 
+import {
+    COLUMNAS_REPORTE_SUCURSALES,
     COLUMNAS_NUMERICAS_SUCURSALES,
-    COLUMNAS_RIESGO_NUMERICO 
+    COLUMNAS_RIESGO_NUMERICO
 } from './constantesSucursales';
 
 export const useSucursales = () => {
@@ -23,17 +23,19 @@ export const useSucursales = () => {
             const valoresRiesgo = COLUMNAS_RIESGO_NUMERICO
                 .map(col => sucursal[col])
                 .filter(val => val !== null && !isNaN(val));
-                
-            const probabilidad = valoresRiesgo.length > 0 ? 
-                valoresRiesgo.reduce((sum, val) => sum + val, 0) / valoresRiesgo.length : 
+
+            const probabilidad = valoresRiesgo.length > 0 ?
+                valoresRiesgo.reduce((sum, val) => sum + val, 0) / valoresRiesgo.length :
                 0;
-            
-            // Impacto fijo en 4
-            const impacto = 4;
-            
+
+            // Usar el valor real de impacto de la base de datos, con fallback a 5 si no existe
+            const impacto = sucursal.impacto !== null && sucursal.impacto !== undefined
+                ? sucursal.impacto
+                : 5;
+
             // Factor de riesgo es el promedio de probabilidad e impacto
             const factorRiesgo = (probabilidad + impacto) / 2;
-            
+
             return {
                 ...sucursal,
                 probabilidad: parseFloat(probabilidad.toFixed(2)),
@@ -41,17 +43,17 @@ export const useSucursales = () => {
                 factorRiesgoZonaGeografica: parseFloat(factorRiesgo.toFixed(2))
             };
         });
-        
+
         setSucursalesConRiesgo(sucursalesActualizadas);
     }, []);
 
     const validarTodosLosRiesgos = useCallback(async () => {
         try {
             setState(prev => ({ ...prev, validandoTodos: true, error: '' }));
-            
+
             const sucursalesAValidar = sucursalesConRiesgo.filter(
-                s => s.factorRiesgoZonaGeografica !== null && 
-                     s.factorRiesgoZonaGeografica !== undefined
+                s => s.factorRiesgoZonaGeografica !== null &&
+                    s.factorRiesgoZonaGeografica !== undefined
             );
 
             if (sucursalesAValidar.length === 0) {
@@ -85,11 +87,11 @@ export const useSucursales = () => {
             // Actualizar el estado con los cambios
             const nuevasSucursales = state.sucursales.map(s => {
                 const sucursalValidada = sucursalesAValidar.find(sv => sv.id === s.id);
-                return sucursalValidada ? { 
-                    ...s, 
+                return sucursalValidada ? {
+                    ...s,
                     probabilidad: sucursalValidada.probabilidad,
                     impacto: sucursalValidada.impacto,
-                    promedio_riesgo_zona_geografica: sucursalValidada.factorRiesgoZonaGeografica 
+                    promedio_riesgo_zona_geografica: sucursalValidada.factorRiesgoZonaGeografica
                 } : s;
             });
 
@@ -99,16 +101,16 @@ export const useSucursales = () => {
             if (errorCount > 0) {
                 const errorMessage = `Se completaron ${successCount} validaciones con éxito. Errores: ${errors.join('; ')}`;
                 setState(prev => ({ ...prev, error: errorMessage }));
-                return { 
-                    success: false, 
+                return {
+                    success: false,
                     message: errorMessage,
                     successCount,
                     errorCount
                 };
             }
 
-            return { 
-                success: true, 
+            return {
+                success: true,
                 message: `Todas las ${successCount} validaciones se completaron con éxito`,
                 successCount
             };
@@ -177,8 +179,13 @@ export const useSucursales = () => {
         return sucursalesConRiesgo.filter(filtrarSucursales);
     }, [sucursalesConRiesgo, filtrarSucursales]);
 
-    const handleFiltroChange = useCallback((e) => {
-        setState(prev => ({ ...prev, filtro: e.target.value }));
+    const handleFiltroChange = useCallback((input) => {
+        // Manejar tanto eventos como valores directos
+        const filterValue = typeof input === 'object' && input.target
+            ? input.target.value
+            : input;
+
+        setState(prev => ({ ...prev, filtro: filterValue }));
     }, []);
 
     const actualizarReporte = useCallback(() => {

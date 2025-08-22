@@ -23,8 +23,7 @@ export const useCanalesDistribucion = () => {
             const sumaProbabilidad = valoresProbabilidad.reduce((total, valor) => total + valor, 0);
             const probabilidad = parseFloat((sumaProbabilidad / valoresProbabilidad.length).toFixed(2));
             
-            // Impacto fijo en 4
-            const impacto = 4;
+            const impacto = 3;
             
             // Calcular Factor de Riesgo (promedio de probabilidad e impacto)
             const factorRiesgo = parseFloat(((probabilidad + impacto) / 2).toFixed(2));
@@ -34,7 +33,7 @@ export const useCanalesDistribucion = () => {
                 probabilidad_canal_distribucion: probabilidad,
                 impacto_canal_distribucion: impacto,
                 factor_riesgo_canal_distribucion: factorRiesgo,
-                promedio_riesgo_cliente_interno: parseFloat(canal.promedio_riesgo_cliente_interno) || 0
+                promedio_riesgo_cliente_interno: parseFloat(canal.riesgo_residual) || 0
             };
         });
         

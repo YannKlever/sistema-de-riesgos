@@ -24,7 +24,7 @@ export const ControlesReporte = ({
             excelColumns,
             'reporte_ldft',
             {
-                sheetName: 'Evaluaciones LDFT',
+                sheetName: 'Evaluaciones de Control LGI/FT-FPADM',
                 headerStyle: {
                     font: { bold: true, color: { rgb: 'FFFFFF' } },
                     fill: { fgColor: { rgb: '4472C4' } },

@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, flexRender } from '@tanstack/react-table';
 import { useAccionistasSocios } from './useAccionistasSocios';
+import { ModalMitigacion } from './ModalMitigacion';
 import styles from './reportesAccionistasSocios.module.css';
 
 export const ReportesAccionistasSocios = () => {
@@ -10,12 +11,16 @@ export const ReportesAccionistasSocios = () => {
         handleFiltroChange,
         actualizarReporte,
         validarRiesgos,
+        modalMitigacion,
+        abrirModalMitigacion,
+        cerrarModalMitigacion,
+        handleMitigacionGuardada,
         COLUMNAS_REPORTE,
         setState
     } = useAccionistasSocios();
 
     // Configuración de columnas para react-table
-    const columns = useMemo(() => 
+    const columns = useMemo(() =>
         COLUMNAS_REPORTE.map(col => ({
             accessorKey: col.id,
             header: col.nombre,
@@ -29,8 +34,23 @@ export const ReportesAccionistasSocios = () => {
             },
             size: col.ancho || 150,
             enableColumnFilter: col.filtrable !== false
-        }))
-    , [COLUMNAS_REPORTE]);
+        })).concat([
+            {
+                id: 'acciones',
+                header: 'Acciones',
+                cell: ({ row }) => (
+                    <button
+                        onClick={() => abrirModalMitigacion(row.original)}
+                        className={styles.botonMitigacion}
+                        title="Aplicar medidas de mitigación"
+                    >
+                        Mitigación
+                    </button>
+                ),
+                size: 100
+            }
+        ])
+        , [COLUMNAS_REPORTE, abrirModalMitigacion]);
 
     // Configuración de la tabla
     const table = useReactTable({
@@ -45,14 +65,14 @@ export const ReportesAccionistasSocios = () => {
         getPaginationRowModel: getPaginationRowModel(),
         globalFilterFn: (row, columnId, filterValue) => {
             const value = row.getValue(columnId);
-            
+
             if (value === undefined || value === null) {
                 return false;
             }
-            
+
             const safeValue = String(value).toLowerCase();
             const safeFilter = filterValue.toLowerCase();
-            
+
             return safeValue.includes(safeFilter);
         },
         initialState: {
@@ -65,7 +85,7 @@ export const ReportesAccionistasSocios = () => {
     // Calcular promedios
     const calcularPromedio = (campo) => {
         if (accionistasFiltrados.length === 0) return '0.00';
-        const total = accionistasFiltrados.reduce((sum, accionista) => 
+        const total = accionistasFiltrados.reduce((sum, accionista) =>
             sum + (accionista[campo] || 0), 0);
         return (total / accionistasFiltrados.length).toFixed(2);
     };
@@ -77,10 +97,20 @@ export const ReportesAccionistasSocios = () => {
                 <p>Información formal de evaluación de riesgos</p>
             </header>
 
+            <ModalMitigacion
+                isOpen={modalMitigacion.isOpen}
+                onClose={cerrarModalMitigacion}
+                accionistaId={modalMitigacion.accionistaId}
+                mitigacionExistente={modalMitigacion.mitigacionExistente}
+                mitigacionNumericoExistente={modalMitigacion.mitigacionNumericoExistente}
+                mitigacionAdicionalExistente={modalMitigacion.mitigacionAdicionalExistente}
+                onMitigacionGuardada={handleMitigacionGuardada}
+            />
+
             {state.error && (
                 <div className={styles.error}>
                     {state.error}
-                    <button 
+                    <button
                         onClick={() => setState(prev => ({ ...prev, error: '' }))}
                         className={styles.botonCerrarError}
                     >
@@ -107,7 +137,7 @@ export const ReportesAccionistasSocios = () => {
                     >
                         Actualizar Reporte
                     </button>
-                    
+
                     <button
                         onClick={validarRiesgos}
                         className={styles.botonValidar}
@@ -151,10 +181,10 @@ export const ReportesAccionistasSocios = () => {
                         ) : (
                             <tr>
                                 <td colSpan={columns.length} className={styles.sinResultados}>
-                                    {state.loading 
-                                        ? 'Cargando datos...' 
-                                        : accionistasFiltrados.length === 0 
-                                            ? 'No hay accionistas/socios registrados' 
+                                    {state.loading
+                                        ? 'Cargando datos...'
+                                        : accionistasFiltrados.length === 0
+                                            ? 'No hay accionistas/socios registrados'
                                             : 'No se encontraron resultados con los filtros aplicados'}
                                 </td>
                             </tr>
@@ -218,7 +248,7 @@ export const ReportesAccionistasSocios = () => {
                     <span>Total en reporte:</span>
                     <strong>{accionistasFiltrados.length}</strong>
                 </div>
-                
+
                 {accionistasFiltrados.length > 0 && (
                     <>
                         <div className={styles.resumenItem}>
@@ -227,18 +257,32 @@ export const ReportesAccionistasSocios = () => {
                                 {calcularPromedio('probabilidad')}
                             </strong>
                         </div>
-                        
+
                         <div className={styles.resumenItem}>
                             <span>Promedio Impacto:</span>
                             <strong className={styles.valorNumerico}>
                                 {calcularPromedio('impacto')}
                             </strong>
                         </div>
-                        
+
                         <div className={styles.resumenItem}>
-                            <span>Promedio Factor Riesgo:</span>
+                            <span>Promedio Riesgo Inherente:</span>
                             <strong className={styles.valorNumerico}>
-                                {calcularPromedio('factorRiesgoAccionistaSocio')}
+                                {calcularPromedio('riesgo_inherente')}
+                            </strong>
+                        </div>
+
+                        <div className={styles.resumenItem}>
+                            <span>Promedio Mitigación:</span>
+                            <strong className={styles.valorNumerico}>
+                                {calcularPromedio('mitigacion_numerico')}%
+                            </strong>
+                        </div>
+
+                        <div className={styles.resumenItem}>
+                            <span>Promedio Riesgo Residual:</span>
+                            <strong className={styles.valorNumerico}>
+                                {calcularPromedio('riesgo_residual')}
                             </strong>
                         </div>
                     </>

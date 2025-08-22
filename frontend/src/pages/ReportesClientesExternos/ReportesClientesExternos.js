@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, flexRender } from '@tanstack/react-table';
 import { useClientesExternos } from './useClientesExternos';
+import { ModalMitigacion } from './ModalMitigacion';
 import styles from './reportesClientesExternos.module.css';
 
 export const ReporteClientesExternos = () => {
@@ -9,28 +10,47 @@ export const ReporteClientesExternos = () => {
         clientesFiltrados,
         handleFiltroChange,
         actualizarReporte,
-        validarTodo,
+        validarRiesgos,
+        modalMitigacion,
+        abrirModalMitigacion,
+        cerrarModalMitigacion,
+        handleMitigacionGuardada,
         COLUMNAS_REPORTE,
         setState
     } = useClientesExternos();
 
-    // Configuración de columnas para react-table
-    const columns = useMemo(() => 
-        COLUMNAS_REPORTE.map(col => ({
-            accessorKey: col.id,
-            header: col.nombre,
-            cell: info => {
-                const value = info.getValue();
-                if (value == null) return '-';
-                if (typeof value === 'string' && value.length > 20) {
-                    return `${value.substring(0, 17)}...`;
-                }
-                return value;
-            },
-            size: col.ancho || 150,
-            enableColumnFilter: col.filtrable !== false
-        }))
-    , [COLUMNAS_REPORTE]);
+// Configuración de columnas para react-table
+const columns = useMemo(() =>
+    COLUMNAS_REPORTE.map(col => ({
+        accessorKey: col.id,
+        header: col.nombre,
+        cell: info => {
+            const value = info.getValue();
+            if (value == null) return '-';
+            if (typeof value === 'string' && value.length > 20) {
+                return `${value.substring(0, 17)}...`;
+            }
+            return value;
+        },
+        size: col.ancho || 150,
+        enableColumnFilter: col.filtrable !== false
+    })).concat([
+        {
+            id: 'acciones',
+            header: 'Acciones',
+            cell: ({ row }) => (
+                <button
+                    onClick={() => abrirModalMitigacion(row.original)}
+                    className={styles.botonMitigacion}
+                    title="Aplicar medidas de mitigación"
+                >
+                    Mitigación
+                </button>
+            ),
+            size: 100
+        }
+    ])
+, [COLUMNAS_REPORTE, abrirModalMitigacion]);
 
     // Configuración de la tabla
     const table = useReactTable({
@@ -45,14 +65,14 @@ export const ReporteClientesExternos = () => {
         getPaginationRowModel: getPaginationRowModel(),
         globalFilterFn: (row, columnId, filterValue) => {
             const value = row.getValue(columnId);
-            
+
             if (value === undefined || value === null) {
                 return false;
             }
-            
+
             const safeValue = String(value).toLowerCase();
             const safeFilter = filterValue.toLowerCase();
-            
+
             return safeValue.includes(safeFilter);
         },
         initialState: {
@@ -62,29 +82,13 @@ export const ReporteClientesExternos = () => {
         }
     });
 
-    // Calcular promedios para el resumen
-    const promedios = useMemo(() => {
-        if (clientesFiltrados.length === 0) return {};
-        
-        const suma = clientesFiltrados.reduce((acc, cliente) => ({
-            probabilidad: acc.probabilidad + (cliente.probabilidad || 0),
-            impacto: acc.impacto + (cliente.impacto || 0),
-            factorRiesgo: acc.factorRiesgo + (cliente.factorRiesgoClienteExterno || 0),
-            riesgoProductoServicio: acc.riesgoProductoServicio + (cliente.promedio_riesgo_producto_servicio || 0)
-        }), { 
-            probabilidad: 0, 
-            impacto: 0, 
-            factorRiesgo: 0,
-            riesgoProductoServicio: 0
-        });
-        
-        return {
-            probabilidad: (suma.probabilidad / clientesFiltrados.length).toFixed(2),
-            impacto: (suma.impacto / clientesFiltrados.length).toFixed(2),
-            factorRiesgo: (suma.factorRiesgo / clientesFiltrados.length).toFixed(2),
-            riesgoProductoServicio: (suma.riesgoProductoServicio / clientesFiltrados.length).toFixed(2)
-        };
-    }, [clientesFiltrados]);
+    // Calcular promedios
+    const calcularPromedio = (campo) => {
+        if (clientesFiltrados.length === 0) return '0.00';
+        const total = clientesFiltrados.reduce((sum, cliente) =>
+            sum + (cliente[campo] || 0), 0);
+        return (total / clientesFiltrados.length).toFixed(2);
+    };
 
     return (
         <div className={styles.contenedor}>
@@ -93,10 +97,20 @@ export const ReporteClientesExternos = () => {
                 <p>Información formal de evaluación de riesgos</p>
             </header>
 
+            <ModalMitigacion
+                isOpen={modalMitigacion.isOpen}
+                onClose={cerrarModalMitigacion}
+                clienteId={modalMitigacion.clienteId}
+                mitigacionExistente={modalMitigacion.mitigacionExistente}
+                mitigacionNumericoExistente={modalMitigacion.mitigacionNumericoExistente}
+                mitigacionAdicionalExistente={modalMitigacion.mitigacionAdicionalExistente}
+                onMitigacionGuardada={handleMitigacionGuardada}
+            />
+
             {state.error && (
                 <div className={styles.error}>
                     {state.error}
-                    <button 
+                    <button
                         onClick={() => setState(prev => ({ ...prev, error: '' }))}
                         className={styles.botonCerrarError}
                     >
@@ -123,13 +137,13 @@ export const ReporteClientesExternos = () => {
                     >
                         Actualizar Reporte
                     </button>
-                    
+
                     <button
-                        onClick={validarTodo}
-                        className={styles.botonMostrarTodas}
-                        disabled={state.loading}
+                        onClick={validarRiesgos}
+                        className={styles.botonValidar}
+                        disabled={state.loading || state.validando}
                     >
-                        Validar Todos
+                        {state.validando ? 'Validando...' : 'Validar Riesgos'}
                     </button>
                 </div>
             </div>
@@ -167,10 +181,10 @@ export const ReporteClientesExternos = () => {
                         ) : (
                             <tr>
                                 <td colSpan={columns.length} className={styles.sinResultados}>
-                                    {state.loading 
-                                        ? 'Cargando datos...' 
-                                        : clientesFiltrados.length === 0 
-                                            ? 'No hay clientes externos registrados' 
+                                    {state.loading
+                                        ? 'Cargando datos...'
+                                        : clientesFiltrados.length === 0
+                                            ? 'No hay clientes externos registrados'
                                             : 'No se encontraron resultados con los filtros aplicados'}
                                 </td>
                             </tr>
@@ -231,37 +245,51 @@ export const ReporteClientesExternos = () => {
 
             <div className={styles.resumen}>
                 <div className={styles.resumenItem}>
-                    <span>Total de clientes:</span>
+                    <span>Total en reporte:</span>
                     <strong>{clientesFiltrados.length}</strong>
                 </div>
-                
+
                 {clientesFiltrados.length > 0 && (
                     <>
                         <div className={styles.resumenItem}>
                             <span>Promedio Probabilidad:</span>
                             <strong className={styles.valorNumerico}>
-                                {promedios.probabilidad}
+                                {calcularPromedio('probabilidad')}
                             </strong>
                         </div>
-                        
+
                         <div className={styles.resumenItem}>
                             <span>Promedio Impacto:</span>
                             <strong className={styles.valorNumerico}>
-                                {promedios.impacto}
+                                {calcularPromedio('impacto')}
                             </strong>
                         </div>
-                        
+
                         <div className={styles.resumenItem}>
-                            <span>Promedio Factor de Riesgo:</span>
+                            <span>Promedio Riesgo Inherente:</span>
                             <strong className={styles.valorNumerico}>
-                                {promedios.factorRiesgo}
+                                {calcularPromedio('riesgo_inherente')}
                             </strong>
                         </div>
-                        
+
                         <div className={styles.resumenItem}>
                             <span>Promedio Riesgo Producto/Servicio:</span>
                             <strong className={styles.valorNumerico}>
-                                {promedios.riesgoProductoServicio}
+                                {calcularPromedio('promedio_riesgo_producto_servicio')}
+                            </strong>
+                        </div>
+
+                        <div className={styles.resumenItem}>
+                            <span>Promedio Mitigación:</span>
+                            <strong className={styles.valorNumerico}>
+                                {calcularPromedio('mitigacion_numerico')}%
+                            </strong>
+                        </div>
+
+                        <div className={styles.resumenItem}>
+                            <span>Promedio Riesgo Residual:</span>
+                            <strong className={styles.valorNumerico}>
+                                {calcularPromedio('riesgo_residual')}
                             </strong>
                         </div>
                     </>

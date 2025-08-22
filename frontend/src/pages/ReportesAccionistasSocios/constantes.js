@@ -1,3 +1,4 @@
+
 export const COLUMNAS_REPORTE = [
     { id: 'oficina', nombre: 'Oficina' },
     { id: 'nombres_accionistas_socios', nombre: 'Nombres' },
@@ -8,14 +9,14 @@ export const COLUMNAS_REPORTE = [
     { id: 'actividad', nombre: 'Actividad' },
     { id: 'riesgo_actividad_numerico', nombre: 'Riesgo Actividad' },
     { id: 'riesgo_zona_numerico', nombre: 'Riesgo Zona' },
-    { id: 'categoria_pep', nombre: 'Categoría PEP' },
-    { id: 'categoria_pep_numerico', nombre: 'Riesgo PEP' },
     { id: 'ingresos_mensuales', nombre: 'Ingresos' },
     { id: 'ingresos_mensuales_numerico', nombre: 'Riesgo Ingresos' },
     { id: 'volumen_actividad', nombre: 'Volumen de actividades' },
     { id: 'volumen_actividad_numerico', nombre: 'Riesgo Volumen' },
     { id: 'frecuencia_actividad', nombre: 'Frecuencia de actividades' },
     { id: 'frecuencia_actividad_numerico', nombre: 'Riesgo Frecuencia' },
+    { id: 'categoria_pep', nombre: 'Categoría PEP' },
+    { id: 'categoria_pep_numerico', nombre: 'Riesgo PEP' },
     { id: 'participacion_accionaria', nombre: 'Participación Accionaria' },
     { id: 'participacion_accionaria_numerico', nombre: 'Riesgo de participación' },
     { id: 'integridad_documental', nombre: 'Integridad en la documentación' },
@@ -30,9 +31,22 @@ export const COLUMNAS_REPORTE = [
     { id: 'consistencia_informacion_numerico', nombre: 'Riesgo de consistencia en información' },
     { id: 'comportamiento_cliente', nombre: 'Comportamiento' },
     { id: 'comportamiento_cliente_numerico', nombre: 'Riesgo de Comportamiento' },
+    
     { id: 'probabilidad', nombre: 'Probabilidad' },
     { id: 'impacto', nombre: 'Impacto' },
-    { id: 'factorRiesgoAccionistaSocio', nombre: 'Factor Riesgo' }
+    { id: 'riesgo_inherente', nombre: 'Riesgo Inherente' },
+    { id: 'mitigacion', nombre: 'Mitigación' },
+    { id: 'mitigacion_numerico', nombre: 'Mitigación (%)' },
+    { id: 'riesgo_residual', nombre: 'Riesgo Residual' }
+];
+
+export const OPCIONES_MITIGACION = [
+    { id: 1, texto: 'Capacitación en prevención de lavado de activos' },
+    { id: 2, texto: 'Sistema de monitoreo continuo' },
+    { id: 3, texto: 'Controles de supervisión reforzados' },
+    { id: 4, texto: 'Limitación de transacciones' },
+    { id: 5, texto: 'Revisión documental adicional' },
+    { id: 6, texto: 'Reportes periódicos de actividad' }
 ];
 
 // Columnas para cálculo de probabilidad

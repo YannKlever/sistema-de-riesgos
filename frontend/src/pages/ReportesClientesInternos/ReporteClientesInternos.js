@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, flexRender } from '@tanstack/react-table';
 import { useClientesInternos } from './useClientesInternos';
-import { ControlesReporte } from './ControlesReporte';
+import { ModalMitigacion } from './ModalMitigacion';
 import styles from './reportesClientesInternos.module.css';
 
 export const ReporteClientesInternos = () => {
@@ -10,13 +10,17 @@ export const ReporteClientesInternos = () => {
         clientesFiltrados,
         handleFiltroChange,
         actualizarReporte,
-        validarTodosLosRiesgos,
+        validarRiesgos,
+        modalMitigacion,
+        abrirModalMitigacion,
+        cerrarModalMitigacion,
+        handleMitigacionGuardada,
         COLUMNAS_REPORTE,
         setState
     } = useClientesInternos();
 
     // Configuración de columnas para react-table
-    const columns = useMemo(() => 
+    const columns = useMemo(() =>
         COLUMNAS_REPORTE.map(col => ({
             accessorKey: col.id,
             header: col.nombre,
@@ -30,8 +34,23 @@ export const ReporteClientesInternos = () => {
             },
             size: col.ancho || 150,
             enableColumnFilter: col.filtrable !== false
-        }))
-    , [COLUMNAS_REPORTE]);
+        })).concat([
+            {
+                id: 'acciones',
+                header: 'Acciones',
+                cell: ({ row }) => (
+                    <button
+                        onClick={() => abrirModalMitigacion(row.original)}
+                        className={styles.botonMitigacion}
+                        title="Aplicar medidas de mitigación"
+                    >
+                        Mitigación
+                    </button>
+                ),
+                size: 100
+            }
+        ])
+        , [COLUMNAS_REPORTE, abrirModalMitigacion]);
 
     // Configuración de la tabla
     const table = useReactTable({
@@ -46,14 +65,14 @@ export const ReporteClientesInternos = () => {
         getPaginationRowModel: getPaginationRowModel(),
         globalFilterFn: (row, columnId, filterValue) => {
             const value = row.getValue(columnId);
-            
+
             if (value === undefined || value === null) {
                 return false;
             }
-            
+
             const safeValue = String(value).toLowerCase();
             const safeFilter = filterValue.toLowerCase();
-            
+
             return safeValue.includes(safeFilter);
         },
         initialState: {
@@ -65,8 +84,8 @@ export const ReporteClientesInternos = () => {
 
     // Calcular promedios
     const calcularPromedio = (campo) => {
-        if (clientesFiltrados.length === 0) return 0;
-        const total = clientesFiltrados.reduce((sum, cliente) => 
+        if (clientesFiltrados.length === 0) return '0.00';
+        const total = clientesFiltrados.reduce((sum, cliente) =>
             sum + (cliente[campo] || 0), 0);
         return (total / clientesFiltrados.length).toFixed(2);
     };
@@ -75,13 +94,23 @@ export const ReporteClientesInternos = () => {
         <div className={styles.contenedor}>
             <header className={styles.header}>
                 <h1>Reporte de Clientes Internos</h1>
-                <p>Información formal de evaluación de riesgos del personal interno</p>
+                <p>Información formal de evaluación de riesgos</p>
             </header>
+
+            <ModalMitigacion
+                isOpen={modalMitigacion.isOpen}
+                onClose={cerrarModalMitigacion}
+                clienteId={modalMitigacion.clienteId}
+                mitigacionExistente={modalMitigacion.mitigacionExistente}
+                mitigacionNumericoExistente={modalMitigacion.mitigacionNumericoExistente}
+                mitigacionAdicionalExistente={modalMitigacion.mitigacionAdicionalExistente}
+                onMitigacionGuardada={handleMitigacionGuardada}
+            />
 
             {state.error && (
                 <div className={styles.error}>
                     {state.error}
-                    <button 
+                    <button
                         onClick={() => setState(prev => ({ ...prev, error: '' }))}
                         className={styles.botonCerrarError}
                     >
@@ -108,13 +137,13 @@ export const ReporteClientesInternos = () => {
                     >
                         Actualizar Reporte
                     </button>
-                    
+
                     <button
-                        onClick={validarTodosLosRiesgos}
-                        className={styles.botonMostrarTodas}
-                        disabled={state.loading || state.validandoTodos}
+                        onClick={validarRiesgos}
+                        className={styles.botonValidar}
+                        disabled={state.loading || state.validando}
                     >
-                        {state.validandoTodos ? 'Validando...' : 'Validar Todos'}
+                        {state.validando ? 'Validando...' : 'Validar Riesgos'}
                     </button>
                 </div>
             </div>
@@ -152,10 +181,10 @@ export const ReporteClientesInternos = () => {
                         ) : (
                             <tr>
                                 <td colSpan={columns.length} className={styles.sinResultados}>
-                                    {state.loading 
-                                        ? 'Cargando datos...' 
-                                        : clientesFiltrados.length === 0 
-                                            ? 'No hay clientes internos registrados' 
+                                    {state.loading
+                                        ? 'Cargando datos...'
+                                        : clientesFiltrados.length === 0
+                                            ? 'No hay clientes internos registrados'
                                             : 'No se encontraron resultados con los filtros aplicados'}
                                 </td>
                             </tr>
@@ -216,10 +245,10 @@ export const ReporteClientesInternos = () => {
 
             <div className={styles.resumen}>
                 <div className={styles.resumenItem}>
-                    <span>Total de clientes:</span>
+                    <span>Total en reporte:</span>
                     <strong>{clientesFiltrados.length}</strong>
                 </div>
-                
+
                 {clientesFiltrados.length > 0 && (
                     <>
                         <div className={styles.resumenItem}>
@@ -228,25 +257,32 @@ export const ReporteClientesInternos = () => {
                                 {calcularPromedio('probabilidad')}
                             </strong>
                         </div>
-                        
+
                         <div className={styles.resumenItem}>
                             <span>Promedio Impacto:</span>
                             <strong className={styles.valorNumerico}>
                                 {calcularPromedio('impacto')}
                             </strong>
                         </div>
-                        
+
                         <div className={styles.resumenItem}>
-                            <span>Promedio Riesgo Calculado:</span>
+                            <span>Promedio Riesgo Inherente:</span>
                             <strong className={styles.valorNumerico}>
-                                {calcularPromedio('factorRiesgoClienteInterno')}
+                                {calcularPromedio('riesgo_inherente')}
                             </strong>
                         </div>
-                        
+
                         <div className={styles.resumenItem}>
-                            <span>Promedio Riesgo Validado:</span>
+                            <span>Promedio Mitigación:</span>
                             <strong className={styles.valorNumerico}>
-                                {calcularPromedio('promedio_riesgo_cliente_interno')}
+                                {calcularPromedio('mitigacion_numerico')}%
+                            </strong>
+                        </div>
+
+                        <div className={styles.resumenItem}>
+                            <span>Promedio Riesgo Residual:</span>
+                            <strong className={styles.valorNumerico}>
+                                {calcularPromedio('riesgo_residual')}
                             </strong>
                         </div>
                     </>

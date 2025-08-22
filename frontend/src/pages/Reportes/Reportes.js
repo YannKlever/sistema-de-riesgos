@@ -53,7 +53,7 @@ const Reportes = () => {
         },
         {
             icon: '💰',
-            title: 'Reporte LD/FT',
+            title: 'Reporte de Control LGI/FT-FPADM',
             description: 'Reportes de evaluación de riesgo de Lavado de Dinero y Financiamiento al Terrorismo',
             path: '/reportes/ld-ft'
         },
