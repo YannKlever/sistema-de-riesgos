@@ -18,6 +18,8 @@ class ClienteInterno {
             estado_civil: cliente.estado_civil || null,
             profesion: cliente.profesion || null,
             riesgo_profesion_actividad: cliente.riesgo_profesion_actividad || null,
+            otra_actividad: cliente.otra_actividad || null,
+            riesgo_otra_actividad: cliente.riesgo_otra_actividad || null,
             domicilio_persona_sucursal: cliente.domicilio_persona_sucursal || null,
             riesgo_zona: cliente.riesgo_zona || null,
             categoria_pep: cliente.categoria_pep || null,
@@ -35,6 +37,7 @@ class ClienteInterno {
             alertas_activos_virtuales: cliente.alertas_activos_virtuales || null,
             nacionalidad_numerico: cliente.nacionalidad_numerico || null,
             riesgo_profesion_actividad_numerico: cliente.riesgo_profesion_actividad_numerico || null,
+            otra_actividad_numerico: cliente.otra_actividad_numerico || null,
             riesgo_zona_numerico: cliente.riesgo_zona_numerico || null,
             categoria_pep_numerico: cliente.categoria_pep_numerico || null,
             ingresos_mensuales_numerico: cliente.ingresos_mensuales_numerico || null,
@@ -48,7 +51,11 @@ class ClienteInterno {
             comportamiento_cliente_numerico: cliente.comportamiento_cliente_numerico || null,
             probabilidad: cliente.probabilidad || null,
             impacto: cliente.impacto || null,
-            promedio_riesgo_cliente_interno: cliente.promedio_riesgo_cliente_interno || null,   
+            riesgo_inherente: cliente.riesgo_inherente || null,
+            mitigacion: cliente.mitigacion || null,
+            mitigacion_numerico: cliente.mitigacion_numerico || null,
+            mitigacion_adicional: cliente.mitigacion_adicional || null,
+            riesgo_residual: cliente.riesgo_residual || null
         };
 
         const { campos, placeholders, valores } = Object.entries(camposCompletos).reduce(

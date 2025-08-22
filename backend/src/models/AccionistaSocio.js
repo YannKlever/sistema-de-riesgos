@@ -48,7 +48,11 @@ class AccionistaSocio {
             comportamiento_cliente_numerico: accionista.comportamiento_cliente_numerico || null,
             probabilidad: accionista.probabilidad || null,
             impacto: accionista.impacto || null,
-            promedio_riesgo_accionista_socio: accionista.promedio_riesgo_accionista_socio || null
+            riesgo_inherente: accionista.riesgo_inherente || null,
+            mitigacion: accionista.mitigacion || null,
+            mitigacion_numerico: accionista.mitigacion_numerico || null,
+            mitigacion_adicional: accionista.mitigacion_adicional || null,
+            riesgo_residual: accionista.riesgo_residual || null
         };
 
         const { campos, placeholders, valores } = Object.entries(camposCompletos).reduce(

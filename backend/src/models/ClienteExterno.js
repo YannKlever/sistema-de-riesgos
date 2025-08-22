@@ -49,6 +49,7 @@ class ClienteExterno {
             extension_representante: cliente.extension_representante || null,
             otra_extension_representante: cliente.otra_extension_representante || null,
             ramo_seguro: cliente.ramo_seguro || null,
+            zona_uso_seguro: cliente.zona_uso_seguro || null,
             riesgo_zona_uso_seguro: cliente.riesgo_zona_uso_seguro || null,
             tipo_documento: cliente.tipo_documento || null,
             fecha_inicio: cliente.fecha_inicio || null,
@@ -58,7 +59,6 @@ class ClienteExterno {
             frecuencia_contacto_fisico: cliente.frecuencia_contacto_fisico || null,
             frecuencia_contacto_digital: cliente.frecuencia_contacto_digital || null,
             medio_comunicacion: cliente.medio_comunicacion || null,
-            medio_pago: cliente.medio_pago || null,
             integridad_documental: cliente.integridad_documental || null,
             exactitud_documental: cliente.exactitud_documental || null,
             vigencia_documental: cliente.vigencia_documental || null,
@@ -79,14 +79,10 @@ class ClienteExterno {
             volumen_actividad_numerico: cliente.volumen_actividad_numerico || null,
             frecuencia_actividad_numerico: cliente.frecuencia_actividad_numerico || null,
             categoria_pep_numerico: cliente.categoria_pep_numerico || null,
-            ramo_seguro_numerico: cliente.ramo_seguro_numerico || null,
             riesgo_zona_uso_seguro_numerico: cliente.riesgo_zona_uso_seguro_numerico || null,
-            tipo_documento_numerico: cliente.tipo_documento_numerico || null,
-            valor_prima_dolares_numerico: cliente.valor_prima_dolares_numerico || null,
             frecuencia_contacto_fisico_numerico: cliente.frecuencia_contacto_fisico_numerico || null,
             frecuencia_contacto_digital_numerico: cliente.frecuencia_contacto_digital_numerico || null,
             medio_comunicacion_numerico: cliente.medio_comunicacion_numerico || null,
-            medio_pago_numerico: cliente.medio_pago_numerico || null,
             integridad_documental_numerico: cliente.integridad_documental_numerico || null,
             exactitud_documental_numerico: cliente.exactitud_documental_numerico || null,
             vigencia_documental_numerico: cliente.vigencia_documental_numerico || null,
@@ -98,7 +94,11 @@ class ClienteExterno {
             promedio_riesgo_canal_distribucion: cliente.promedio_riesgo_canal_distribucion || null,
             probabilidad_cliente_externo: cliente.probabilidad_cliente_externo || null,
             impacto_cliente_externo: cliente.impacto_cliente_externo || null,
-            promedio_riesgo_cliente_externo: cliente.promedio_riesgo_cliente_externo || null
+            riesgo_inherente: cliente.riesgo_inherente || null,
+            mitigacion: cliente.mitigacion || null,
+            mitigacion_numerico: cliente.mitigacion_numerico || null,
+            mitigacion_adicional: cliente.mitigacion_adicional || null,
+            riesgo_residual: cliente.riesgo_residual || null
         };
         const { campos, placeholders, valores } = Object.entries(camposCompletos).reduce(
             (acc, [campo, valor]) => {
@@ -148,7 +148,7 @@ class ClienteExterno {
             db.all(
                 `SELECT 
                 ce.*,
-                ci.promedio_riesgo_cliente_interno,
+                ci.riesgo_residual,
                 ci.nombres_cliente_interno || ' ' || ci.apellidos_cliente_interno AS ejecutivo_interno
              FROM "tabla-clientes-externos" ce
              LEFT JOIN "tabla-clientes-internos" ci 
@@ -162,8 +162,8 @@ class ClienteExterno {
                     } else {
                         const processedRows = rows.map(row => ({
                             ...row,
-                            promedio_riesgo_cliente_interno: row.promedio_riesgo_cliente_interno
-                                ? parseFloat(row.promedio_riesgo_cliente_interno)
+                            riesgo_residual: row.riesgo_residual
+                                ? parseFloat(row.riesgo_residual)
                                 : 0,
                             ejecutivo_interno: row.ejecutivo_interno || 'admin'
                         }));
