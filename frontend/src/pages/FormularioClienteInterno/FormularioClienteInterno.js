@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import InTexto from '../../components/CamposFormulario/InTexto/InTexto';
 import InPersona from '../../components/CamposFormulario/InPersona/InPersona';
@@ -7,6 +7,7 @@ import InPais from '../../components/CamposFormulario/InPais/InPais';
 import InEstadoCivil from '../../components/CamposFormulario/InEstadoCivil/InEstadoCivil';
 import HeaderInfoRegistro from '../../components/CamposFormulario/HeaderInfoRegistro/HeaderInfoRegistro';
 import InRiesgo from '../../components/CamposFormulario/InRiesgo/InRiesgo';
+import InOtraActividad from '../../components/CamposFormulario/InOtraActividad/InOtraActividad'; // AÑADIDO
 import InPep from '../../components/CamposFormulario/InPep/InPep';
 import InIngresosAnuales from '../../components/CamposFormulario/InIngresosAnuales/InIngresosAnuales';
 import InVolumenActividad from '../../components/CamposFormulario/InVolumenActividad/InVolumenActividad';
@@ -14,16 +15,132 @@ import InFrecuenciaActividad from '../../components/CamposFormulario/InFrecuenci
 import SeccionEvaluacionRiesgo from '../../components/CamposFormulario/SeccionEvaluacionRiesgo/SeccionEvaluacionRiesgo';
 import SeccionAlertasCi from '../../components/CamposFormulario/SeccionAlertasCi/SeccionAlertasCi';
 import styles from './formularioClienteInterno.module.css';
+import { generateFormPDF, downloadPDF } from '../../utils/print/pdfGenerator';
 import { databaseService } from '../../services/database';
+
+const printSections = [
+    {
+        title: 'Datos Generales',
+        fields: [
+            { label: 'Fecha de Registro', name: 'fecha_registro' },
+            { label: 'Oficina', name: 'oficina' },
+            { label: 'Ejecutivo', name: 'ejecutivo' },
+        ]
+    },
+    {
+        title: 'Datos Personales',
+        fields: [
+            { label: 'Nombre Completo', name: 'nombres_cliente_interno' },
+            { label: 'Apellidos', name: 'apellidos_cliente_interno' },
+            { label: 'Tipo de Documento', name: 'tipo_documento_cliente_interno' },
+            { label: 'Número de Documento', name: 'nro_documento_cliente_interno' },
+            { label: 'Extensión', name: 'extension_cliente_interno' },
+            { label: 'Otra Extensión', name: 'otra_extension_cliente_interno' },
+            { label: 'Fecha de Nacimiento', name: 'fecha_nacimiento' },
+            { label: 'Lugar de Nacimiento', name: 'lugar_nacimiento' },
+            { label: 'Nacionalidad', name: 'nacionalidad' },
+            { label: 'Estado Civil', name: 'estado_civil' },
+            { label: 'Cargo', name: 'profesion' },
+            { label: 'Otra Actividad Relevante', name: 'otra_actividad' }, // AÑADIDO
+            { label: 'Riesgo Otra Actividad', name: 'riesgo_otra_actividad' } // AÑADIDO
+        ]
+    },
+    {
+        title: 'Información de Riesgo',
+        fields: [
+            { label: 'Riesgo de cargo', name: 'riesgo_profesion_actividad' },
+            { label: 'Riesgo de la zona', name: 'riesgo_zona' },
+            { label: 'Riesgo otra actividad', name: 'riesgo_otra_actividad' }, // AÑADIDO
+            { label: 'Cliente PEP', name: 'categoria_pep' },
+            { label: 'Ingresos mensuales', name: 'ingresos_mensuales' },
+            { label: 'Volumen de actividad', name: 'volumen_actividad' },
+            { label: 'Frecuencia de actividad', name: 'frecuencia_actividad' }
+        ]
+    },
+    {
+        title: 'Domicilio',
+        fields: [
+            { label: 'Domicilio Particular', name: 'domicilio_persona_sucursal' }
+        ]
+    },
+    {
+        title: 'Evaluación de Riesgo',
+        fields: [
+            { label: 'Integridad documental', name: 'integridad_documental' },
+            { label: 'Exactitud documental', name: 'exactitud_documental' },
+            { label: 'Vigencia documental', name: 'vigencia_documental' },
+            { label: 'Relevancia información', name: 'relevancia_informacion' },
+            { label: 'Comportamiento cliente', name: 'comportamiento_cliente' },
+            { label: 'Consistencia información', name: 'consistencia_informacion' },
+            { label: 'Observaciones', name: 'observaciones' }
+        ]
+    },
+];
 
 const FormularioClienteInterno = () => {
     const { id } = useParams();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [initialData, setInitialData] = useState(null);
+    const [printError, setPrintError] = useState(null);
     const navigate = useNavigate();
     const alertasRef = useRef();
 
+    const getFormData = useCallback(() => {
+        try {
+            const form = document.forms[0];
+            if (!form) {
+                console.error('No se encontró el formulario en el DOM');
+                return {};
+            }
+
+            const data = {};
+            const formElements = form.elements;
+
+            for (let element of formElements) {
+                if (element.name && element.value !== undefined) {
+                    const cleanName = element.name.startsWith('_') ? element.name.substring(1) : element.name;
+
+                    if (element.type === 'checkbox') {
+                        data[cleanName] = element.checked;
+                    } else if (element.type === 'radio') {
+                        if (element.checked) data[cleanName] = element.value;
+                    } else {
+                        data[cleanName] = element.value;
+                    }
+                }
+            }
+
+            // Agregar datos de alertas si existen
+            if (alertasRef.current) {
+                const alertasData = alertasRef.current.getAlertasData();
+                Object.assign(data, alertasData);
+            }
+
+            console.log('Datos recolectados del formulario:', data);
+            return data;
+        } catch (error) {
+            console.error('Error en getFormData:', error);
+            setPrintError('Error al leer el formulario');
+            return {};
+        }
+    }, []);
+
+    const handlePrint = useCallback((formData) => {
+        try {
+            const pdf = generateFormPDF(formData, `Formulario de Cliente Interno ${isEditing ? '(Edición)' : '(Nuevo)'}`, printSections);
+            downloadPDF(pdf, `formulario_cliente_interno_${id || 'nuevo'}`);
+            return true;
+        } catch (error) {
+            handlePrintError(error);
+            return false;
+        }
+    }, [isEditing, id]);
+
+    const handlePrintError = useCallback((error) => {
+        console.error('Error en generación de PDF:', error);
+        setPrintError(error);
+    }, []);
 
     useEffect(() => {
         if (id) {
@@ -80,6 +197,9 @@ const FormularioClienteInterno = () => {
             profesion: formValues.profesion,
             riesgo_profesion_actividad: formValues.riesgo_profesion_actividad,
             riesgo_profesion_actividad_numerico: formValues.riesgo_profesion_actividad_numerico,
+            otra_actividad: formValues.otra_actividad, // AÑADIDO
+            riesgo_otra_actividad: formValues.riesgo_otra_actividad, // AÑADIDO
+            otra_actividad_numerico: formValues.otra_actividad_numerico, // AÑADIDO
             riesgo_zona: formValues.riesgo_zona,
             riesgo_zona_numerico: formValues.riesgo_zona_numerico,
             categoria_pep: formValues.categoria_pep,
@@ -120,6 +240,14 @@ const FormularioClienteInterno = () => {
 
             if (result?.success) {
                 alert(`Cliente interno ${isEditing ? 'actualizado' : 'creado'} correctamente`);
+
+                // Preguntar si desea imprimir
+                const shouldPrint = window.confirm('¿Desea imprimir el comprobante de registro?');
+                if (shouldPrint) {
+                    const formDataForPrint = getFormData();
+                    handlePrint(formDataForPrint);
+                }
+
                 navigate('/parametros/clientes-internos');
             } else {
                 alert(`Error: ${result?.error || 'Error desconocido'}`);
@@ -132,8 +260,14 @@ const FormularioClienteInterno = () => {
         }
     };
 
+
     return (
         <div className={styles.container}>
+            {printError && (
+                <div className={styles.errorAlert}>
+                    Error al generar PDF: {printError}
+                </div>
+            )}
             <div className={styles.card}>
                 <div className={styles.cardBody}>
                     <form onSubmit={handleSubmit}>
@@ -195,7 +329,7 @@ const FormularioClienteInterno = () => {
                                 </div>
                                 <div className={styles.formCol}>
                                     <InTexto
-                                        label="Profesión u Oficio"
+                                        label="Cargo"
                                         name="profesion"
                                         maxLength={100}
                                         required
@@ -204,13 +338,28 @@ const FormularioClienteInterno = () => {
                                 </div>
                                 <div className={styles.formCol}>
                                     <InRiesgo
-                                        label="Riesgo de profesión"
+                                        label="Riesgo de cargo"
                                         name="riesgo_profesion_actividad"
                                         required
                                         defaultValue={initialData?.riesgo_profesion_actividad}
                                         defaultNumerico={initialData?.riesgo_profesion_actividad_numerico}
                                     />
                                 </div>
+
+                                {/* AÑADIDO: Componente InOtraActividad */}
+                                <div className={styles.formCol} style={{ flex: '1 1 100%', maxWidth: '100%' }}>
+                                    <InOtraActividad
+                                        label="Otra actividad relevante"
+                                        name="otra_actividad"
+                                        selectName="riesgo_otra_actividad"
+                                        nameNumerico="otra_actividad_numerico"
+                                        required={false}
+                                        defaultTextValue={initialData?.otra_actividad}
+                                        defaultSelectValue={initialData?.riesgo_otra_actividad}
+                                        defaultNumerico={initialData?.otra_actividad_numerico}
+                                    />
+                                </div>
+
                                 <div className={styles.formCol}>
                                     <InRiesgo
                                         label="Riesgo de la zona de actividades"

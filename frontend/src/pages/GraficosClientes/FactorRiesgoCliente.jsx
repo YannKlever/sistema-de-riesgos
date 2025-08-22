@@ -35,17 +35,17 @@ const FactorRiesgoCliente = () => {
   const { clientesFiltrados: clientesInternosFiltrados } = useClientesInternos();
   const { clientesFiltrados: clientesExternosFiltrados } = useClientesExternos();
 
-  // Función para calcular el promedio de riesgo
-  const calcularPromedioRiesgo = (data, campoRiesgo) => {
+  // Función para calcular el promedio de riesgo_residual
+  const calcularPromedioRiesgoResidual = (data) => {
     if (data.length === 0) return 0;
-    const total = data.reduce((sum, item) => sum + (item[campoRiesgo] || 0), 0);
+    const total = data.reduce((sum, item) => sum + (item.riesgo_residual || 0), 0);
     return parseFloat((total / data.length).toFixed(2));
   };
 
-  // Calcular promedios para cada tipo
-  const promedioAccionistas = calcularPromedioRiesgo(accionistasFiltrados, 'factorRiesgoAccionistaSocio');
-  const promedioClientesInternos = calcularPromedioRiesgo(clientesInternosFiltrados, 'factorRiesgoClienteInterno');
-  const promedioClientesExternos = calcularPromedioRiesgo(clientesExternosFiltrados, 'factorRiesgoClienteExterno');
+  // Calcular promedios para cada tipo usando riesgo_residual
+  const promedioAccionistas = calcularPromedioRiesgoResidual(accionistasFiltrados);
+  const promedioClientesInternos = calcularPromedioRiesgoResidual(clientesInternosFiltrados);
+  const promedioClientesExternos = calcularPromedioRiesgoResidual(clientesExternosFiltrados);
 
   // Calcular el factor riesgo cliente (promedio de los tres)
   const factorRiesgoCliente = parseFloat((
@@ -61,9 +61,9 @@ const FactorRiesgoCliente = () => {
   // Preparar datos para el gráfico
   const chartData = useMemo(() => {
     const labels = [
-      'Accionistas/Socios', 
-      'Clientes Internos', 
-      'Clientes Externos', 
+      'Accionistas/Socios',
+      'Clientes Internos',
+      'Clientes Externos',
       'Factor Riesgo Cliente'
     ];
 
@@ -79,7 +79,7 @@ const FactorRiesgoCliente = () => {
     return {
       labels,
       datasets: [{
-        label: 'Nivel de Riesgo',
+        label: 'Nivel de Riesgo Residual',
         data: valores,
         backgroundColor: valoresRedondeados.map(value => {
           switch (value) {
@@ -107,7 +107,7 @@ const FactorRiesgoCliente = () => {
       },
       title: {
         display: true,
-        text: 'Comparativa de Riesgos de Clientes',
+        text: 'Comparativa de Riesgos Residuales de Clientes',
         font: {
           size: 16
         }
@@ -118,8 +118,8 @@ const FactorRiesgoCliente = () => {
             const value = context.raw;
             const riskLevels = ['Minimo', 'Bajo', 'Moderado', 'Alto', 'Critico'];
             const nivel = redondearRiesgo(value);
-            
-            return `Nivel de riesgo: ${value.toFixed(2)} (${riskLevels[nivel - 1] || 'N/A'})`;
+
+            return `Riesgo Residual: ${value.toFixed(2)} (${riskLevels[nivel - 1] || 'N/A'})`;
           }
         }
       }
@@ -128,7 +128,7 @@ const FactorRiesgoCliente = () => {
       x: {
         title: {
           display: true,
-          text: 'Nivel de Riesgo'
+          text: 'Nivel de Riesgo Residual'
         },
         min: 0,
         max: 5,
@@ -150,8 +150,8 @@ const FactorRiesgoCliente = () => {
   return (
     <div className={styles.contenedor}>
       <header className={styles.header}>
-        <h1>Factor Riesgo Cliente</h1>
-        <p>Comparativa de riesgos de clientes internos, externos y accionistas/socios</p>
+        <h1>Factor Riesgo Cliente - Riesgo Residual</h1>
+        <p>Comparativa de riesgos residuales de clientes internos, externos y accionistas/socios</p>
       </header>
 
       <div className={styles.chartContainer}>
@@ -166,24 +166,28 @@ const FactorRiesgoCliente = () => {
         <div className={styles.resumen}>
           <div className={styles.resumenItem}>
             <span>Accionistas/Socios:</span>
-            <strong>{promedioAccionistas}</strong>
+            <strong>{promedioAccionistas.toFixed(2)}</strong>
+            <span className={styles.detalle}>({accionistasFiltrados.length} registros)</span>
           </div>
           <div className={styles.resumenItem}>
             <span>Clientes Internos:</span>
-            <strong>{promedioClientesInternos}</strong>
+            <strong>{promedioClientesInternos.toFixed(2)}</strong>
+            <span className={styles.detalle}>({clientesInternosFiltrados.length} registros)</span>
           </div>
           <div className={styles.resumenItem}>
             <span>Clientes Externos:</span>
-            <strong>{promedioClientesExternos}</strong>
+            <strong>{promedioClientesExternos.toFixed(2)}</strong>
+            <span className={styles.detalle}>({clientesExternosFiltrados.length} registros)</span>
           </div>
           <div className={styles.resumenItem}>
             <span>Factor Riesgo Cliente:</span>
-            <strong>{factorRiesgoCliente}</strong>
+            <strong>{factorRiesgoCliente.toFixed(2)}</strong>
+            <span className={styles.detalle}>(Promedio general)</span>
           </div>
         </div>
 
         <div className={styles.leyenda}>
-          <h3>Leyenda de Riesgo:</h3>
+          <h3>Leyenda de Riesgo Residual:</h3>
           <div className={styles.leyendaItems}>
             {[1, 2, 3, 4, 5].map(nivel => (
               <div key={nivel} className={styles.leyendaItem}>
@@ -209,6 +213,14 @@ const FactorRiesgoCliente = () => {
               </div>
             ))}
           </div>
+        </div>
+
+        <div className={styles.infoAdicional}>
+          <p>
+            <strong>Nota:</strong> El Factor Riesgo Cliente se calcula como el promedio del riesgo residual
+            de accionistas/socios, clientes internos y clientes externos. Cada riesgo residual representa
+            la evaluación final del riesgo después de considerar todos los factores relevantes.
+          </p>
         </div>
       </div>
     </div>

@@ -13,7 +13,6 @@ import {
     Title,
     Colors
 } from 'chart.js';
-import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel } from '@tanstack/react-table';
 import styles from './graficosClientesExternos.module.css';
 
 ChartJS.register(
@@ -31,6 +30,8 @@ ChartJS.register(
 const GraficosClientesExternos = () => {
     const { clientesFiltrados } = useClientesExternos();
     const [busqueda, setBusqueda] = useState('');
+    const [paginaActual, setPaginaActual] = useState(0);
+    const [tamanoPagina, setTamanoPagina] = useState(10);
 
     // Función para redondear matemáticamente a entero (0.5 hacia arriba)
     const redondearRiesgo = (valor) => {
@@ -38,43 +39,58 @@ const GraficosClientesExternos = () => {
         return Math.round(valor);
     };
 
-    // Configuración de la tabla para paginación
-    const table = useReactTable({
-        data: clientesFiltrados,
-        columns: [],
-        state: {
-            globalFilter: busqueda
-        },
-        onGlobalFilterChange: setBusqueda,
-        getCoreRowModel: getCoreRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        globalFilterFn: (row, columnId, filterValue) => {
-            const value = row.original;
-            if (!filterValue) return true;
+    // Filtrar clientes basado en la búsqueda
+    const clientesFiltradosBusqueda = useMemo(() => {
+        if (!busqueda) return clientesFiltrados;
+        
+        const termino = busqueda.toLowerCase();
+        return clientesFiltrados.filter(cliente => {
+            const camposBusqueda = [
+                cliente.nombres_propietario || '',
+                cliente.apellidos_propietario || '',
+                cliente.nro_documento_propietario || '',
+                cliente.razon_social || '',
+                cliente.nit || '',
+                cliente.tipo_documento_propietario || '',
+                cliente.correo || '',
+                cliente.telefono || ''
+            ];
             
-            const termino = filterValue.toLowerCase();
-            return `${value.nombres_propietario || ''} ${value.apellidos_propietario || ''} ${value.nro_documento_propietario || ''} ${value.razon_social || ''} ${value.nit || ''}`
-                .toLowerCase()
-                .includes(termino);
-        },
-        initialState: {
-            pagination: {
-                pageSize: 10
-            }
-        }
-    });
+            return camposBusqueda.some(campo => 
+                campo.toLowerCase().includes(termino)
+            );
+        });
+    }, [clientesFiltrados, busqueda]);
 
-    // Obtener los clientes paginados y filtrados
-    const clientesPaginados = table.getRowModel().rows.map(row => row.original);
+    // Paginación manual
+    const paginasTotales = Math.ceil(clientesFiltradosBusqueda.length / tamanoPagina);
+    const inicio = paginaActual * tamanoPagina;
+    const fin = inicio + tamanoPagina;
+    const clientesPaginados = clientesFiltradosBusqueda.slice(inicio, fin);
+
+    const irAPagina = (pagina) => {
+        setPaginaActual(Math.max(0, Math.min(pagina, paginasTotales - 1)));
+    };
+
+    const siguientePagina = () => {
+        if (paginaActual < paginasTotales - 1) {
+            setPaginaActual(paginaActual + 1);
+        }
+    };
+
+    const paginaAnterior = () => {
+        if (paginaActual > 0) {
+            setPaginaActual(paginaActual - 1);
+        }
+    };
 
     // Preparar datos para el gráfico usando solo los clientes paginados
     const prepararDatosGrafico = () => {
         if (!clientesPaginados.length) return { labels: [], datasets: [] };
 
-        // Ordenar por riesgo (mayor a menor)
+        // Ordenar por riesgo residual (mayor a menor)
         const clientesOrdenados = [...clientesPaginados]
-            .sort((a, b) => (b.factorRiesgoClienteExterno || 0) - (a.factorRiesgoClienteExterno || 0));
+            .sort((a, b) => (b.riesgo_residual || 0) - (a.riesgo_residual || 0));
 
         // Preparar etiquetas con nombre/razón social y documento/NIT
         const labels = clientesOrdenados.map(cliente => {
@@ -84,9 +100,9 @@ const GraficosClientesExternos = () => {
             return `${cliente.nombres_propietario || ''} ${cliente.apellidos_propietario || ''} (${cliente.nro_documento_propietario || 'N/A'})`;
         });
 
-        // Obtener valores de riesgo con redondeo matemático
+        // Usar riesgo_residual
         const valoresRiesgo = clientesOrdenados.map(cliente => {
-            const valor = cliente.factorRiesgoClienteExterno;
+            const valor = cliente.riesgo_residual;
             // Aseguramos que el valor esté entre 1 y 5 después del redondeo
             const redondeado = Math.min(5, Math.max(1, redondearRiesgo(valor)));
             return redondeado;
@@ -95,22 +111,22 @@ const GraficosClientesExternos = () => {
         return {
             labels,
             datasets: [{
-                label: 'Nivel de Riesgo',
+                label: 'Factor Cliente Externo',
                 data: valoresRiesgo,
                 backgroundColor: valoresRiesgo.map(value => {
                     switch (value) {
-                        case 1: return '#228B22'; // Verde bajo
-                        case 2: return '#9ACD32'; // Verde claro
-                        case 3: return '#FFD700'; // Amarillo
-                        case 4: return '#FF8C00'; // Naranja
-                        case 5: return '#FF0000'; // Rojo
-                        default: return '#f7f7f7'; // Gris
+                        case 1: return '#228B22';
+                        case 2: return '#9ACD32';
+                        case 3: return '#FFD700';
+                        case 4: return '#FF8C00';
+                        case 5: return '#FF0000';
+                        default: return '#f7f7f7';
                     }
                 }),
                 borderColor: '#ddd',
-                borderWidth: 1
+                borderWidth: 1,
             }],
-            clientes: clientesOrdenados // Para usar en los tooltips
+            clientes: clientesOrdenados
         };
     };
 
@@ -126,7 +142,9 @@ const GraficosClientesExternos = () => {
             },
             title: {
                 display: true,
-                text: 'Análisis de Riesgo de Clientes Externos',
+                text: busqueda 
+                    ? `Resultados de búsqueda (${clientesFiltradosBusqueda.length} encontrados)`
+                    : 'Factor Cliente Externo',
                 font: {
                     size: 16
                 }
@@ -137,15 +155,12 @@ const GraficosClientesExternos = () => {
                         const value = context.raw;
                         const riskLevels = ['Minimo', 'Bajo', 'Moderado', 'Alto', 'Critico'];
                         const cliente = clientes[context.dataIndex];
-                        const valorOriginal = cliente.factorRiesgoClienteExterno?.toFixed(2) || 'N/A';
+                        const valorOriginal = cliente.riesgo_residual?.toFixed(2) || 'N/A';
 
                         return [
-                            `Nivel de riesgo Ponderado: ${value} (${riskLevels[value - 1] || 'N/A'})`,
-                            `Nivel de riesgo: ${valorOriginal}`,
+                            `Factor Cliente Externo: ${value} (${riskLevels[value - 1] || 'N/A'})`,
+                            `Riesgo Residual: ${valorOriginal}`,
                         ];
-                    },
-                    afterLabel: (context) => {
-                        const cliente = clientes[context.dataIndex];
                     }
                 }
             }
@@ -154,7 +169,7 @@ const GraficosClientesExternos = () => {
             x: {
                 title: {
                     display: true,
-                    text: 'Nivel de Riesgo'
+                    text: 'Factor Cliente Externo'
                 },
                 min: 0,
                 max: 5,
@@ -167,8 +182,17 @@ const GraficosClientesExternos = () => {
                     autoSkip: false,
                     font: {
                         size: 12
-                    }
+                    },
+                    padding: 15
                 }
+            }
+        },
+        layout: {
+            padding: {
+                left: 10,
+                right: 10,
+                top: 10,
+                bottom: 10
             }
         }
     };
@@ -176,23 +200,31 @@ const GraficosClientesExternos = () => {
     return (
         <div className={styles.contenedor}>
             <header className={styles.header}>
-                <h1>Análisis de Riesgo - Clientes Externos</h1>
-                <p>Visualización del factor de riesgo individual por cliente externo</p>
+                <h1>Factor Cliente Externo</h1>
+                <p>Visualización del riesgo residual individual por cliente externo</p>
             </header>
 
             <div className={styles.controles}>
                 <input
                     type="text"
-                    placeholder="Buscar por nombre, razón social, documento o NIT..."
+                    placeholder="Buscar por nombre, razón social, documento, NIT, teléfono o correo..."
                     value={busqueda}
-                    onChange={(e) => setBusqueda(e.target.value)}
+                    onChange={(e) => {
+                        setBusqueda(e.target.value);
+                        setPaginaActual(0); // Resetear a primera página al buscar
+                    }}
                     className={styles.buscador}
                 />
+                {busqueda && (
+                    <span className={styles.contadorBusqueda}>
+                        {clientesFiltradosBusqueda.length} de {clientesFiltrados.length} clientes encontrados
+                    </span>
+                )}
             </div>
 
             {datasets?.length > 0 ? (
                 <div className={styles.chartContainer}>
-                    <div className={styles.chartWrapper} style={{ height: `${Math.max(400, labels.length * 40)}px` }}>
+                    <div className={styles.chartWrapper} style={{ height: `${Math.max(400, labels.length * 50)}px` }}>
                         <Chart
                             type='bar'
                             data={{ labels, datasets }}
@@ -201,7 +233,7 @@ const GraficosClientesExternos = () => {
                     </div>
 
                     <div className={styles.leyenda}>
-                        <h3>Leyenda de Riesgo:</h3>
+                        <h3>Leyenda de Factor Cliente Externo:</h3>
                         <div className={styles.leyendaItems}>
                             {[1, 2, 3, 4, 5].map(nivel => (
                                 <div key={nivel} className={styles.leyendaItem}>
@@ -229,53 +261,69 @@ const GraficosClientesExternos = () => {
                         </div>
                     </div>
 
-                    {/* Controles de paginación */}
-                    <div className={styles.paginacion}>
-                        <button
-                            onClick={() => table.setPageIndex(0)}
-                            disabled={!table.getCanPreviousPage()}
-                        >
-                            {'<<'}
-                        </button>
-                        <button
-                            onClick={() => table.previousPage()}
-                            disabled={!table.getCanPreviousPage()}
-                        >
-                            {'<'}
-                        </button>
-                        <button
-                            onClick={() => table.nextPage()}
-                            disabled={!table.getCanNextPage()}
-                        >
-                            {'>'}
-                        </button>
-                        <button
-                            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                            disabled={!table.getCanNextPage()}
-                        >
-                            {'>>'}
-                        </button>
+                    {/* Controles de paginación manual */}
+                    {paginasTotales > 1 && (
+                        <div className={styles.paginacion}>
+                            <button
+                                onClick={() => irAPagina(0)}
+                                disabled={paginaActual === 0}
+                                className={styles.botonPaginacion}
+                            >
+                                {'<<'}
+                            </button>
+                            <button
+                                onClick={paginaAnterior}
+                                disabled={paginaActual === 0}
+                                className={styles.botonPaginacion}
+                            >
+                                {'<'}
+                            </button>
+                            
+                            <span className={styles.infoPagina}>
+                                Página{' '}
+                                <strong>
+                                    {paginaActual + 1} de {paginasTotales}
+                                </strong>
+                            </span>
 
-                        <span>
-                            Página{' '}
-                            <strong>
-                                {table.getState().pagination.pageIndex + 1} de{' '}
-                                {table.getPageCount()}
-                            </strong>
-                        </span>
+                            <button
+                                onClick={siguientePagina}
+                                disabled={paginaActual >= paginasTotales - 1}
+                                className={styles.botonPaginacion}
+                            >
+                                {'>'}
+                            </button>
+                            <button
+                                onClick={() => irAPagina(paginasTotales - 1)}
+                                disabled={paginaActual >= paginasTotales - 1}
+                                className={styles.botonPaginacion}
+                            >
+                                {'>>'}
+                            </button>
 
-                        <select
-                            value={table.getState().pagination.pageSize}
-                            onChange={e => {
-                                table.setPageSize(Number(e.target.value))
-                            }}
-                        >
-                            {[5, 10, 20, 30, 50].map(pageSize => (
-                                <option key={pageSize} value={pageSize}>
-                                    Mostrar {pageSize}
-                                </option>
-                            ))}
-                        </select>
+                            <select
+                                value={tamanoPagina}
+                                onChange={(e) => {
+                                    setTamanoPagina(Number(e.target.value));
+                                    setPaginaActual(0);
+                                }}
+                                className={styles.selectorPagina}
+                            >
+                                {[5, 10, 20, 30, 50].map(pageSize => (
+                                    <option key={pageSize} value={pageSize}>
+                                        Mostrar {pageSize}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+
+                    <div className={styles.resumen}>
+                        <p>Total de clientes externos: <strong>{clientesFiltrados.length}</strong></p>
+                        {busqueda && (
+                            <p>Clientes encontrados: <strong>{clientesFiltradosBusqueda.length}</strong></p>
+                        )}
+                        <p>Mostrando: <strong>{clientesPaginados.length}</strong> clientes</p>
                     </div>
                 </div>
             ) : (

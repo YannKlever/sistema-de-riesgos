@@ -133,20 +133,21 @@
     .container {
         padding: 1rem;
     }
-    
-    .cardHeader, .cardBody {
+
+    .cardHeader,
+    .cardBody {
         padding: 1.25rem;
     }
-    
+
     .formCol {
         min-width: 100%;
     }
-    
+
     .formActions {
         flex-direction: column;
     }
-    
-    .primaryButton, 
+
+    .primaryButton,
     .secondaryButton {
         width: 100%;
     }
@@ -156,8 +157,48 @@
     .sectionTitle {
         font-size: 1.1rem;
     }
-    
-    .cardHeader, .cardBody {
+
+    .cardHeader,
+    .cardBody {
         padding: 1rem;
+    }
+}
+
+/* Ajustes específicos para los campos conflictivos */
+.combinedFieldColumn {
+    flex: 1 1 100%;
+}
+
+@media (min-width: 992px) {
+    .combinedFieldColumn {
+        flex: 1 1 calc(60% - 1.5rem);
+    }
+
+    .riesgoZonaField {
+        flex: 1 1 calc(40% - 1.5rem);
+    }
+}
+
+
+/* Estilos para agrupación de campos en filas */
+.fieldRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    width: 100%;
+    margin-bottom: 1.5rem;
+}
+
+.fieldRowItem {
+    flex: 1;
+    min-width: calc(50% - 0.75rem);
+    max-width: calc(50% - 0.75rem);
+}
+
+/* Ajuste para móviles */
+@media (max-width: 768px) {
+    .fieldRowItem {
+        min-width: 100%;
+        max-width: 100%;
     }
 }

@@ -13,7 +13,6 @@ import {
     Title,
     Colors
 } from 'chart.js';
-import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel } from '@tanstack/react-table';
 import styles from './graficosAccionistasSocios.module.css';
 
 ChartJS.register(
@@ -31,54 +30,72 @@ ChartJS.register(
 const GraficosAccionistasSocios = () => {
     const { accionistasFiltrados } = useAccionistasSocios();
     const [busqueda, setBusqueda] = useState('');
+    const [paginaActual, setPaginaActual] = useState(0);
+    const [tamanoPagina, setTamanoPagina] = useState(10);
 
-    // Configuración de la tabla para paginación
-    const table = useReactTable({
-        data: accionistasFiltrados,
-        columns: [],
-        state: {
-            globalFilter: busqueda
-        },
-        onGlobalFilterChange: setBusqueda,
-        getCoreRowModel: getCoreRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        globalFilterFn: (row, columnId, filterValue) => {
-            const acc = row.original;
-            if (!filterValue) return true;
-            
-            const termino = filterValue.toLowerCase();
-            return `${acc.nombres_accionistas_socios} ${acc.apellidos_accionistas_socios} ${acc.nro_documento_accionistas_socios}`
-                .toLowerCase()
-                .includes(termino);
-        },
-        initialState: {
-            pagination: {
-                pageSize: 10
-            }
-        }
-    });
-
-    // Obtener los accionistas paginados y filtrados
-    const accionistasPaginados = table.getRowModel().rows.map(row => row.original);
-
+    // Función para redondear matemáticamente a entero (0.5 hacia arriba)
     const redondearRiesgo = (valor) => {
         if (valor == null) return 0;
         return Math.round(valor);
     };
 
+    // Filtrar accionistas basado en la búsqueda (similar a clientes externos)
+    const accionistasFiltradosBusqueda = useMemo(() => {
+        if (!busqueda) return accionistasFiltrados;
+        
+        const termino = busqueda.toLowerCase();
+        return accionistasFiltrados.filter(accionista => {
+            const camposBusqueda = [
+                accionista.nombres_accionistas_socios || '',
+                accionista.apellidos_accionistas_socios || '',
+                accionista.nro_documento_accionistas_socios || '',
+                accionista.tipo_documento_accionistas_socios || '',
+                accionista.correo || '',
+                accionista.telefono || ''
+            ];
+            
+            return camposBusqueda.some(campo => 
+                campo.toLowerCase().includes(termino)
+            );
+        });
+    }, [accionistasFiltrados, busqueda]);
+
+    // Paginación manual (similar a clientes externos)
+    const paginasTotales = Math.ceil(accionistasFiltradosBusqueda.length / tamanoPagina);
+    const inicio = paginaActual * tamanoPagina;
+    const fin = inicio + tamanoPagina;
+    const accionistasPaginados = accionistasFiltradosBusqueda.slice(inicio, fin);
+
+    const irAPagina = (pagina) => {
+        setPaginaActual(Math.max(0, Math.min(pagina, paginasTotales - 1)));
+    };
+
+    const siguientePagina = () => {
+        if (paginaActual < paginasTotales - 1) {
+            setPaginaActual(paginaActual + 1);
+        }
+    };
+
+    const paginaAnterior = () => {
+        if (paginaActual > 0) {
+            setPaginaActual(paginaActual - 1);
+        }
+    };
+
     const prepararDatosHeatmap = () => {
         if (!accionistasPaginados.length) return { labels: [], datasets: [] };
 
+        // MODIFICACIÓN: Usar riesgo_residual en lugar de factorRiesgoAccionistaSocio
         const accionistasOrdenados = [...accionistasPaginados]
-            .sort((a, b) => (b.factorRiesgoAccionistaSocio || 0) - (a.factorRiesgoAccionistaSocio || 0));
+            .sort((a, b) => (b.riesgo_residual || 0) - (a.riesgo_residual || 0));
 
         const labels = accionistasOrdenados.map(acc =>
             `${acc.nombres_accionistas_socios} ${acc.apellidos_accionistas_socios} (${acc.nro_documento_accionistas_socios})`
         );
 
+        // MODIFICACIÓN: Usar riesgo_residual en lugar de factorRiesgoAccionistaSocio
         const valoresRiesgo = accionistasOrdenados.map(acc => {
-            const valor = acc.factorRiesgoAccionistaSocio;
+            const valor = acc.riesgo_residual; // Cambiado aquí
             const redondeado = Math.min(5, Math.max(1, redondearRiesgo(valor)));
             return redondeado;
         });
@@ -86,7 +103,7 @@ const GraficosAccionistasSocios = () => {
         return {
             labels,
             datasets: [{
-                label: 'Nivel de Riesgo',
+                label: 'Nivel del Factor Cliente Accionista/Socio',
                 data: valoresRiesgo,
                 backgroundColor: valoresRiesgo.map(value => {
                     switch (value) {
@@ -100,7 +117,6 @@ const GraficosAccionistasSocios = () => {
                 }),
                 borderColor: '#ddd',
                 borderWidth: 1,
-                barThickness: 30, // Grosor fijo para las barras
             }],
             accionistas: accionistasOrdenados
         };
@@ -117,8 +133,8 @@ const GraficosAccionistasSocios = () => {
             title: {
                 display: true,
                 text: busqueda 
-                    ? 'Resultados de búsqueda de Accionistas/Socios'
-                    : 'Análisis de Riesgo de Accionistas/Socios',
+                    ? `Resultados de búsqueda (${accionistasFiltradosBusqueda.length} encontrados)`
+                    : 'Análisis del Factor Cliente Accionista/Socio',
                 font: { size: 16 }
             },
             tooltip: {
@@ -127,11 +143,11 @@ const GraficosAccionistasSocios = () => {
                         const value = context.raw;
                         const riskLevels = ['Minimo', 'Bajo', 'Moderado', 'Alto', 'Critico'];
                         const accionista = accionistas[context.dataIndex];
-                        const valorOriginal = accionista.factorRiesgoAccionistaSocio?.toFixed(2) || 'N/A';
+                        const valorOriginal = accionista.riesgo_residual?.toFixed(2) || 'N/A';
 
                         return [
                             `Nivel de riesgo Ponderado: ${value} (${riskLevels[value - 1] || 'N/A'})`,
-                            `Nivel de riesgo: ${valorOriginal}`,
+                            `Factor Cliente Accionista/Socio: ${valorOriginal}`,
                         ];
                     }
                 }
@@ -139,7 +155,7 @@ const GraficosAccionistasSocios = () => {
         },
         scales: {
             x: {
-                title: { display: true, text: 'Nivel de Riesgo' },
+                title: { display: true, text: 'Nivel de Factor Cliente Accionista/Socio' },
                 min: 0,
                 max: 5,
                 ticks: { stepSize: 1 }
@@ -148,7 +164,7 @@ const GraficosAccionistasSocios = () => {
                 ticks: {
                     autoSkip: false,
                     font: { size: 12 },
-                    padding: 15 // Espacio entre etiquetas
+                    padding: 15
                 }
             }
         },
@@ -165,18 +181,26 @@ const GraficosAccionistasSocios = () => {
     return (
         <div className={styles.contenedor}>
             <header className={styles.header}>
-                <h1>Análisis de Riesgo - Accionistas y Socios</h1>
-                <p>Visualización del factor de riesgo individual por cliente</p>
+                <h1>Análisis de Factor Cliente Accionista/Socio</h1>
+                <p>Visualización del Factor Cliente Accionista/Socio</p>
             </header>
 
             <div className={styles.controles}>
                 <input
                     type="text"
-                    placeholder="Buscar por nombre, apellido o documento..."
+                    placeholder="Buscar por nombre, apellido, documento, teléfono o correo..."
                     value={busqueda}
-                    onChange={(e) => setBusqueda(e.target.value)}
+                    onChange={(e) => {
+                        setBusqueda(e.target.value);
+                        setPaginaActual(0); // Resetear a primera página al buscar
+                    }}
                     className={styles.buscador}
                 />
+                {busqueda && (
+                    <span className={styles.contadorBusqueda}>
+                        {accionistasFiltradosBusqueda.length} de {accionistasFiltrados.length} accionistas/socios encontrados
+                    </span>
+                )}
             </div>
 
             {datasets?.length > 0 ? (
@@ -190,7 +214,7 @@ const GraficosAccionistasSocios = () => {
                     </div>
 
                     <div className={styles.leyenda}>
-                        <h3>Leyenda de Riesgo:</h3>
+                        <h3>Leyenda del Factor Cliente Accionista/Socio:</h3>
                         <div className={styles.leyendaItems}>
                             {[1, 2, 3, 4, 5].map(nivel => (
                                 <div key={nivel} className={styles.leyendaItem}>
@@ -218,64 +242,76 @@ const GraficosAccionistasSocios = () => {
                         </div>
                     </div>
 
-                    {/* Controles de paginación */}
-                    <div className={styles.paginacion}>
-                        <button
-                            onClick={() => table.setPageIndex(0)}
-                            disabled={!table.getCanPreviousPage()}
-                        >
-                            {'<<'}
-                        </button>
-                        <button
-                            onClick={() => table.previousPage()}
-                            disabled={!table.getCanPreviousPage()}
-                        >
-                            {'<'}
-                        </button>
-                        <button
-                            onClick={() => table.nextPage()}
-                            disabled={!table.getCanNextPage()}
-                        >
-                            {'>'}
-                        </button>
-                        <button
-                            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                            disabled={!table.getCanNextPage()}
-                        >
-                            {'>>'}
-                        </button>
+                    {/* Controles de paginación manual (similar a clientes externos) */}
+                    {paginasTotales > 1 && (
+                        <div className={styles.paginacion}>
+                            <button
+                                onClick={() => irAPagina(0)}
+                                disabled={paginaActual === 0}
+                                className={styles.botonPaginacion}
+                            >
+                                {'<<'}
+                            </button>
+                            <button
+                                onClick={paginaAnterior}
+                                disabled={paginaActual === 0}
+                                className={styles.botonPaginacion}
+                            >
+                                {'<'}
+                            </button>
+                            
+                            <span className={styles.infoPagina}>
+                                Página{' '}
+                                <strong>
+                                    {paginaActual + 1} de {paginasTotales}
+                                </strong>
+                            </span>
 
-                        <span>
-                            Página{' '}
-                            <strong>
-                                {table.getState().pagination.pageIndex + 1} de{' '}
-                                {table.getPageCount()}
-                            </strong>
-                        </span>
+                            <button
+                                onClick={siguientePagina}
+                                disabled={paginaActual >= paginasTotales - 1}
+                                className={styles.botonPaginacion}
+                            >
+                                {'>'}
+                            </button>
+                            <button
+                                onClick={() => irAPagina(paginasTotales - 1)}
+                                disabled={paginaActual >= paginasTotales - 1}
+                                className={styles.botonPaginacion}
+                            >
+                                {'>>'}
+                            </button>
 
-                        <select
-                            value={table.getState().pagination.pageSize}
-                            onChange={e => {
-                                table.setPageSize(Number(e.target.value))
-                            }}
-                        >
-                            {[5, 10, 20, 30, 50].map(pageSize => (
-                                <option key={pageSize} value={pageSize}>
-                                    Mostrar {pageSize}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+                            <select
+                                value={tamanoPagina}
+                                onChange={(e) => {
+                                    setTamanoPagina(Number(e.target.value));
+                                    setPaginaActual(0);
+                                }}
+                                className={styles.selectorPagina}
+                            >
+                                {[5, 10, 20, 30, 50].map(pageSize => (
+                                    <option key={pageSize} value={pageSize}>
+                                        Mostrar {pageSize}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
 
                     <div className={styles.resumen}>
-                        <p>Total de accionistas/socios: <strong>{accionistasFiltrados.length}</strong> (mostrando {accionistasPaginados.length})</p>
+                        <p>Total de accionistas/socios: <strong>{accionistasFiltrados.length}</strong></p>
+                        {busqueda && (
+                            <p>Accionistas/socios encontrados: <strong>{accionistasFiltradosBusqueda.length}</strong></p>
+                        )}
+                        <p>Mostrando: <strong>{accionistasPaginados.length}</strong> accionistas/socios</p>
                     </div>
                 </div>
             ) : (
                 <div className={styles.sinDatos}>
                     {busqueda
                         ? 'No se encontraron accionistas/socios que coincidan con la búsqueda'
-                        : 'No hay datos suficientes para generar el análisis de riesgo'}
+                        : 'No hay datos suficientes para generar el Factor Cliente Accionista/Socio'}
                 </div>
             )}
         </div>

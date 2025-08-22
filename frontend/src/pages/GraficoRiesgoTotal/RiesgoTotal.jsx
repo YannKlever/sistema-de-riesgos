@@ -7,8 +7,6 @@ import { useSucursales } from '../ReporteSucursales/useSucursales';
 import { useCanalesDistribucion } from '../ReportesCanalDistribucion/useCanalesDistribucion';
 import { useReportesLDFT } from '../ReportesFormularioLDFT/useReporteLDFT';
 
-
-
 import { Chart } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -51,21 +49,21 @@ const RiesgoTotal = () => {
   const promedioAccionistas = useMemo(() => {
     if (!accionistasFiltrados || accionistasFiltrados.length === 0) return 0;
     const total = accionistasFiltrados.reduce(
-      (sum, item) => sum + (item.factorRiesgoAccionistaSocio || 0), 0);
+      (sum, item) => sum + (item.riesgo_residual || 0), 0);
     return parseFloat((total / accionistasFiltrados.length).toFixed(2));
   }, [accionistasFiltrados]);
 
   const promedioClientesInternos = useMemo(() => {
     if (!clientesInternosFiltrados || clientesInternosFiltrados.length === 0) return 0;
     const total = clientesInternosFiltrados.reduce(
-      (sum, item) => sum + (item.factorRiesgoClienteInterno || 0), 0);
+      (sum, item) => sum + (item.riesgo_residual || 0), 0);
     return parseFloat((total / clientesInternosFiltrados.length).toFixed(2));
   }, [clientesInternosFiltrados]);
 
   const promedioClientesExternos = useMemo(() => {
     if (!clientesExternosFiltrados || clientesExternosFiltrados.length === 0) return 0;
     const total = clientesExternosFiltrados.reduce(
-      (sum, item) => sum + (item.factorRiesgoClienteExterno || 0), 0);
+      (sum, item) => sum + (item.riesgo_residual || 0), 0);
     return parseFloat((total / clientesExternosFiltrados.length).toFixed(2));
   }, [clientesExternosFiltrados]);
 
@@ -97,22 +95,25 @@ const RiesgoTotal = () => {
     return parseFloat((total / evaluacionesLDFT.length).toFixed(2));
   }, [evaluacionesLDFT]);
 
-  // Calcular riesgo total consolidado
+  // Calcular Factor Riesgo Cliente (promedio de los tres tipos de clientes)
+  const factorRiesgoCliente = useMemo(() => {
+    return parseFloat((
+      (promedioAccionistas + promedioClientesInternos + promedioClientesExternos) / 3
+    ).toFixed(2));
+  }, [promedioAccionistas, promedioClientesInternos, promedioClientesExternos]);
+
+  // Calcular riesgo total consolidado (promedio de todos los factores)
   const riesgoTotal = useMemo(() => {
     const sumaRiesgos = (
-      promedioAccionistas +
-      promedioClientesInternos +
-      promedioClientesExternos +
+      factorRiesgoCliente +
       promedioProductos +
       promedioZonas +
       promedioCanales +
       promedioLDFT
     );
-    return parseFloat((sumaRiesgos / 7).toFixed(2));
+    return parseFloat((sumaRiesgos / 5).toFixed(2));
   }, [
-    promedioAccionistas,
-    promedioClientesInternos,
-    promedioClientesExternos,
+    factorRiesgoCliente,
     promedioProductos,
     promedioZonas,
     promedioCanales,
@@ -128,20 +129,16 @@ const RiesgoTotal = () => {
   // Configuración del gráfico
   const chartData = useMemo(() => {
     const labels = [
-      'Accionistas/Socios', 
-      'Clientes Internos', 
-      'Clientes Externos',
-      'Productos/Servicios',
-      'Zona Geográfica',
-      'Canales Distribución',
-      'LDFT',
+      'Factor Riesgo Cliente',
+      'Factor Producto/Servicio',
+      'Factor Zona Geográfica',
+      'Factor Canal de Distribución',
+      'Factor Control LGI/FT-FPADM',
       'Riesgo Total'
     ];
 
     const valores = [
-      promedioAccionistas,
-      promedioClientesInternos,
-      promedioClientesExternos,
+      factorRiesgoCliente,
       promedioProductos,
       promedioZonas,
       promedioCanales,
@@ -171,9 +168,7 @@ const RiesgoTotal = () => {
       }]
     };
   }, [
-    promedioAccionistas,
-    promedioClientesInternos,
-    promedioClientesExternos,
+    factorRiesgoCliente,
     promedioProductos,
     promedioZonas,
     promedioCanales,
@@ -191,7 +186,7 @@ const RiesgoTotal = () => {
       },
       title: {
         display: true,
-        text: 'Comparativa de Riesgos Totales',
+        text: 'Riesgo Total Consolidado',
         font: {
           size: 16
         }
@@ -234,11 +229,11 @@ const RiesgoTotal = () => {
     <div className={styles.contenedor}>
       <header className={styles.header}>
         <h1>Riesgo Total Consolidado</h1>
-        <p>Comparativa de riesgos de todos los factores y riesgo total consolidado</p>
+        <p>Evaluación integral del riesgo basada en todos los factores de riesgo</p>
       </header>
 
       <div className={styles.chartContainer}>
-        <div className={styles.chartWrapper} style={{ height: '500px' }}>
+        <div className={styles.chartWrapper} style={{ height: '400px' }}>
           <Chart
             type='bar'
             data={chartData}
@@ -248,36 +243,37 @@ const RiesgoTotal = () => {
 
         <div className={styles.resumen}>
           <div className={styles.resumenItem}>
-            <span>Accionistas/Socios:</span>
-            <strong>{promedioAccionistas}</strong>
+            <span>Factor Riesgo Cliente:</span>
+            <strong>{factorRiesgoCliente.toFixed(2)}</strong>
+            <span className={styles.detalle}>
+              (Accionistas: {promedioAccionistas.toFixed(2)}, 
+              Internos: {promedioClientesInternos.toFixed(2)}, 
+              Externos: {promedioClientesExternos.toFixed(2)})
+            </span>
           </div>
           <div className={styles.resumenItem}>
-            <span>Clientes Internos:</span>
-            <strong>{promedioClientesInternos}</strong>
+            <span>Factor Producto/Servicio:</span>
+            <strong>{promedioProductos.toFixed(2)}</strong>
+            <span className={styles.detalle}>({productosFiltrados?.length || 0} productos)</span>
           </div>
           <div className={styles.resumenItem}>
-            <span>Clientes Externos:</span>
-            <strong>{promedioClientesExternos}</strong>
+            <span>Factor Zona Geográfica:</span>
+            <strong>{promedioZonas.toFixed(2)}</strong>
+            <span className={styles.detalle}>({sucursalesFiltradas?.length || 0} sucursales)</span>
           </div>
           <div className={styles.resumenItem}>
-            <span>Productos/Servicios:</span>
-            <strong>{promedioProductos}</strong>
+            <span>Factor Canal de Distribución:</span>
+            <strong>{promedioCanales.toFixed(2)}</strong>
+            <span className={styles.detalle}>({canalesFiltrados?.length || 0} canales)</span>
           </div>
           <div className={styles.resumenItem}>
-            <span>Zona Geográfica:</span>
-            <strong>{promedioZonas}</strong>
-          </div>
-          <div className={styles.resumenItem}>
-            <span>Canales Distribución:</span>
-            <strong>{promedioCanales}</strong>
-          </div>
-          <div className={styles.resumenItem}>
-            <span>LDFT:</span>
-            <strong>{promedioLDFT}</strong>
+            <span>Factor Control LGI/FT-FPADM:</span>
+            <strong>{promedioLDFT.toFixed(2)}</strong>
+            <span className={styles.detalle}>({evaluacionesLDFT?.length || 0} evaluaciones)</span>
           </div>
           <div className={styles.resumenItemTotal}>
-            <span>Riesgo Total:</span>
-            <strong>{riesgoTotal}</strong>
+            <span>Riesgo Total Consolidado:</span>
+            <strong>{riesgoTotal.toFixed(2)}</strong>
           </div>
         </div>
 
@@ -308,6 +304,15 @@ const RiesgoTotal = () => {
               </div>
             ))}
           </div>
+        </div>
+
+        <div className={styles.infoAdicional}>
+          <h4>Metodología de Cálculo:</h4>
+          <ul>
+            <li><strong>Factor Riesgo Cliente:</strong> Promedio de los riesgos residuales de accionistas/socios, clientes internos y clientes externos</li>
+            <li><strong>Riesgo Total:</strong> Promedio de los 5 factores de riesgo principales</li>
+            <li>Los valores se presentan en una escala de 1 a 5, donde 1 es riesgo mínimo y 5 es riesgo crítico</li>
+          </ul>
         </div>
       </div>
     </div>

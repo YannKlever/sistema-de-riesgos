@@ -89,7 +89,7 @@ const GraficosLDFT = () => {
         return {
             labels,
             datasets: [{
-                label: 'Nivel de Riesgo LD/FT',
+                label: 'Nivel de Riesgo LGI/FT-FPADM',
                 data: valoresRiesgo,
                 backgroundColor: valoresRiesgo.map(value => {
                     switch (value) {
@@ -120,7 +120,7 @@ const GraficosLDFT = () => {
             },
             title: {
                 display: true,
-                text: 'Análisis de Riesgo LD/FT por Evaluación',
+                text: 'Análisis de Riesgo LGI/FT-FPADM por Evaluación',
                 font: {
                     size: 16
                 }
@@ -176,7 +176,7 @@ const GraficosLDFT = () => {
     return (
         <div className={styles.contenedor}>
             <header className={styles.header}>
-                <h1>Análisis de Riesgo - LD/FT</h1>
+                <h1>Análisis de Riesgo - LGI/FT-FPADM</h1>
                 <p>Visualización del riesgo de Lavado de Dinero y Financiamiento al Terrorismo</p>
             </header>
 
@@ -299,7 +299,7 @@ const GraficosLDFT = () => {
                 <div className={styles.sinDatos}>
                     {busqueda || state.filtro
                         ? 'No se encontraron evaluaciones que coincidan con los filtros'
-                        : 'No hay datos suficientes para generar el análisis de riesgo LD/FT'}
+                        : 'No hay datos suficientes para generar el análisis de riesgo LGI/FT-FPADM'}
                 </div>
             )}
         </div>

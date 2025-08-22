@@ -56,7 +56,7 @@ const Graficos = () => {
         },
         {
             icon: '⚠️',
-            title: 'Riesgo LDFT',
+            title: 'Riesgo de Control LGI/FT-FPADM',
             description: 'Visualización de riesgos asociados a Lavado de Dinero y Financiamiento al Terrorismo',
             path: '/graficos/riesgo-ldft'
         }

@@ -13,7 +13,6 @@ import {
     Title,
     Colors
 } from 'chart.js';
-import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel } from '@tanstack/react-table';
 import styles from './graficosClientesInternos.module.css';
 
 ChartJS.register(
@@ -31,6 +30,8 @@ ChartJS.register(
 const GraficosClientesInternos = () => {
     const { clientesFiltrados } = useClientesInternos();
     const [busqueda, setBusqueda] = useState('');
+    const [paginaActual, setPaginaActual] = useState(0);
+    const [tamanoPagina, setTamanoPagina] = useState(10);
 
     // Función para redondear matemáticamente a entero (0.5 hacia arriba)
     const redondearRiesgo = (valor) => {
@@ -38,52 +39,66 @@ const GraficosClientesInternos = () => {
         return Math.round(valor);
     };
 
-    // Configuración de la tabla para paginación
-    const table = useReactTable({
-        data: clientesFiltrados,
-        columns: [],
-        state: {
-            globalFilter: busqueda
-        },
-        onGlobalFilterChange: setBusqueda,
-        getCoreRowModel: getCoreRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        globalFilterFn: (row, columnId, filterValue) => {
-            const value = row.original;
-            if (!filterValue) return true;
-            
-            const termino = filterValue.toLowerCase();
-            return `${value.nombres_cliente_interno || ''} ${value.apellidos_cliente_interno || ''} ${value.nro_documento_cliente_interno || ''} ${value.oficina || ''} ${value.categoria_pep || ''}`
-                .toLowerCase()
-                .includes(termino);
-        },
-        initialState: {
-            pagination: {
-                pageSize: 10
-            }
-        }
-    });
+    // Filtrar clientes internos basado en la búsqueda
+    const clientesFiltradosBusqueda = useMemo(() => {
+        if (!busqueda) return clientesFiltrados;
 
-    // Obtener los clientes paginados y filtrados
-    const clientesPaginados = table.getRowModel().rows.map(row => row.original);
+        const termino = busqueda.toLowerCase();
+        return clientesFiltrados.filter(cliente => {
+            const camposBusqueda = [
+                cliente.nombres_cliente_interno || '',
+                cliente.apellidos_cliente_interno || '',
+                cliente.nro_documento_cliente_interno || '',
+                cliente.oficina || '',
+                cliente.categoria_pep || '',
+                cliente.correo || '',
+                cliente.telefono || ''
+            ];
+
+            return camposBusqueda.some(campo =>
+                campo.toLowerCase().includes(termino)
+            );
+        });
+    }, [clientesFiltrados, busqueda]);
+
+    // Paginación manual
+    const paginasTotales = Math.ceil(clientesFiltradosBusqueda.length / tamanoPagina);
+    const inicio = paginaActual * tamanoPagina;
+    const fin = inicio + tamanoPagina;
+    const clientesPaginados = clientesFiltradosBusqueda.slice(inicio, fin);
+
+    const irAPagina = (pagina) => {
+        setPaginaActual(Math.max(0, Math.min(pagina, paginasTotales - 1)));
+    };
+
+    const siguientePagina = () => {
+        if (paginaActual < paginasTotales - 1) {
+            setPaginaActual(paginaActual + 1);
+        }
+    };
+
+    const paginaAnterior = () => {
+        if (paginaActual > 0) {
+            setPaginaActual(paginaActual - 1);
+        }
+    };
 
     // Preparar datos para el gráfico usando solo los clientes paginados
     const prepararDatosGrafico = () => {
         if (!clientesPaginados.length) return { labels: [], datasets: [] };
 
-        // Ordenar por riesgo (mayor a menor)
+        // MODIFICACIÓN: Usar riesgo_residual en lugar de promedio_riesgo_cliente_interno
         const clientesOrdenados = [...clientesPaginados]
-            .sort((a, b) => (b.promedio_riesgo_cliente_interno || 0) - (a.promedio_riesgo_cliente_interno || 0));
+            .sort((a, b) => (b.riesgo_residual || 0) - (a.riesgo_residual || 0));
 
         // Preparar etiquetas con nombre completo, documento y cargo/oficina
         const labels = clientesOrdenados.map(cliente => {
             return `${cliente.nombres_cliente_interno || ''} ${cliente.apellidos_cliente_interno || ''} (${cliente.nro_documento_cliente_interno || 'N/A'}) - ${cliente.oficina || 'N/A'}`;
         });
 
-        // Obtener valores de riesgo con redondeo matemático
+        // MODIFICACIÓN: Usar riesgo_residual en lugar de promedio_riesgo_cliente_interno
         const valoresRiesgo = clientesOrdenados.map(cliente => {
-            const valor = cliente.promedio_riesgo_cliente_interno;
+            const valor = cliente.riesgo_residual; // Cambiado aquí
             // Aseguramos que el valor esté entre 1 y 5 después del redondeo
             const redondeado = Math.min(5, Math.max(1, redondearRiesgo(valor)));
             return redondeado;
@@ -123,7 +138,9 @@ const GraficosClientesInternos = () => {
             },
             title: {
                 display: true,
-                text: 'Análisis de Riesgo de Clientes Internos',
+                text: busqueda
+                    ? `Resultados de búsqueda (${clientesFiltradosBusqueda.length} encontrados)`
+                    : 'Análisis de Riesgo de Clientes Internos',
                 font: {
                     size: 16
                 }
@@ -134,11 +151,12 @@ const GraficosClientesInternos = () => {
                         const value = context.raw;
                         const riskLevels = ['Minimo', 'Bajo', 'Moderado', 'Alto', 'Critico'];
                         const cliente = clientes[context.dataIndex];
-                        const valorOriginal = cliente.promedio_riesgo_cliente_interno?.toFixed(2) || 'N/A';
+                        // MODIFICACIÓN: Usar riesgo_residual en lugar de promedio_riesgo_cliente_interno
+                        const valorOriginal = cliente.riesgo_residual?.toFixed(2) || 'N/A';
 
                         return [
                             `Nivel de riesgo Ponderado: ${value} (${riskLevels[value - 1] || 'N/A'})`,
-                            `Nivel de riesgo: ${valorOriginal}`,
+                            `Riesgo Residual: ${valorOriginal}`,
                         ];
                     },
                     afterLabel: (context) => {
@@ -167,8 +185,17 @@ const GraficosClientesInternos = () => {
                     autoSkip: false,
                     font: {
                         size: 12
-                    }
+                    },
+                    padding: 15
                 }
+            }
+        },
+        layout: {
+            padding: {
+                left: 10,
+                right: 10,
+                top: 10,
+                bottom: 10
             }
         }
     };
@@ -183,16 +210,24 @@ const GraficosClientesInternos = () => {
             <div className={styles.controles}>
                 <input
                     type="text"
-                    placeholder="Buscar por nombre, apellido, documento, oficina o categoría PEP..."
+                    placeholder="Buscar por nombre, apellido, documento, oficina, categoría PEP, teléfono o correo..."
                     value={busqueda}
-                    onChange={(e) => setBusqueda(e.target.value)}
+                    onChange={(e) => {
+                        setBusqueda(e.target.value);
+                        setPaginaActual(0); // Resetear a primera página al buscar
+                    }}
                     className={styles.buscador}
                 />
+                {busqueda && (
+                    <span className={styles.contadorBusqueda}>
+                        {clientesFiltradosBusqueda.length} de {clientesFiltrados.length} clientes internos encontrados
+                    </span>
+                )}
             </div>
 
             {datasets?.length > 0 ? (
                 <div className={styles.chartContainer}>
-                    <div className={styles.chartWrapper} style={{ height: `${Math.max(400, labels.length * 40)}px` }}>
+                    <div className={styles.chartWrapper} style={{ height: `${Math.max(400, labels.length * 50)}px` }}>
                         <Chart
                             type='bar'
                             data={{ labels, datasets }}
@@ -229,53 +264,69 @@ const GraficosClientesInternos = () => {
                         </div>
                     </div>
 
-                    {/* Controles de paginación */}
-                    <div className={styles.paginacion}>
-                        <button
-                            onClick={() => table.setPageIndex(0)}
-                            disabled={!table.getCanPreviousPage()}
-                        >
-                            {'<<'}
-                        </button>
-                        <button
-                            onClick={() => table.previousPage()}
-                            disabled={!table.getCanPreviousPage()}
-                        >
-                            {'<'}
-                        </button>
-                        <button
-                            onClick={() => table.nextPage()}
-                            disabled={!table.getCanNextPage()}
-                        >
-                            {'>'}
-                        </button>
-                        <button
-                            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                            disabled={!table.getCanNextPage()}
-                        >
-                            {'>>'}
-                        </button>
+                    {/* Controles de paginación manual */}
+                    {paginasTotales > 1 && (
+                        <div className={styles.paginacion}>
+                            <button
+                                onClick={() => irAPagina(0)}
+                                disabled={paginaActual === 0}
+                                className={styles.botonPaginacion}
+                            >
+                                {'<<'}
+                            </button>
+                            <button
+                                onClick={paginaAnterior}
+                                disabled={paginaActual === 0}
+                                className={styles.botonPaginacion}
+                            >
+                                {'<'}
+                            </button>
 
-                        <span>
-                            Página{' '}
-                            <strong>
-                                {table.getState().pagination.pageIndex + 1} de{' '}
-                                {table.getPageCount()}
-                            </strong>
-                        </span>
+                            <span className={styles.infoPagina}>
+                                Página{' '}
+                                <strong>
+                                    {paginaActual + 1} de {paginasTotales}
+                                </strong>
+                            </span>
 
-                        <select
-                            value={table.getState().pagination.pageSize}
-                            onChange={e => {
-                                table.setPageSize(Number(e.target.value))
-                            }}
-                        >
-                            {[5, 10, 20, 30, 50].map(pageSize => (
-                                <option key={pageSize} value={pageSize}>
-                                    Mostrar {pageSize}
-                                </option>
-                            ))}
-                        </select>
+                            <button
+                                onClick={siguientePagina}
+                                disabled={paginaActual >= paginasTotales - 1}
+                                className={styles.botonPaginacion}
+                            >
+                                {'>'}
+                            </button>
+                            <button
+                                onClick={() => irAPagina(paginasTotales - 1)}
+                                disabled={paginaActual >= paginasTotales - 1}
+                                className={styles.botonPaginacion}
+                            >
+                                {'>>'}
+                            </button>
+
+                            <select
+                                value={tamanoPagina}
+                                onChange={(e) => {
+                                    setTamanoPagina(Number(e.target.value));
+                                    setPaginaActual(0);
+                                }}
+                                className={styles.selectorPagina}
+                            >
+                                {[5, 10, 20, 30, 50].map(pageSize => (
+                                    <option key={pageSize} value={pageSize}>
+                                        Mostrar {pageSize}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+
+                    <div className={styles.resumen}>
+                        <p>Total de clientes internos: <strong>{clientesFiltrados.length}</strong></p>
+                        {busqueda && (
+                            <p>Clientes internos encontrados: <strong>{clientesFiltradosBusqueda.length}</strong></p>
+                        )}
+                        <p>Mostrando: <strong>{clientesPaginados.length}</strong> clientes internos</p>
                     </div>
                 </div>
             ) : (

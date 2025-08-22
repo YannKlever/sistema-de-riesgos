@@ -13,7 +13,6 @@ import {
     Title,
     Colors
 } from 'chart.js';
-import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel } from '@tanstack/react-table';
 import styles from './graficosProductosServicios.module.css';
 
 ChartJS.register(
@@ -31,41 +30,56 @@ ChartJS.register(
 const GraficosProductosServicios = () => {
     const { productosFiltrados } = useProductosServicios();
     const [busqueda, setBusqueda] = useState('');
-
-    // Configuración de la tabla para paginación
-    const table = useReactTable({
-        data: productosFiltrados,
-        columns: [],
-        state: {
-            globalFilter: busqueda
-        },
-        onGlobalFilterChange: setBusqueda,
-        getCoreRowModel: getCoreRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        globalFilterFn: (row, columnId, filterValue) => {
-            const producto = row.original;
-            if (!filterValue) return true;
-            
-            const termino = filterValue.toLowerCase();
-            return `${producto.producto_servicio || ''} ${producto.oficina || ''} ${producto.riesgo_producto || ''} ${producto.riesgo_cliente || ''}`
-                .toLowerCase()
-                .includes(termino);
-        },
-        initialState: {
-            pagination: {
-                pageSize: 10
-            }
-        }
-    });
-
-    // Obtener los productos paginados y filtrados
-    const productosPaginados = table.getRowModel().rows.map(row => row.original);
+    const [paginaActual, setPaginaActual] = useState(0);
+    const [tamanoPagina, setTamanoPagina] = useState(10);
 
     // Función para redondear matemáticamente a entero (0.5 hacia arriba)
     const redondearRiesgo = (valor) => {
         if (valor == null) return 0;
         return Math.round(valor);
+    };
+
+    // Filtrar productos basado en la búsqueda
+    const productosFiltradosBusqueda = useMemo(() => {
+        if (!busqueda) return productosFiltrados;
+        
+        const termino = busqueda.toLowerCase();
+        return productosFiltrados.filter(producto => {
+            const camposBusqueda = [
+                producto.producto_servicio || '',
+                producto.oficina || '',
+                producto.riesgo_producto || '',
+                producto.riesgo_cliente || '',
+                producto.categoria || '',
+                producto.descripcion || ''
+            ];
+            
+            return camposBusqueda.some(campo => 
+                campo.toLowerCase().includes(termino)
+            );
+        });
+    }, [productosFiltrados, busqueda]);
+
+    // Paginación manual
+    const paginasTotales = Math.ceil(productosFiltradosBusqueda.length / tamanoPagina);
+    const inicio = paginaActual * tamanoPagina;
+    const fin = inicio + tamanoPagina;
+    const productosPaginados = productosFiltradosBusqueda.slice(inicio, fin);
+
+    const irAPagina = (pagina) => {
+        setPaginaActual(Math.max(0, Math.min(pagina, paginasTotales - 1)));
+    };
+
+    const siguientePagina = () => {
+        if (paginaActual < paginasTotales - 1) {
+            setPaginaActual(paginaActual + 1);
+        }
+    };
+
+    const paginaAnterior = () => {
+        if (paginaActual > 0) {
+            setPaginaActual(paginaActual - 1);
+        }
     };
 
     // Preparar datos para el gráfico
@@ -96,18 +110,18 @@ const GraficosProductosServicios = () => {
                 data: valoresRiesgo,
                 backgroundColor: valoresRiesgo.map(value => {
                     switch (value) {
-                        case 1: return '#228B22'; // Verde bajo
-                        case 2: return '#9ACD32'; // Verde claro
-                        case 3: return '#FFD700'; // Amarillo
-                        case 4: return '#FF8C00'; // Naranja
-                        case 5: return '#FF0000'; // Rojo
-                        default: return '#f7f7f7'; // Gris
+                        case 1: return '#228B22';
+                        case 2: return '#9ACD32';
+                        case 3: return '#FFD700';
+                        case 4: return '#FF8C00';
+                        case 5: return '#FF0000';
+                        default: return '#f7f7f7';
                     }
                 }),
                 borderColor: '#ddd',
-                borderWidth: 1
+                borderWidth: 1,
             }],
-            productos: productosOrdenados // Para usar en los tooltips
+            productos: productosOrdenados
         };
     };
 
@@ -123,7 +137,9 @@ const GraficosProductosServicios = () => {
             },
             title: {
                 display: true,
-                text: 'Análisis de Riesgo de Productos/Servicios',
+                text: busqueda 
+                    ? `Resultados de búsqueda (${productosFiltradosBusqueda.length} encontrados)`
+                    : 'Análisis de Riesgo de Productos/Servicios',
                 font: {
                     size: 16
                 }
@@ -170,8 +186,17 @@ const GraficosProductosServicios = () => {
                     autoSkip: false,
                     font: {
                         size: 12
-                    }
+                    },
+                    padding: 15
                 }
+            }
+        },
+        layout: {
+            padding: {
+                left: 10,
+                right: 10,
+                top: 10,
+                bottom: 10
             }
         }
     };
@@ -186,16 +211,24 @@ const GraficosProductosServicios = () => {
             <div className={styles.controles}>
                 <input
                     type="text"
-                    placeholder="Buscar por producto, oficina o tipo de riesgo..."
+                    placeholder="Buscar por producto, oficina, categoría, descripción o tipo de riesgo..."
                     value={busqueda}
-                    onChange={(e) => setBusqueda(e.target.value)}
+                    onChange={(e) => {
+                        setBusqueda(e.target.value);
+                        setPaginaActual(0);
+                    }}
                     className={styles.buscador}
                 />
+                {busqueda && (
+                    <span className={styles.contadorBusqueda}>
+                        {productosFiltradosBusqueda.length} de {productosFiltrados.length} productos encontrados
+                    </span>
+                )}
             </div>
 
             {datasets?.length > 0 ? (
                 <div className={styles.chartContainer}>
-                    <div className={styles.chartWrapper} style={{ height: `${Math.max(400, labels.length * 40)}px` }}>
+                    <div className={styles.chartWrapper} style={{ height: `${Math.max(400, labels.length * 50)}px` }}>
                         <Chart
                             type='bar'
                             data={{ labels, datasets }}
@@ -232,57 +265,69 @@ const GraficosProductosServicios = () => {
                         </div>
                     </div>
 
-                    {/* Controles de paginación */}
-                    <div className={styles.paginacion}>
-                        <button
-                            onClick={() => table.setPageIndex(0)}
-                            disabled={!table.getCanPreviousPage()}
-                        >
-                            {'<<'}
-                        </button>
-                        <button
-                            onClick={() => table.previousPage()}
-                            disabled={!table.getCanPreviousPage()}
-                        >
-                            {'<'}
-                        </button>
-                        <button
-                            onClick={() => table.nextPage()}
-                            disabled={!table.getCanNextPage()}
-                        >
-                            {'>'}
-                        </button>
-                        <button
-                            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                            disabled={!table.getCanNextPage()}
-                        >
-                            {'>>'}
-                        </button>
+                    {/* Controles de paginación manual */}
+                    {paginasTotales > 1 && (
+                        <div className={styles.paginacion}>
+                            <button
+                                onClick={() => irAPagina(0)}
+                                disabled={paginaActual === 0}
+                                className={styles.botonPaginacion}
+                            >
+                                {'<<'}
+                            </button>
+                            <button
+                                onClick={paginaAnterior}
+                                disabled={paginaActual === 0}
+                                className={styles.botonPaginacion}
+                            >
+                                {'<'}
+                            </button>
+                            
+                            <span className={styles.infoPagina}>
+                                Página{' '}
+                                <strong>
+                                    {paginaActual + 1} de {paginasTotales}
+                                </strong>
+                            </span>
 
-                        <span>
-                            Página{' '}
-                            <strong>
-                                {table.getState().pagination.pageIndex + 1} de{' '}
-                                {table.getPageCount()}
-                            </strong>
-                        </span>
+                            <button
+                                onClick={siguientePagina}
+                                disabled={paginaActual >= paginasTotales - 1}
+                                className={styles.botonPaginacion}
+                            >
+                                {'>'}
+                            </button>
+                            <button
+                                onClick={() => irAPagina(paginasTotales - 1)}
+                                disabled={paginaActual >= paginasTotales - 1}
+                                className={styles.botonPaginacion}
+                            >
+                                {'>>'}
+                            </button>
 
-                        <select
-                            value={table.getState().pagination.pageSize}
-                            onChange={e => {
-                                table.setPageSize(Number(e.target.value))
-                            }}
-                        >
-                            {[5, 10, 20, 30, 50].map(pageSize => (
-                                <option key={pageSize} value={pageSize}>
-                                    Mostrar {pageSize}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+                            <select
+                                value={tamanoPagina}
+                                onChange={(e) => {
+                                    setTamanoPagina(Number(e.target.value));
+                                    setPaginaActual(0);
+                                }}
+                                className={styles.selectorPagina}
+                            >
+                                {[5, 10, 20, 30, 50].map(pageSize => (
+                                    <option key={pageSize} value={pageSize}>
+                                        Mostrar {pageSize}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
 
                     <div className={styles.resumen}>
-                        <p>Total de productos/servicios: <strong>{productosFiltrados.length}</strong> (mostrando {productosPaginados.length})</p>
+                        <p>Total de productos/servicios: <strong>{productosFiltrados.length}</strong></p>
+                        {busqueda && (
+                            <p>Productos encontrados: <strong>{productosFiltradosBusqueda.length}</strong></p>
+                        )}
+                        <p>Mostrando: <strong>{productosPaginados.length}</strong> productos</p>
                     </div>
                 </div>
             ) : (

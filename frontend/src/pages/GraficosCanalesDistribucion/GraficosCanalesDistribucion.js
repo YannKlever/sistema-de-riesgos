@@ -13,7 +13,6 @@ import {
     Title,
     Colors
 } from 'chart.js';
-import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel } from '@tanstack/react-table';
 import styles from './graficosCanalesDistribucion.module.css';
 
 ChartJS.register(
@@ -31,65 +30,84 @@ ChartJS.register(
 const GraficosCanalesDistribucion = () => {
     const { state, canalesFiltrados } = useCanalesDistribucion();
     const [busqueda, setBusqueda] = useState('');
+    const [paginaActual, setPaginaActual] = useState(0);
+    const [tamanoPagina, setTamanoPagina] = useState(10);
 
-    // Configuración de la tabla para paginación
-    const table = useReactTable({
-        data: canalesFiltrados,
-        columns: [],
-        state: {
-            globalFilter: busqueda
-        },
-        onGlobalFilterChange: setBusqueda,
-        getCoreRowModel: getCoreRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        globalFilterFn: (row, columnId, filterValue) => {
-            const cliente = row.original;
-            if (!filterValue) return true;
-            
-            const termino = filterValue.toLowerCase();
-            return `${cliente.nombres_propietario || ''} ${cliente.apellidos_propietario || ''} ${cliente.nro_documento_propietario || ''} ${cliente.razon_social || ''} ${cliente.nit || ''}`
-                .toLowerCase()
-                .includes(termino);
-        },
-        initialState: {
-            pagination: {
-                pageSize: 10
-            }
-        }
-    });
-
-    // Obtener los clientes paginados y filtrados
-    const clientesPaginados = table.getRowModel().rows.map(row => row.original);
-
+    // Función para redondear matemáticamente a entero (0.5 hacia arriba)
     const redondearRiesgo = (valor) => {
         if (valor == null) return 0;
         return Math.round(valor);
     };
 
-    // Preparar datos para el gráfico usando solo los clientes paginados
-    const prepararDatosGrafico = () => {
-        if (!clientesPaginados.length) return { labels: [], datasets: [] };
+    // Filtrar canales basado en la búsqueda
+    const canalesFiltradosBusqueda = useMemo(() => {
+        if (!busqueda) return canalesFiltrados;
+        
+        const termino = busqueda.toLowerCase();
+        return canalesFiltrados.filter(cliente => {
+            const camposBusqueda = [
+                cliente.nombres_propietario || '',
+                cliente.apellidos_propietario || '',
+                cliente.nro_documento_propietario || '',
+                cliente.razon_social || '',
+                cliente.nit || '',
+                cliente.tipo_documento_propietario || '',
+                cliente.correo || '',
+                cliente.telefono || ''
+            ];
+            
+            return camposBusqueda.some(campo => 
+                campo.toLowerCase().includes(termino)
+            );
+        });
+    }, [canalesFiltrados, busqueda]);
 
-        // Ordenar por riesgo (mayor a menor)
-        const clientesOrdenados = [...clientesPaginados]
-            .sort((a, b) => (b.promedio_riesgo_cliente_externo || 0) - (a.promedio_riesgo_cliente_externo || 0));
+    // Paginación manual
+    const paginasTotales = Math.ceil(canalesFiltradosBusqueda.length / tamanoPagina);
+    const inicio = paginaActual * tamanoPagina;
+    const fin = inicio + tamanoPagina;
+    const canalesPaginados = canalesFiltradosBusqueda.slice(inicio, fin);
+
+    const irAPagina = (pagina) => {
+        setPaginaActual(Math.max(0, Math.min(pagina, paginasTotales - 1)));
+    };
+
+    const siguientePagina = () => {
+        if (paginaActual < paginasTotales - 1) {
+            setPaginaActual(paginaActual + 1);
+        }
+    };
+
+    const paginaAnterior = () => {
+        if (paginaActual > 0) {
+            setPaginaActual(paginaActual - 1);
+        }
+    };
+
+    // Preparar datos para el gráfico usando solo los canales paginados
+    const prepararDatosGrafico = () => {
+        if (!canalesPaginados.length) return { labels: [], datasets: [] };
+
+        // MODIFICACIÓN: Usar factor_riesgo_canal_distribucion
+        const canalesOrdenados = [...canalesPaginados]
+            .sort((a, b) => (b.factor_riesgo_canal_distribucion || 0) - (a.factor_riesgo_canal_distribucion || 0));
 
         // Preparar etiquetas con los 3 campos más importantes: nombre/razón social, documento/NIT y riesgo
-        const labels = clientesOrdenados.map(cliente => {
+        const labels = canalesOrdenados.map(cliente => {
             const nombre = cliente.razon_social 
                 ? cliente.razon_social 
                 : `${cliente.nombres_propietario || ''} ${cliente.apellidos_propietario || ''}`;
             
             const identificador = cliente.nit || cliente.nro_documento_propietario || 'N/A';
-            const riesgo = cliente.promedio_riesgo_cliente_externo?.toFixed(2) || 'N/A';
+            // MODIFICACIÓN: Usar factor_riesgo_canal_distribucion
+            const riesgo = cliente.factor_riesgo_canal_distribucion?.toFixed(2) || 'N/A';
 
-            return `${nombre} (${identificador}) - Riesgo: ${riesgo}`;
+            return `${nombre} (${identificador}) - Factor: ${riesgo}`;
         });
 
-        // Obtener valores de riesgo con redondeo matemático
-        const valoresRiesgo = clientesOrdenados.map(cliente => {
-            const valor = cliente.promedio_riesgo_cliente_externo;
+        // MODIFICACIÓN: Usar factor_riesgo_canal_distribucion
+        const valoresRiesgo = canalesOrdenados.map(cliente => {
+            const valor = cliente.factor_riesgo_canal_distribucion;
             const redondeado = Math.min(5, Math.max(1, redondearRiesgo(valor)));
             return redondeado;
         });
@@ -97,7 +115,7 @@ const GraficosCanalesDistribucion = () => {
         return {
             labels,
             datasets: [{
-                label: 'Nivel de Riesgo',
+                label: 'Factor Canal de Distribución',
                 data: valoresRiesgo,
                 backgroundColor: valoresRiesgo.map(value => {
                     switch (value) {
@@ -112,11 +130,11 @@ const GraficosCanalesDistribucion = () => {
                 borderColor: '#ddd',
                 borderWidth: 1
             }],
-            clientes: clientesOrdenados
+            canales: canalesOrdenados
         };
     };
 
-    const { labels, datasets, clientes } = prepararDatosGrafico();
+    const { labels, datasets, canales } = prepararDatosGrafico();
 
     const options = {
         indexAxis: 'y',
@@ -128,7 +146,9 @@ const GraficosCanalesDistribucion = () => {
             },
             title: {
                 display: true,
-                text: 'Canales de Distribución por Nivel de Riesgo',
+                text: busqueda 
+                    ? `Resultados de búsqueda (${canalesFiltradosBusqueda.length} encontrados)`
+                    : 'Factor Canal de Distribución',
                 font: {
                     size: 16
                 }
@@ -138,24 +158,29 @@ const GraficosCanalesDistribucion = () => {
                     label: (context) => {
                         const value = context.raw;
                         const riskLevels = ['Minimo', 'Bajo', 'Moderado', 'Alto', 'Critico'];
-                        const cliente = clientes[context.dataIndex];
-                        const valorOriginal = cliente.promedio_riesgo_cliente_externo?.toFixed(2) || 'N/A';
+                        const canal = canales[context.dataIndex];
+                        // MODIFICACIÓN: Usar factor_riesgo_canal_distribucion
+                        const valorOriginal = canal.factor_riesgo_canal_distribucion?.toFixed(2) || 'N/A';
 
-                        return `Nivel de riesgo: ${value} (${riskLevels[value - 1] || 'N/A'})`;
+                        return [
+                            `Factor Canal de Distribución: ${value} (${riskLevels[value - 1] || 'N/A'})`,
+                            `Valor Original: ${valorOriginal}`,
+                        ];
                     },
                     afterLabel: (context) => {
-                        const cliente = clientes[context.dataIndex];
+                        const canal = canales[context.dataIndex];
                         const info = [];
                         
-                        if (cliente.razon_social) {
-                            info.push(`Razón Social: ${cliente.razon_social}`);
-                            info.push(`NIT: ${cliente.nit || 'N/A'}`);
+                        if (canal.razon_social) {
+                            info.push(`Razón Social: ${canal.razon_social}`);
+                            info.push(`NIT: ${canal.nit || 'N/A'}`);
                         } else {
-                            info.push(`Nombre: ${cliente.nombres_propietario || ''} ${cliente.apellidos_propietario || ''}`);
-                            info.push(`Documento: ${cliente.nro_documento_propietario || 'N/A'}`);
+                            info.push(`Nombre: ${canal.nombres_propietario || ''} ${canal.apellidos_propietario || ''}`);
+                            info.push(`Documento: ${canal.nro_documento_propietario || 'N/A'}`);
                         }
                         
-                        info.push(`Riesgo: ${cliente.promedio_riesgo_cliente_externo?.toFixed(2) || 'N/A'}`);
+                        // MODIFICACIÓN: Usar factor_riesgo_canal_distribucion
+                        info.push(`Factor: ${canal.factor_riesgo_canal_distribucion?.toFixed(2) || 'N/A'}`);
                         
                         return info;
                     }
@@ -166,7 +191,7 @@ const GraficosCanalesDistribucion = () => {
             x: {
                 title: {
                     display: true,
-                    text: 'Nivel de Riesgo'
+                    text: 'Factor Canal de Distribución'
                 },
                 min: 0,
                 max: 5,
@@ -179,8 +204,17 @@ const GraficosCanalesDistribucion = () => {
                     autoSkip: false,
                     font: {
                         size: 12
-                    }
+                    },
+                    padding: 15
                 }
+            }
+        },
+        layout: {
+            padding: {
+                left: 10,
+                right: 10,
+                top: 10,
+                bottom: 10
             }
         }
     };
@@ -188,25 +222,33 @@ const GraficosCanalesDistribucion = () => {
     return (
         <div className={styles.contenedor}>
             <header className={styles.header}>
-                <h1>Canales de Distribución por Nivel de Riesgo</h1>
-                <p>Visualización de todos los Canales de Distribución ordenados por nivel de riesgo</p>
+                <h1>Factor Canal de Distribución</h1>
+                <p>Visualización del factor de riesgo individual por canal de distribución</p>
             </header>
 
             <div className={styles.controles}>
                 <input
                     type="text"
-                    placeholder="Buscar por nombre, razón social, documento o NIT..."
+                    placeholder="Buscar por nombre, razón social, documento, NIT, teléfono o correo..."
                     value={busqueda}
-                    onChange={(e) => setBusqueda(e.target.value)}
+                    onChange={(e) => {
+                        setBusqueda(e.target.value);
+                        setPaginaActual(0); // Resetear a primera página al buscar
+                    }}
                     className={styles.buscador}
                 />
+                {busqueda && (
+                    <span className={styles.contadorBusqueda}>
+                        {canalesFiltradosBusqueda.length} de {canalesFiltrados.length} canales encontrados
+                    </span>
+                )}
             </div>
 
             {state?.loading ? (
                 <div className={styles.cargando}>Cargando datos...</div>
             ) : datasets?.length > 0 ? (
                 <div className={styles.chartContainer}>
-                    <div className={styles.chartWrapper} style={{ height: `${Math.max(500, labels.length * 40)}px` }}>
+                    <div className={styles.chartWrapper} style={{ height: `${Math.max(400, labels.length * 50)}px` }}>
                         <Chart
                             type='bar'
                             data={{ labels, datasets }}
@@ -215,7 +257,7 @@ const GraficosCanalesDistribucion = () => {
                     </div>
 
                     <div className={styles.leyenda}>
-                        <h3>Leyenda de Riesgo:</h3>
+                        <h3>Leyenda de Factor Canal de Distribución:</h3>
                         <div className={styles.leyendaItems}>
                             {[1, 2, 3, 4, 5].map(nivel => (
                                 <div key={nivel} className={styles.leyendaItem}>
@@ -243,63 +285,75 @@ const GraficosCanalesDistribucion = () => {
                         </div>
                     </div>
 
-                    {/* Controles de paginación */}
-                    <div className={styles.paginacion}>
-                        <button
-                            onClick={() => table.setPageIndex(0)}
-                            disabled={!table.getCanPreviousPage()}
-                        >
-                            {'<<'}
-                        </button>
-                        <button
-                            onClick={() => table.previousPage()}
-                            disabled={!table.getCanPreviousPage()}
-                        >
-                            {'<'}
-                        </button>
-                        <button
-                            onClick={() => table.nextPage()}
-                            disabled={!table.getCanNextPage()}
-                        >
-                            {'>'}
-                        </button>
-                        <button
-                            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                            disabled={!table.getCanNextPage()}
-                        >
-                            {'>>'}
-                        </button>
+                    {/* Controles de paginación manual */}
+                    {paginasTotales > 1 && (
+                        <div className={styles.paginacion}>
+                            <button
+                                onClick={() => irAPagina(0)}
+                                disabled={paginaActual === 0}
+                                className={styles.botonPaginacion}
+                            >
+                                {'<<'}
+                            </button>
+                            <button
+                                onClick={paginaAnterior}
+                                disabled={paginaActual === 0}
+                                className={styles.botonPaginacion}
+                            >
+                                {'<'}
+                            </button>
+                            
+                            <span className={styles.infoPagina}>
+                                Página{' '}
+                                <strong>
+                                    {paginaActual + 1} de {paginasTotales}
+                                </strong>
+                            </span>
 
-                        <span>
-                            Página{' '}
-                            <strong>
-                                {table.getState().pagination.pageIndex + 1} de{' '}
-                                {table.getPageCount()}
-                            </strong>
-                        </span>
+                            <button
+                                onClick={siguientePagina}
+                                disabled={paginaActual >= paginasTotales - 1}
+                                className={styles.botonPaginacion}
+                            >
+                                {'>'}
+                            </button>
+                            <button
+                                onClick={() => irAPagina(paginasTotales - 1)}
+                                disabled={paginaActual >= paginasTotales - 1}
+                                className={styles.botonPaginacion}
+                            >
+                                {'>>'}
+                            </button>
 
-                        <select
-                            value={table.getState().pagination.pageSize}
-                            onChange={e => {
-                                table.setPageSize(Number(e.target.value))
-                            }}
-                        >
-                            {[5, 10, 20, 30, 50].map(pageSize => (
-                                <option key={pageSize} value={pageSize}>
-                                    Mostrar {pageSize}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+                            <select
+                                value={tamanoPagina}
+                                onChange={(e) => {
+                                    setTamanoPagina(Number(e.target.value));
+                                    setPaginaActual(0);
+                                }}
+                                className={styles.selectorPagina}
+                            >
+                                {[5, 10, 20, 30, 50].map(pageSize => (
+                                    <option key={pageSize} value={pageSize}>
+                                        Mostrar {pageSize}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
 
                     <div className={styles.resumen}>
-                        <p>Total de canales: <strong>{canalesFiltrados.length}</strong> (mostrando {clientesPaginados.length})</p>
+                        <p>Total de canales de distribución: <strong>{canalesFiltrados.length}</strong></p>
+                        {busqueda && (
+                            <p>Canales encontrados: <strong>{canalesFiltradosBusqueda.length}</strong></p>
+                        )}
+                        <p>Mostrando: <strong>{canalesPaginados.length}</strong> canales</p>
                     </div>
                 </div>
             ) : (
                 <div className={styles.sinDatos}>
                     {busqueda
-                        ? 'No se encontraron clientes que coincidan con la búsqueda'
+                        ? 'No se encontraron canales que coincidan con la búsqueda'
                         : 'No hay datos suficientes para generar el análisis de riesgo'}
                 </div>
             )}

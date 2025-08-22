@@ -1,11 +1,11 @@
 export const secciones = [
 
         {
-            titulo: "1. Administración del Riesgo de LGI/FT y/o DP",
+            titulo: "1. Administración del Riesgo de LGI/FT-FPADM",
             preguntas: [
                 {
                     id: "p1_1",
-                    texto: "1.1. ¿Existe un área independiente responsable de administrar el riesgo de LGI/FT y/o DP?",
+                    texto: "1.1. ¿Existe un área independiente responsable de administrar el riesgo de LGI/FT-FPADM?",
                     opciones: [
                         { value: 'Área especializada con recursos dedicados y autonomía', label: 'Área especializada con recursos dedicados y autonomía',valor:1 },
                         { value: 'Área definida pero con recursos compartidos', label: 'Área definida pero con recursos compartidos',valor:2 },
@@ -16,7 +16,7 @@ export const secciones = [
                 },
                 {
                     id: "p1_2",
-                    texto: "1.2. ¿Cómo se implementa la gestión de riesgos de LGI/FT y/o DP?",
+                    texto: "1.2. ¿Cómo se implementa la gestión de riesgos de LGI/FT-FPADM?",
                     opciones: [
                         { value: 'Sistema integral con identificación, medición y monitoreo continuo', label: 'Sistema integral con identificación, medición y monitoreo continuo',valor:1 },
                         { value: 'Procesos establecidos pero con algunas limitaciones', label: 'Procesos establecidos pero con algunas limitaciones', valor:2 },
@@ -32,7 +32,7 @@ export const secciones = [
             preguntas: [
                 {
                     id: "p2_1",
-                    texto: "2.1. ¿Existen políticas y procedimientos para prevenir LGI/FT y/o DP?",
+                    texto: "2.1. ¿Existen políticas y procedimientos para prevenir LGI/FT-FPADM?",
                     opciones: [
                         { value: 'Políticas completas, actualizadas y alineadas con regulaciones', label: 'Políticas completas, actualizadas y alineadas con regulaciones', valor:1 },
                         { value: 'Políticas documentadas pero con actualizaciones irregulares', label: 'Políticas documentadas pero con actualizaciones irregulares', valor:2 },
@@ -184,7 +184,7 @@ export const secciones = [
             preguntas: [
                 {
                     id: "p6_1",
-                    texto: "6.1. ¿Cómo es el programa de capacitación en LGI/FT y/o DP?",
+                    texto: "6.1. ¿Cómo es el programa de capacitación en LGI/FT-FPADM?",
                     opciones: [
                         { value: 'Capacitación obligatoria anual con evaluaciones y seguimiento', label: 'Capacitación obligatoria anual con evaluaciones y seguimiento', valor:1 },
                         { value: 'Entrenamientos regulares sin sistema de evaluación', label: 'Entrenamientos regulares sin sistema de evaluación', valor:2 },
@@ -222,7 +222,7 @@ export const secciones = [
             preguntas: [
                 {
                     id: "p7_1",
-                    texto: "7.1. ¿Cómo es la auditoría de controles LGI/FT y/o DP?",
+                    texto: "7.1. ¿Cómo es la auditoría de controles LGI/FT-FPADM?",
                     opciones: [
                         { value: 'Auditorías periódicas exhaustivas con seguimiento de hallazgos', label: 'Auditorías periódicas exhaustivas con seguimiento de hallazgos', valor:1 },
                         { value: 'Revisiones básicas cumpliendo requisitos mínimos', label: 'Revisiones básicas cumpliendo requisitos mínimos', valor:2 },
