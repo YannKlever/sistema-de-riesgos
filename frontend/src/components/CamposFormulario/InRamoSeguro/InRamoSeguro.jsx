@@ -5,10 +5,8 @@ import { databaseService } from '../../../services/database';
 const InRamoSeguro = ({ 
     label, 
     name, 
-    nameNumerico = `${name}_numerico`,
     required = false,
-    defaultValue = '',
-    defaultNumerico = null
+    defaultValue = ''
 }) => {
     const [ramoSeleccionado, setRamoSeleccionado] = useState(defaultValue || '');
     const [ramos, setRamos] = useState([]);
@@ -25,8 +23,7 @@ const InRamoSeguro = ({
                     const ramosCargados = resultado.data.map(item => ({
                         value: item.producto_servicio,
                         label: item.producto_servicio,
-                        grupo: item.riesgo_producto || 'Otros Riesgos',
-                        riesgoNumerico: item.riesgo_producto_numerico
+                        grupo: item.riesgo_producto || 'Otros Riesgos'
                     }));
                     
                     setRamos(ramosCargados);
@@ -46,9 +43,6 @@ const InRamoSeguro = ({
     const handleChange = (e) => {
         setRamoSeleccionado(e.target.value);
     };
-
-    // Obtener el valor numérico del riesgo
-    const riesgoNumerico = ramos.find(r => r.value === ramoSeleccionado)?.riesgoNumerico || null;
 
     // Agrupar los ramos por categoría para el select
     const ramosAgrupados = ramos.reduce((acc, ramo) => {
@@ -92,12 +86,6 @@ const InRamoSeguro = ({
                     </optgroup>
                 ))}
             </select>
-            
-            <input 
-                type="hidden" 
-                name={nameNumerico} 
-                value={riesgoNumerico || ''} 
-            />
         </div>
     );
 };
