@@ -4,11 +4,12 @@ export const COLUMNAS_PRODUCTOS_SERVICIOS = [
     { id: 'oficina', nombre: 'Oficina', visible: true },
     { id: 'producto_servicio', nombre: 'Producto/Servicio', visible: true },
     { id: 'riesgo_producto', nombre: 'Riesgo Producto/Servicio', visible: true },
-    { id: 'riesgo_cliente', nombre: 'Riesgo Cliente', visible: true },
+    { id: 'riesgo_cliente', nombre: 'Tipo de cliente recurrente', visible: true },
     { id: 'observaciones', nombre: 'Observaciones', visible: true },
     { id: 'riesgo_producto_numerico', nombre: 'Riesgo Producto/Servicio (Ponderado)', visible: false },
     { id: 'riesgo_cliente_numerico', nombre: 'Riesgo Cliente (Ponderado)', visible: false },
     { id: 'probabilidad', nombre: 'Probabilidad', visible: false },
+    { id: 'impacto_texto', nombre: 'Valores de Impacto', visible: false },
     { id: 'impacto', nombre: 'Impacto', visible: false },
     { id: 'promedio_riesgo_producto_servicio', nombre: 'Riesgo Promedio del Producto Servicio', visible: false }
 ];

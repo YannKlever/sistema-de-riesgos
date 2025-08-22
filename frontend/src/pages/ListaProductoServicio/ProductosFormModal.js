@@ -190,7 +190,7 @@ const ProductosFormModal = ({ editingId, productos, oficinas, onClose, onSuccess
                             />
                         </CampoFormulario>
 
-                        <CampoFormulario label="Riesgo Cliente" required>
+                        <CampoFormulario label="Tipo de cliente recurrente" required>
                             <CampoRiesgo
                                 name="riesgo_cliente"
                                 value={formData.riesgo_cliente}

@@ -34,7 +34,7 @@ const Parametros = () => {
                         onClick={() => navigate('/parametros/formulario-ld-ft')}
                     >
                         <div className={styles.optionIcon}>📋</div>
-                        <h3>Registrar el Formulario LD-FT</h3>
+                        <h3>Registrar el Formulario de Control LGI/FT-FPADM</h3>
                         <p>Evaluación de riesgo de Lavado de Dinero y Financiamiento al Terrorismo</p>
                     </div>
 

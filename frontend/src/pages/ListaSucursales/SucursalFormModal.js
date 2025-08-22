@@ -46,7 +46,7 @@ const SucursalFormModal = ({ editingId, sucursales, onClose, onSuccess, onError 
         riesgo_zona_numerico: null,
         riesgo_frontera: '',
         riesgo_frontera_numerico: null,
-        impacto_texto: [], // Nuevo campo para opciones seleccionadas
+        impacto_texto: [],
         impacto: 0
     });
 

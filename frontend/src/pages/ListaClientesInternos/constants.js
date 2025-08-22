@@ -15,6 +15,8 @@ export const COLUMNAS_CLIENTES_INTERNOS = [
     { id: 'estado_civil', nombre: 'Estado Civil', visible: false },
     { id: 'profesion', nombre: 'Profesión', visible: true },
     { id: 'riesgo_profesion_actividad', nombre: 'Riesgo Profesión/Actividad', visible: false },
+    { id: 'otra_actividad', nombre: 'Otra Actividad', visible:true},
+    { id: 'riesgo_otra_actividad', nombre: 'Riesgo otra actividad', visible:false},
     { id: 'domicilio_persona_sucursal', nombre: 'Domicilio', visible: false },
     { id: 'riesgo_zona', nombre: 'Riesgo Zona', visible: false },
     { id: 'categoria_pep', nombre: 'PEP', visible: true },
@@ -32,6 +34,7 @@ export const COLUMNAS_CLIENTES_INTERNOS = [
     { id: 'alertas_activos_virtuales', nombre: 'Alertas de Activos Virtuales', visible: false },
     { id: 'nacionalidad_numerico', nombre: 'Nacionalidad (Ponderado)', visible: false },
     { id: 'riesgo_profesion_actividad_numerico', nombre: 'Riesgo Profesión (Ponderado)', visible: false },
+    { id: 'otra_actividad_numerico', nombre: 'Riesgo Otra Actividad (Ponderado)', visible: false},
     { id: 'riesgo_zona_numerico', nombre: 'Riesgo Zona (Ponderado)', visible: false },
     { id: 'categoria_pep_numerico', nombre: 'PEP (Ponderado)', visible: false },
     { id: 'ingresos_mensuales_numerico', nombre: 'Ingresos Mensuales (Ponderado)', visible: false },
@@ -45,7 +48,11 @@ export const COLUMNAS_CLIENTES_INTERNOS = [
     { id: 'comportamiento_cliente_numerico', nombre: 'Comportamiento Cliente (Ponderado)', visible: false },
     { id: 'probabilidad', nombre: 'Probabilidad', visible: false },
     { id: 'impacto', nombre: 'Impacto', visible: false },
-    { id: 'promedio_riesgo_cliente_interno', nombre: 'Promedio Riesgo Cliente Interno', visible: true }
+    { id: 'riesgo_inherente', nombre: 'Riesgo Inherente', visible: false },
+    { id: 'mitigacion', nombre: 'Mitigación', visible: false },
+    { id: 'mitigacion_numerico', nombre: 'Mitigación Relativa', visible: false },
+    { id: 'mitigacion_adicional', nombre: 'Detalle de la Mitigación', visible: false },
+    { id: 'riesgo_residual', nombre: 'Riesgo Residual', visible: true },
 ];
 
 export const DEFAULT_COLUMNAS_CLIENTES = COLUMNAS_CLIENTES_INTERNOS.filter(col => col.visible);

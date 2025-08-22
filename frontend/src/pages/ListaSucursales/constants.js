@@ -22,6 +22,7 @@ export const COLUMNAS_SUCURSALES = [
     { id: 'riesgo_zona_numerico', nombre: 'Riesgo Zona (Ponderado)', visible: false },
     { id: 'riesgo_frontera_numerico', nombre: 'Riesgo Frontera (Ponderado)', visible: false },
     { id: 'probabilidad', nombre: 'Probabilidad', visible: false },
+    { id: 'impacto_texto', nombre: 'Valores de Impacto', visible: false },
     { id: 'impacto', nombre: 'Impacto', visible: false },
     { id: 'promedio_riesgo_zona_geografica', nombre: 'Riesgo Zona Geográfica', visible: false }
 ];
