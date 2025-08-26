@@ -85,6 +85,7 @@ const printSections = [
     {
         title: 'Información del Seguro',
         fields: [
+            { label: 'Compañía', name: 'compania' },
             { label: 'Ramo de seguro', name: 'ramo_seguro' },
             { label: 'Tipo de documento', name: 'tipo_documento' },
             { label: 'Fecha de Inicio de Vigencia', name: 'fecha_inicio' },
