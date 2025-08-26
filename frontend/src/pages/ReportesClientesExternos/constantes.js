@@ -7,6 +7,7 @@ export const COLUMNAS_REPORTE = [
     { id: 'nro_documento_propietario', nombre: 'Documento' },
     { id: 'razon_social', nombre: 'Razón Social' },
     { id: 'nit', nombre: 'NIT' },
+    { id: 'compania', nombre: 'Compañía' },
     { id: 'fecha_inicio', nombre: 'Fecha Inicial' },
     { id: 'fecha_fin', nombre: 'Fecha Final' },
     { id: 'nro_poliza', nombre: 'Numero de Poliza' },
@@ -86,8 +87,8 @@ export const COLUMNAS_IMPACTO = [
 ];
 
 // Columnas numéricas para filtrado
-export const COLUMNAS_NUMERICAS = COLUMNAS_REPORTE.filter(col => 
-    col.id.endsWith('_numerico') || 
+export const COLUMNAS_NUMERICAS = COLUMNAS_REPORTE.filter(col =>
+    col.id.endsWith('_numerico') ||
     col.id === 'promedio_riesgo_canal_distribucion' ||
     col.id === 'promedio_riesgo_producto_servicio' ||
     col.id === 'probabilidad' ||

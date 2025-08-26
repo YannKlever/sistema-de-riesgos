@@ -13,7 +13,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: 
+  background:
     url('../../../public/images/background.png') no-repeat center center;
   background-size: cover;
   z-index: 0;
@@ -39,7 +39,7 @@
   border-radius: 50%;
   margin-bottom: 1.5rem;
   border: 8px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 
+  box-shadow:
     0 4px 20px rgba(0, 0, 0, 0.3),
     inset 0 0 15px rgba(255, 255, 255, 0.1);
   background-color: rgba(255, 255, 255, 0.1);
@@ -58,17 +58,15 @@
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: 0.5px;
-  text-shadow: 
+  text-shadow:
     0 2px 4px rgba(0, 0, 0, 0.5),
     0 0 10px rgba(255, 255, 255, 0.2);
   position: relative;
   padding: 1rem;
-  background: linear-gradient(
-    to right, 
-    transparent, 
-    rgba(255, 255, 255, 0.1), 
-    transparent
-  );
+  background: linear-gradient(to right,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent);
 }
 
 .subtitle {
@@ -78,7 +76,7 @@
   line-height: 1.5;
   max-width: 500px;
   margin: 0 auto;
-  text-shadow: 
+  text-shadow:
     0 2px 3px rgba(0, 0, 0, 0.4),
     0 0 5px rgba(255, 255, 255, 0.1);
   opacity: 0.9;
@@ -91,6 +89,7 @@
     opacity: 0;
     transform: translateY(20px) scale(0.98);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -99,6 +98,95 @@
 
 .content {
   animation: fadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Estilos para el nombre de la empresa */
+.companyName {
+  display: block;
+  font-size: 0.7em;
+  color: var(--clr-blanco);
+  margin-top: 0.5rem;
+  font-weight: 600px;
+  text-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    0 0 8px rgba(79, 70, 229, 0.4);
+  letter-spacing: 0.5px;
+}
+
+/* Prompt de configuración */
+.setupPrompt {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(5px);
+}
+
+.setupPrompt p {
+  color: var(--clr-gris-claro);
+  font-size: 1rem;
+  margin: 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.setupPrompt p::before {
+  content: "💡 ";
+  margin-right: 0.5rem;
+}
+
+/* Responsive para el nombre de la empresa */
+@media (max-width: 768px) {
+  .companyName {
+    font-size: 0.6em;
+    margin-top: 0.4rem;
+  }
+
+  .setupPrompt {
+    margin-top: 1.5rem;
+    padding: 0.8rem;
+  }
+
+  .setupPrompt p {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .companyName {
+    font-size: 0.5em;
+    margin-top: 0.3rem;
+  }
+
+  .setupPrompt {
+    margin-top: 1rem;
+    padding: 0.6rem;
+  }
+
+  .setupPrompt p {
+    font-size: 0.8rem;
+  }
+}
+
+/* Animación suave para la aparición del nombre */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.companyName {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.setupPrompt {
+  animation: fadeInUp 0.8s ease-out 0.3s both;
 }
 
 /* Responsive Design */
@@ -147,8 +235,9 @@
 }
 
 /* Efecto hover para mejor interacción */
-.title:hover, .subtitle:hover {
-  text-shadow: 
+.title:hover,
+.subtitle:hover {
+  text-shadow:
     0 2px 6px rgba(0, 0, 0, 0.6),
     0 0 15px rgba(255, 255, 255, 0.3);
   transition: text-shadow 0.3s ease;

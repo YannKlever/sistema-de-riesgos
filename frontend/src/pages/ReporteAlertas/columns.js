@@ -30,6 +30,11 @@ export const alertasColumns = [
         cell: info => info.getValue() || '-'
     },
     {
+        header: 'Compañía',
+        accessorKey: 'compania',
+        cell: info => info.getValue() || '-'
+    },
+    {
         header: 'Ramo Seguro',
         accessorKey: 'ramo_seguro',
         cell: info => info.getValue() || '-'

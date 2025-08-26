@@ -44,6 +44,7 @@ export const TODAS_LAS_COLUMNAS = [
     { id: 'nro_documento_representante', nombre: 'Nro. Documento Representante', visible: false },
     { id: 'extension_representante', nombre: 'Extensión Representante', visible: false },
     { id: 'otra_extension_representante', nombre: 'Otra Extensión Representante', visible: false },
+    { id: 'compania', nombre: 'Compañía', visible: false },
     { id: 'ramo_seguro', nombre: 'Ramo de Seguro', visible: false },
     { id: 'tipo_documento', nombre: 'Tipo de Documento', visible: false },
     { id: 'fecha_inicio', nombre: 'Fecha de Inicio', visible: false },
