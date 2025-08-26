@@ -50,6 +50,7 @@ export const CLIENTES_EXTERNOS_SCHEMA = {
     'Nro. Documento Representante': 'nro_documento_representante',
     'Extensión Representante': 'extension_representante',
     'Otra Extensión Representante': 'otra_extension_representante',
+    'Compañía': 'compania',
     'Ramo de Seguro': 'ramo_seguro',
     'Tipo de Documento': 'tipo_documento',
     'Fecha de Inicio': 'fecha_inicio',
