@@ -1,3 +1,62 @@
+
+
+// Verificar Electron
+const isElectron = () => {
+    return !!(window && window.process && window.process.versions && window.process.versions.electron);
+};
+
+// Función para manejar errores de conexión
+const handleConnectionError = (error) => {
+    console.error('Error de conexión con la base de datos:', error);
+    return {
+        success: false,
+        error: 'Error de conexión con la base de datos. Por favor, verifique que la aplicación esté funcionando correctamente.'
+    };
+};
+
+// Función para sanitizar datos antes de enviarlos
+const sanitizeData = (data) => {
+    if (typeof data !== 'object' || data === null) return data;
+
+    const sanitized = {};
+    Object.keys(data).forEach(key => {
+        if (typeof data[key] === 'string') {
+            sanitized[key] = data[key].trim().replace(/[<>]/g, '');
+            if (sanitized[key].length > 255) {
+                sanitized[key] = sanitized[key].substring(0, 255);
+            }
+        } else {
+            sanitized[key] = data[key];
+        }
+    });
+
+    return sanitized;
+};
+
+// Función para verificar y esperar electronAPI
+const ensureElectronAPI = () => {
+    return new Promise((resolve, reject) => {
+        if (window.electronAPI) {
+            resolve(window.electronAPI);
+            return;
+        }
+
+        // Intentar esperar a que electronAPI esté disponible
+        let attempts = 0;
+        const checkAPI = () => {
+            attempts++;
+            if (window.electronAPI) {
+                resolve(window.electronAPI);
+            } else if (attempts < 10) {
+                setTimeout(checkAPI, 100);
+            } else {
+                reject(new Error('Electron API no disponible después de 10 intentos'));
+            }
+        };
+
+        setTimeout(checkAPI, 100);
+    });
+};
 export const databaseService = {
     // Métodos existentes para Clientes Externos
     async crearCliente(data) {
@@ -10,11 +69,11 @@ export const databaseService = {
         return window.electronAPI.listarClientesExternos();
     },
 
-
     async actualizarClienteExterno(id, data) {
         if (!window.electronAPI) throw new Error('API no disponible');
         return window.electronAPI.actualizarClienteExterno(id, data);
     },
+
     // Método para importación masiva de clientes externos
     async importarClientesExternos(data) {
         if (!window.electronAPI) {
@@ -38,19 +97,19 @@ export const databaseService = {
             };
         }
     },
+
     async listarClientesConAlertas() {
         if (!window.electronAPI) throw new Error('API no disponible');
         return window.electronAPI.listarClientesConAlertas();
     },
-
 
     // Nuevo método para listar con riesgo interno
     async listarClientesExternosConRiesgoInterno() {
         if (!window.electronAPI) throw new Error('API no disponible');
         return window.electronAPI.listarClientesExternosConRiesgoInterno();
     },
-    //metodo para listar con producto servicio
 
+    //metodo para listar con producto servicio
     async listarClientesExternosConRiesgoProductoServicio() {
         if (!window.electronAPI) throw new Error('API no disponible');
         return window.electronAPI.listarClientesExternosConRiesgoProductoServicio();
@@ -97,6 +156,7 @@ export const databaseService = {
         if (!window.electronAPI) throw new Error('API no disponible');
         return window.electronAPI.eliminarAccionistaSocio(id);
     },
+
     async importarAccionistasSocios(data) {
         if (!window.electronAPI) {
             console.error('Electron API no disponible');
@@ -110,7 +170,6 @@ export const databaseService = {
         if (!window.electronAPI) throw new Error('API no disponible');
         return window.electronAPI.crearClienteInterno(data);
     },
-
 
     //importar
     async importarClientesInternos(data) {
@@ -146,8 +205,6 @@ export const databaseService = {
         if (!window.electronAPI) throw new Error('API no disponible');
         return window.electronAPI.eliminarClienteInterno(id);
     },
-
-
 
     // Métodos para Productos/Servicios
     async crearProductoServicio(data) {
@@ -215,10 +272,6 @@ export const databaseService = {
         return window.electronAPI.bulkCreateProductosServicios(data);
     },
 
-
-
-
-
     // Nuevos métodos para obtener riesgos específicos
     async obtenerRiesgoZonaGeografica(oficina) {
         if (!window.electronAPI) {
@@ -253,6 +306,7 @@ export const databaseService = {
             return { success: false, error: error.message, data: 0 };
         }
     },
+
     // Métodos para Evaluaciones LD/FT
     async crearEvaluacionLDFT(data) {
         if (!window.electronAPI) {
@@ -309,11 +363,6 @@ export const databaseService = {
             return { success: false, error: error.message };
         }
     },
-
-
-
-
-
 
     // Métodos para Sucursales
     async crearSucursal(data) {
@@ -411,39 +460,192 @@ export const databaseService = {
         }
     },
 
-
-
-    //metodos para usuarios
     async crearUsuario(data) {
-        if (!window.electronAPI) throw new Error('API no disponible');
-        return window.electronAPI.crearUsuario(data);
+        try {
+            console.log('=== Crear Usuario - Datos recibidos en databaseService ===', data);
+
+            const electronAPI = await ensureElectronAPI();
+            const sanitizedData = sanitizeData(data);
+
+            console.log('Datos sanitizados:', sanitizedData);
+            console.log('Llamando a electronAPI.crearUsuario...');
+
+            const resultado = await electronAPI.crearUsuario(sanitizedData);
+
+            console.log('Resultado de electronAPI.crearUsuario:', resultado);
+            return resultado;
+        } catch (error) {
+            console.error('Error completo en crearUsuario:', error);
+            return handleConnectionError(error);
+        }
     },
 
     async listarUsuarios() {
-        if (!window.electronAPI) throw new Error('API no disponible');
-        return window.electronAPI.listarUsuarios();
+        try {
+            console.log('=== Iniciando listarUsuarios ===');
+
+            const electronAPI = await ensureElectronAPI();
+
+            if (typeof electronAPI.listarUsuarios !== 'function') {
+                throw new Error('Método listarUsuarios no disponible en electronAPI');
+            }
+
+            console.log('Llamando a electronAPI.listarUsuarios()...');
+            const resultado = await electronAPI.listarUsuarios();
+            console.log('Resultado recibido:', resultado);
+
+            return resultado;
+        } catch (error) {
+            console.error('Error en listarUsuarios:', error);
+            return handleConnectionError(error);
+        }
     },
 
     async obtenerUsuario(id) {
-        if (!window.electronAPI) throw new Error('API no disponible');
-        return window.electronAPI.obtenerUsuario(id);
+        try {
+            const electronAPI = await ensureElectronAPI();
+
+            if (isNaN(id) || id <= 0) {
+                return { success: false, error: 'ID de usuario inválido' };
+            }
+
+            return await electronAPI.obtenerUsuario(id);
+        } catch (error) {
+            console.error('Error en obtenerUsuario:', error);
+            return handleConnectionError(error);
+        }
     },
 
     async actualizarUsuario(id, data) {
-        if (!window.electronAPI) throw new Error('API no disponible');
-        return window.electronAPI.actualizarUsuario(id, data);
+        try {
+            const electronAPI = await ensureElectronAPI();
+
+            if (isNaN(id) || id <= 0) {
+                return { success: false, error: 'ID de usuario inválido' };
+            }
+
+            const sanitizedData = sanitizeData(data);
+            return await electronAPI.actualizarUsuario(id, sanitizedData);
+        } catch (error) {
+            console.error('Error en actualizarUsuario:', error);
+            return handleConnectionError(error);
+        }
     },
 
     async eliminarUsuario(id) {
-        if (!window.electronAPI) throw new Error('API no disponible');
-        return window.electronAPI.eliminarUsuario(id);
+        try {
+            const electronAPI = await ensureElectronAPI();
+
+            if (isNaN(id) || id <= 0) {
+                return { success: false, error: 'ID de usuario inválido' };
+            }
+
+            if (id === 1) {
+                return { success: false, error: 'No se puede eliminar el usuario administrador principal' };
+            }
+
+            return await electronAPI.eliminarUsuario(id);
+        } catch (error) {
+            console.error('Error en eliminarUsuario:', error);
+            return handleConnectionError(error);
+        }
     },
 
     async verificarCredenciales(email, password) {
-        if (!window.electronAPI) throw new Error('API no disponible');
-        return window.electronAPI.verificarCredenciales(email, password);
-    }
+        try {
+            const electronAPI = await ensureElectronAPI();
 
+            const sanitizedEmail = email.trim().toLowerCase();
+            if (!sanitizedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sanitizedEmail)) {
+                return { success: false, error: 'Email inválido' };
+            }
+
+            if (!password || password.length < 1) {
+                return { success: false, error: 'Contraseña requerida' };
+            }
+
+            return await electronAPI.verificarCredenciales(sanitizedEmail, password);
+        } catch (error) {
+            console.error('Error en verificarCredenciales:', error);
+            return handleConnectionError(error);
+        }
+    },
+
+    // Métodos adicionales de seguridad
+    async cambiarPassword(userId, currentPassword, newPassword) {
+        try {
+            if (!isElectron() || !window.electronAPI) {
+                throw new Error('API no disponible - La aplicación debe ejecutarse en Electron');
+            }
+
+            // Validar nueva contraseña
+            if (!newPassword || newPassword.length < 8) {
+                return { success: false, error: 'La nueva contraseña debe tener al menos 8 caracteres' };
+            }
+
+            // Primero verificar la contraseña actual
+            const userResult = await this.obtenerUsuario(userId);
+            if (!userResult.success) {
+                return { success: false, error: 'Usuario no encontrado' };
+            }
+
+            const user = userResult.data;
+            const verification = await this.verificarCredenciales(user.email, currentPassword);
+
+            if (!verification.success) {
+                return { success: false, error: 'La contraseña actual es incorrecta' };
+            }
+
+            // Actualizar con la nueva contraseña
+            return await this.actualizarUsuario(userId, { password: newPassword });
+        } catch (error) {
+            return handleConnectionError(error);
+        }
+    },
+
+
+
+    async reactivarUsuario(id) {
+        try {
+            if (!isElectron() || !window.electronAPI) {
+                throw new Error('API no disponible - La aplicación debe ejecutarse en Electron');
+            }
+
+
+
+            return await this.actualizarUsuario(id, { activo: 1, intentos_fallidos: 0 });
+        } catch (error) {
+            return handleConnectionError(error);
+        }
+    },
+    // Métodos para Empresa
+    async obtenerEmpresa() {
+        if (!window.electronAPI) {
+            console.error('Electron API no disponible');
+            return { success: false, error: 'API no disponible', data: null };
+        }
+        try {
+            const resultado = await window.electronAPI.obtenerEmpresa();
+            return resultado;
+        } catch (error) {
+            console.error('Error al obtener datos de la empresa:', error);
+            return { success: false, error: error.message, data: null };
+        }
+    },
+
+    async guardarEmpresa(datos) {
+        if (!window.electronAPI) {
+            console.error('Electron API no disponible');
+            return { success: false, error: 'API no disponible' };
+        }
+        try {
+            const resultado = await window.electronAPI.guardarEmpresa(datos);
+            return resultado;
+        } catch (error) {
+            console.error('Error al guardar datos de la empresa:', error);
+            return { success: false, error: error.message };
+        }
+    }
 };
 
-
+export default databaseService;
