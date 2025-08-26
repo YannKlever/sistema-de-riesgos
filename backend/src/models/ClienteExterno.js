@@ -48,6 +48,7 @@ class ClienteExterno {
             nro_documento_representante: cliente.nro_documento_representante || null,
             extension_representante: cliente.extension_representante || null,
             otra_extension_representante: cliente.otra_extension_representante || null,
+            compania: cliente.compania || null,
             ramo_seguro: cliente.ramo_seguro || null,
             zona_uso_seguro: cliente.zona_uso_seguro || null,
             riesgo_zona_uso_seguro: cliente.riesgo_zona_uso_seguro || null,
@@ -275,33 +276,6 @@ class ClienteExterno {
         });
     }
 
-    static async obtenerRiesgoPorId(id) {
-        return new Promise((resolve, reject) => {
-            db.get(
-                `SELECT 
-                    (COALESCE(nacionalidad_numerico, 0) + 
-                    (COALESCE(riesgo_profesion_actividad_numerico, 0) + 
-                    (COALESCE(riesgo_zona_numerico, 0) + 
-                    (COALESCE(categoria_pep_numerico, 0) +
-                    (COALESCE(ingresos_mensuales_numerico, 0) +
-                    (COALESCE(volumen_actividad_numerico, 0) +
-                    (COALESCE(frecuencia_actividad_numerico, 0) +
-                    (COALESCE(integridad_documental_numerico, 0) +
-                    (COALESCE(exactitud_documental_numerico, 0) +
-                    (COALESCE(vigencia_documental_numerico, 0) +
-                    (COALESCE(relevancia_informacion_numerico, 0) +
-                    (COALESCE(consistencia_informacion_numerico, 0) +
-                    (COALESCE(comportamiento_cliente_numerico, 0)) / 12 AS riesgo_promedio
-                 FROM "tabla-clientes-internos" 
-                 WHERE id = ?`,
-                [id],
-                (err, row) => {
-                    if (err) reject(err);
-                    else resolve(row ? row.riesgo_promedio : null);
-                }
-            );
-        });
-    }
     static async bulkCreate(clientes) {
         return new Promise((resolve, reject) => {
             db.serialize(() => {

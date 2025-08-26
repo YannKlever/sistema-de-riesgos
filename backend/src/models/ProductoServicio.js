@@ -16,7 +16,6 @@ class ProductoServicio {
             impacto: producto.impacto || null,
             promedio_riesgo_producto_servicio: producto.promedio_riesgo_producto_servicio || null, 
         };
-
         const { campos, placeholders, valores } = Object.entries(camposCompletos).reduce(
             (acc, [campo, valor]) => {
                 acc.campos.push(`"${campo}"`);
