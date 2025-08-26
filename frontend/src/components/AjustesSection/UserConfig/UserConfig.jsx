@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import UserTable from './UserTable';
 import UserForm from './UserForm';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
-
 import { databaseService } from '../../../services/database';
+import { getCurrentUser } from '../../../services/authService';
 import styles from './styles.module.css';
 
 const UserConfig = () => {
@@ -16,18 +16,47 @@ const UserConfig = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
+  
+  const context = useOutletContext();
 
-  // Cargar usuarios desde la base de datos
   useEffect(() => {
+    console.log('Contexto recibido en UserConfig:', context);
+    
+    let userData;
+    if (context && context.currentUser) {
+      userData = context.currentUser;
+      setCurrentUser(context.currentUser);
+      setIsAdmin(context.currentUser?.role === 'admin');
+    } else {
+      userData = getCurrentUser();
+      setCurrentUser(userData);
+      setIsAdmin(userData?.role === 'admin');
+    }
+    
+    console.log('Usuario en UserConfig:', userData);
+    console.log('Es admin en UserConfig:', userData?.role === 'admin');
+  }, [context]);
+
+  useEffect(() => {
+    if (!isAdmin) {
+      console.log('No es admin, no cargando usuarios');
+      setLoading(false);
+      return;
+    }
+    
     const fetchUsers = async () => {
       try {
         setLoading(true);
         setError('');
+        console.log('Cargando usuarios...');
         const response = await databaseService.listarUsuarios();
         
+        console.log('Respuesta de listarUsuarios:', response);
+        
         if (response.success) {
-          // Mapear los nombres de campos si es necesario (nombre -> name, rol -> role)
           const formattedUsers = response.data.map(user => ({
             id: user.id,
             name: user.nombre,
@@ -49,15 +78,17 @@ const UserConfig = () => {
     };
     
     fetchUsers();
-  }, []);
+  }, [isAdmin]);
 
   const handleEdit = async (user) => {
     try {
       setError('');
+      console.log('Editando usuario ID:', user.id);
+      
       const response = await databaseService.obtenerUsuario(user.id);
+      console.log('Respuesta de obtenerUsuario:', response);
       
       if (response.success) {
-        // Formatear los datos del usuario para el formulario
         const userData = {
           id: response.data.id,
           name: response.data.nombre,
@@ -73,7 +104,7 @@ const UserConfig = () => {
       }
     } catch (err) {
       console.error('Error getting user:', err);
-      setError('Error al obtener los datos del usuario');
+      setError('Error al obtener los datos del usuario: ' + err.message);
     }
   };
 
@@ -87,7 +118,10 @@ const UserConfig = () => {
     
     try {
       setError('');
+      console.log('Eliminando usuario ID:', userToDelete);
+      
       const response = await databaseService.eliminarUsuario(userToDelete);
+      console.log('Respuesta de eliminarUsuario:', response);
       
       if (response.success) {
         setUsers(users.filter(user => user.id !== userToDelete));
@@ -98,7 +132,7 @@ const UserConfig = () => {
       }
     } catch (err) {
       console.error('Error deleting user:', err);
-      setError('Error al eliminar el usuario');
+      setError('Error al eliminar el usuario: ' + err.message);
     } finally {
       setShowDeleteModal(false);
       setUserToDelete(null);
@@ -111,55 +145,89 @@ const UserConfig = () => {
   };
 
   const handleUserSubmit = async (userData) => {
-    try {
-      setError('');
-      let response;
-      
-      // Preparar los datos para la base de datos
-      const dbData = {
-        nombre: userData.name,
-        email: userData.email,
-        rol: userData.role,
-        ...(userData.password && { password: userData.password })
-      };
-      
-      if (userData.id) {
-        // Actualizar usuario existente
-        response = await databaseService.actualizarUsuario(userData.id, dbData);
-      } else {
-        // Crear nuevo usuario
-        response = await databaseService.crearUsuario(dbData);
+  try {
+    setError('');
+    console.log('Datos del formulario:', userData);
+    
+    // Preparar datos para el backend (convertir name -> nombre, role -> rol)
+    const dbData = {
+      nombre: userData.name,
+      email: userData.email,
+      rol: userData.role
+    };
+    
+    console.log('Datos para enviar al backend:', dbData);
+    
+    let response;
+    
+    if (userData.id) {
+      // Editar usuario existente
+      // Solo añadir password si se proporcionó y no está vacío
+      if (userData.password && userData.password.trim().length > 0) {
+        dbData.password = userData.password;
       }
-      
-      if (response.success) {
-        // Actualizar la lista de usuarios
-        const usersResponse = await databaseService.listarUsuarios();
-        if (usersResponse.success) {
-          const formattedUsers = usersResponse.data.map(user => ({
-            id: user.id,
-            name: user.nombre,
-            email: user.email,
-            role: user.rol,
-            activo: user.activo,
-            ultimo_login: user.ultimo_login
-          }));
-          setUsers(formattedUsers);
-        }
-        
-        setSuccessMessage(userData.id ? 
-          'Usuario actualizado correctamente' : 
-          'Usuario creado correctamente');
-        setTimeout(() => setSuccessMessage(''), 3000);
-        setShowForm(false);
-        setSelectedUser(null);
-      } else {
-        setError(response.error || 'Error al guardar el usuario');
+      response = await databaseService.actualizarUsuario(userData.id, dbData);
+      console.log('Respuesta de actualizarUsuario:', response);
+    } else {
+      // Crear nuevo usuario - password es obligatorio para creación
+      if (!userData.password || userData.password.length < 8) {
+        setError('La contraseña es requerida y debe tener al menos 8 caracteres');
+        return;
       }
-    } catch (err) {
-      console.error('Error saving user:', err);
-      setError('Error al guardar el usuario');
+      // Añadir password para creación
+      dbData.password = userData.password;
+      response = await databaseService.crearUsuario(dbData);
+      console.log('Respuesta de crearUsuario:', response);
     }
-  };
+    
+    if (response.success) {
+      // Recargar lista de usuarios
+      const usersResponse = await databaseService.listarUsuarios();
+      console.log('Respuesta de listarUsuarios después de guardar:', usersResponse);
+      
+      if (usersResponse.success) {
+        const formattedUsers = usersResponse.data.map(user => ({
+          id: user.id,
+          name: user.nombre,
+          email: user.email,
+          role: user.rol,
+          activo: user.activo,
+          ultimo_login: user.ultimo_login
+        }));
+        setUsers(formattedUsers);
+      }
+      
+      setSuccessMessage(userData.id ? 
+        'Usuario actualizado correctamente' : 
+        'Usuario creado correctamente');
+      setTimeout(() => setSuccessMessage(''), 3000);
+      setShowForm(false);
+      setSelectedUser(null);
+    } else {
+      setError(response.error || 'Error al guardar el usuario');
+    }
+  } catch (err) {
+    console.error('Error saving user:', err);
+    setError('Error al guardar el usuario: ' + err.message);
+  }
+};
+
+  if (!isAdmin) {
+    return (
+      <div className={styles.container}>
+        <button 
+          className={styles.backButton}
+          onClick={() => navigate('/ajustes')}
+        >
+          ← Volver a Ajustes
+        </button>
+        <div className={styles.error}>
+          No tienes permisos para acceder a esta sección. 
+          Solo los administradores pueden gestionar usuarios.
+        </div>
+      </div>
+    );
+  }
 
   if (loading) return (
     <div className={styles.loadingContainer}>
@@ -180,7 +248,7 @@ const UserConfig = () => {
         className={styles.backButton}
         onClick={() => navigate('/ajustes')}
       >
-        ← Volver
+        ← Volver a Ajustes
       </button>
       
       <div className={styles.header}>

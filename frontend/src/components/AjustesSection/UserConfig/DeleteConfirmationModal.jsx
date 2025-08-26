@@ -1,4 +1,3 @@
-// components/AjustesSection/UserConfig/DeleteConfirmationModal.jsx
 import React from 'react';
 import styles from './styles.module.css';
 
@@ -9,7 +8,10 @@ const DeleteConfirmationModal = ({ isOpen, onCancel, onConfirm }) => {
     <div className={styles.modalOverlay}>
       <div className={styles.modalContent}>
         <h3 className={styles.modalTitle}>Confirmar Eliminación</h3>
-        <p className={styles.modalMessage}>¿Estás seguro de que deseas eliminar este usuario? Esta acción no se puede deshacer.</p>
+        <p className={styles.modalMessage}>
+          ¿Estás seguro de que deseas eliminar este usuario? 
+          Esta acción no se puede deshacer.
+        </p>
         <div className={styles.modalActions}>
           <button 
             className={styles.modalCancelButton}

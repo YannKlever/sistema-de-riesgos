@@ -1,4 +1,3 @@
-// components/AjustesSection/UserConfig/UserTable.jsx
 import React from 'react';
 import styles from './styles.module.css';
 
@@ -10,6 +9,7 @@ const UserTable = ({ users, onEdit, onDelete }) => {
           <th>Nombre</th>
           <th>Email</th>
           <th>Rol</th>
+          <th>Estado</th>
           <th>Acciones</th>
         </tr>
       </thead>
@@ -19,6 +19,7 @@ const UserTable = ({ users, onEdit, onDelete }) => {
             <td>{user.name}</td>
             <td>{user.email}</td>
             <td>{user.role}</td>
+            <td>{user.activo ? 'Activo' : 'Inactivo'}</td>
             <td>
               <div className={styles.actions}>
                 <button 

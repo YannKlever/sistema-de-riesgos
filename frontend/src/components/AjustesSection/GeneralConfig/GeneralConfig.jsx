@@ -1,11 +1,12 @@
-// components/AjustesSection/GeneralConfig/GeneralConfig.jsx
+
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import CompanyForm from './CompanyForm';
 import styles from './styles.module.css';
 
 const GeneralConfig = () => {
   const navigate = useNavigate();
+  const { currentUser, isAdmin } = useOutletContext();
 
   return (
     <div className={styles.container}>
@@ -17,6 +18,8 @@ const GeneralConfig = () => {
       </button>
       
       <h2>Configuración General de la Empresa</h2>
+      <p>Usuario actual: {currentUser?.name} ({currentUser?.role})</p>
+      
       <CompanyForm />
     </div>
   );
