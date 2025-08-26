@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
-import { isAuthenticated } from './services/authService';
+import { isAuthenticated, getCurrentUser } from './services/authService';
 import { ThemeProvider } from './context/ThemeContext';
 import LayoutPrincipal from './components/HeaderSection/LayoutPrincipal/LayoutPrincipal';
 import LoginPage from './pages/Login/LoginPage';
@@ -10,13 +10,11 @@ import Ajustes from './pages/Ajustes/Ajustes';
 import Parametros from './pages/Parametros/Parametros';
 import UserConfig from './components/AjustesSection/UserConfig/UserConfig';
 import GeneralConfig from './components/AjustesSection/GeneralConfig/GeneralConfig';
-import ThemeConfig from './components/AjustesSection/ThemeConfig/ThemeConfig';
 import LoadingSpinner from './components/LoadingSpinner/LoadingSpinner';
 import styles from './App.css';
 
 // Componentes de formularios
 import BotonClientes from './components/BotonClientes/BotonClientes';
-//import FormROS from './pages/FormularioROS/FormularioROS';
 import FormularioEmpresaPublica from './pages/FormularioEmpresaPublica/FormularioEmpresaPublica';
 import FormularioPersonaJuridica from './pages/FormularioPersonaJuridica/FormularioPersonaJuridica';
 import FormularioPersonaNatural100 from './pages/FormularioPersonaNatural100/FormularioPersonaNatural100';
@@ -25,7 +23,6 @@ import FormularioPersonaNatural5000 from './pages/FormularioPersonaNatural5000/F
 import FormularioEmpresaUnipersonal100 from './pages/FormularioEmpresaUnipersonal100/FormularioEmpresaUnipersonal100';
 import FormularioEmpresaUnipersonal1000 from './pages/FormularioEmpresaUnipersonal1000/FormularioEmpresaUnipersonal1000';
 import FormularioEmpresaUnipersonal5000 from './pages/FormularioEmpresaUnipersonal5000/FormularioEmpresaUnipersonal5000';
-
 
 // Componentes de parámetros
 import FormularioLDFT from './pages/FormularioLD_FT/FormularioLD_FT';
@@ -63,23 +60,63 @@ import RiesgoTotal from './pages/GraficoRiesgoTotal/RiesgoTotal';
 function App() {
   const [authChecked, setAuthChecked] = useState(false);
   const [isAuth, setIsAuth] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
     const checkAuthentication = async () => {
       try {
         const authStatus = await isAuthenticated();
         setIsAuth(authStatus);
+        if (authStatus) {
+          const user = getCurrentUser();
+          setCurrentUser(user);
+          console.log('Usuario autenticado:', user);
+        }
       } catch (error) {
+        console.error('Error en autenticación:', error);
         setIsAuth(false);
+        setCurrentUser(null);
       } finally {
         setAuthChecked(true);
       }
     };
+    
     checkAuthentication();
+    
+    const interval = setInterval(checkAuthentication, 300000);
+    return () => clearInterval(interval);
   }, []);
 
-  const handleLoginSuccess = () => setIsAuth(true);
-  const handleLogout = () => setIsAuth(false);
+  const handleLoginSuccess = (userData) => {
+    setIsAuth(true);
+    setCurrentUser(userData);
+  };
+  
+  const handleLogout = () => {
+    setIsAuth(false);
+    setCurrentUser(null);
+  };
+
+  const ProtectedRoute = ({ children, requiredRole }) => {
+    if (!isAuth) {
+      console.log('ProtectedRoute: No autenticado, redirigiendo a login');
+      return <Navigate to="/login" replace />;
+    }
+    
+    const user = getCurrentUser();
+    console.log('ProtectedRoute - Verificación de rol:', {
+      required: requiredRole,
+      actual: user?.role,
+      tieneAcceso: !requiredRole || user?.role === requiredRole
+    });
+    
+    if (requiredRole && user?.role !== requiredRole) {
+      console.log(`ProtectedRoute: Acceso denegado. Se requiere: ${requiredRole}, usuario tiene: ${user?.role}`);
+      return <Navigate to="/home" replace />;
+    }
+    
+    return children;
+  };
 
   if (!authChecked) return <LoadingSpinner />;
 
@@ -88,7 +125,6 @@ function App() {
       <div className={styles.appContainer}>
         <BrowserRouter>
           <Routes>
-            {/* Ruta de login (sin layout) */}
             <Route
               path="/login"
               element={
@@ -100,11 +136,10 @@ function App() {
               }
             />
 
-            {/* Todas las rutas principales (con layout) */}
             <Route
               element={
                 isAuth ? (
-                  <LayoutPrincipal onLogout={handleLogout}>
+                  <LayoutPrincipal onLogout={handleLogout} user={currentUser}>
                     <Outlet />
                   </LayoutPrincipal>
                 ) : (
@@ -112,7 +147,6 @@ function App() {
                 )
               }
             >
-              {/* Rutas principales */}
               <Route path="/home" element={<HomePage />} />
 
               <Route path="/parametros" element={<Parametros />} />
@@ -125,9 +159,7 @@ function App() {
               <Route path="/parametros/lista-accionistas-socios" element={<ListaAccionistasSocios />} />
               <Route path='/parametros/lista-clientes-internos' element={<ListaClientesInternos />} />
 
-              {/* Componente de clientes y formularios */}
               <Route path="/clientes" element={<BotonClientes />} />
-              {/*<Route path="/formulario-ros" element={<FormROS />} />*/}
               <Route path="/empresa-publica" element={<FormularioEmpresaPublica />} />
               <Route path="/personaJuridica" element={<FormularioPersonaJuridica />} />
               <Route path="/personaNatural100" element={<FormularioPersonaNatural100 />} />
@@ -137,7 +169,6 @@ function App() {
               <Route path="/formulario-empresa/1000" element={<FormularioEmpresaUnipersonal1000 />} />
               <Route path="/formulario-empresa/5000" element={<FormularioEmpresaUnipersonal5000 />} />
 
-              {/* Componente de reportes */}
               <Route path="/reportes" element={<Reportes />} />
               <Route path="/reportes/clientes-externos" element={<ReporteClienteExterno />} />
               <Route path="/reportes/accionistasSocios" element={<ReporteAccionistaSocio />} />
@@ -148,7 +179,6 @@ function App() {
               <Route path="/reportes/productos-servicios" element={<ReportesProductosServicios />} />
               <Route path="/reportes/canales-distribucion" element={<ReporteCanalesDistribucion />} />
 
-              {/* Componente de graficos */}
               <Route path="/graficos" element={<Graficos />} />
               <Route path="/graficos/accionistasSocios" element={<GraficosAccionistaSocio />} />
               <Route path="/graficos/clientesExternos" element={<GraficosClienteExterno />} />
@@ -160,18 +190,21 @@ function App() {
               <Route path="/graficos/riesgo-cliente" element={<FactorRiesgoCliente />} />
               <Route path="/graficos/riesgo-total" element={<RiesgoTotal />} />
 
-              {/* Configuración de ajustes con sub-rutas */}
               <Route path="/ajustes" element={<Ajustes />}>
-                <Route path="usuarios" element={<UserConfig />} />
+                <Route 
+                  path="usuarios" 
+                  element={
+                    <ProtectedRoute requiredRole="admin">
+                      <UserConfig />
+                    </ProtectedRoute>
+                  } 
+                />
                 <Route path="generales" element={<GeneralConfig />} />
-                <Route path="apariencia" element={<ThemeConfig />} />
-                <Route index element={<Navigate to="usuarios" replace />} />
+                <Route index element={<Navigate to="generales" replace />} />
               </Route>
 
-              {/* Redirecciones */}
               <Route path="/" element={<Navigate to="/home" replace />} />
 
-              {/* Ruta 404 (mantiene el layout) */}
               <Route
                 path="*"
                 element={
