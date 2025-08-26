@@ -61,7 +61,7 @@ const SeccionFrecuenciaContacto = () => {
             <div className={styles.filaSuperior}>
                 <div className={styles.campoWrapper}>
                     <div className={styles.labelContainer}>
-                        <span className={styles.labelText}>Frecuencia de contacto físico</span>
+                        <span className={styles.labelText}>Riesgo de Frecuencia de contacto físico</span>
                         <span className={styles.requiredAsterisk}>*</span>
                     </div>
                     <InSelect
@@ -80,7 +80,7 @@ const SeccionFrecuenciaContacto = () => {
                 
                 <div className={styles.campoWrapper}>
                     <div className={styles.labelContainer}>
-                        <span className={styles.labelText}>Frecuencia de contacto digital</span>
+                        <span className={styles.labelText}>Riesgo de Frecuencia de contacto digital</span>
                         <span className={styles.requiredAsterisk}>*</span>
                     </div>
                     <InSelect

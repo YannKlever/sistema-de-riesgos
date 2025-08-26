@@ -5,6 +5,7 @@ import InTexto from '../InTexto/InTexto';
 import InPrima from '../InPrima/InPrima';
 import InZonaSeguro from '../InZonaSeguro/InZonaSeguro'; 
 import styles from './styles.module.css';
+import InCompania from '../InCompania/InCompania';
 
 const SeccionInformacionSeguro = () => {
     return (
@@ -14,6 +15,13 @@ const SeccionInformacionSeguro = () => {
                 Información del Seguro
             </h5>
             <div className={styles.seccionCampos}>
+                <div className={styles.campoWrapper}>
+                    <InCompania
+                        label="Compañía de Seguros"
+                        name="compania"
+                        required
+                    />
+                </div>
                 <div className={styles.campoWrapper}>
                     <InRamoSeguro
                         label="Ramo de seguro"

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import styles from './styles.module.css';
 
 const extensiones = [
@@ -22,52 +22,26 @@ const tiposDocumento = [
 ];
 
 const InPersona = ({ title, prefix = '', defaultValue = null }) => {
-    const initialPersonaState = useMemo(() => ({
-        nombres: '',
-        apellidos: '',
-        tipo_documento: '',
-        nro_documento: '',
-        extension: '',
-        otra_extension: ''
-    }), []);
-
-    const [personaData, setPersonaData] = useState(initialPersonaState);
-    const containerRef = useRef(null);
-
-    useEffect(() => {
-        const container = containerRef.current;
-        if (!container) return;
-
-        const form = container.closest('form');
-        if (!form) return;
-
-        const handleReset = () => {
-            setPersonaData(initialPersonaState);
-        };
-
-        form.addEventListener('reset', handleReset);
-        return () => form.removeEventListener('reset', handleReset);
-    }, [initialPersonaState]);
+    const [selectedTipoDocumento, setSelectedTipoDocumento] = useState('');
+    const [selectedExtension, setSelectedExtension] = useState('');
 
     useEffect(() => {
         if (defaultValue) {
-            setPersonaData(prev => ({
-                ...initialPersonaState,
-                ...defaultValue
-            }));
+            setSelectedTipoDocumento(defaultValue.tipo_documento || '');
+            setSelectedExtension(defaultValue.extension || '');
         }
-    }, [defaultValue, initialPersonaState]);
+    }, [defaultValue]);
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setPersonaData(prev => ({
-            ...prev,
-            [name.replace(prefix, '')]: value
-        }));
+    const handleTipoDocumentoChange = (e) => {
+        setSelectedTipoDocumento(e.target.value);
+    };
+
+    const handleExtensionChange = (e) => {
+        setSelectedExtension(e.target.value);
     };
 
     return (
-        <div ref={containerRef} className={styles.personaContainer}>
+        <div className={styles.personaContainer}>
             {title && <h5 className={styles.personaTitle}>{title}</h5>}
 
             <div className={styles.personaRow}>
@@ -81,8 +55,7 @@ const InPersona = ({ title, prefix = '', defaultValue = null }) => {
                         maxLength={50}
                         required
                         className={styles.personaInput}
-                        value={personaData.nombres || ''}
-                        onChange={handleChange}
+                        defaultValue={defaultValue?.nombres || ''}
                     />
                 </div>
 
@@ -96,8 +69,7 @@ const InPersona = ({ title, prefix = '', defaultValue = null }) => {
                         maxLength={50}
                         required
                         className={styles.personaInput}
-                        value={personaData.apellidos || ''}
-                        onChange={handleChange}
+                        defaultValue={defaultValue?.apellidos || ''}
                     />
                 </div>
             </div>
@@ -111,8 +83,8 @@ const InPersona = ({ title, prefix = '', defaultValue = null }) => {
                         name={`tipo_documento${prefix}`}
                         required
                         className={styles.personaSelect}
-                        value={personaData.tipo_documento || ''}
-                        onChange={handleChange}
+                        value={selectedTipoDocumento}
+                        onChange={handleTipoDocumentoChange}
                     >
                         <option value="">Seleccione...</option>
                         {tiposDocumento.map(opcion => (
@@ -133,8 +105,7 @@ const InPersona = ({ title, prefix = '', defaultValue = null }) => {
                         maxLength={20}
                         required
                         className={styles.personaInput}
-                        value={personaData.nro_documento || ''}
-                        onChange={handleChange}
+                        defaultValue={defaultValue?.nro_documento || ''}
                     />
                 </div>
             </div>
@@ -145,8 +116,8 @@ const InPersona = ({ title, prefix = '', defaultValue = null }) => {
                     <select
                         name={`extension${prefix}`}
                         className={styles.personaSelect}
-                        value={personaData.extension || ''}
-                        onChange={handleChange}
+                        value={selectedExtension}
+                        onChange={handleExtensionChange}
                     >
                         <option value="">Seleccione...</option>
                         {extensiones.map(opcion => (
@@ -163,10 +134,8 @@ const InPersona = ({ title, prefix = '', defaultValue = null }) => {
                         type="text"
                         name={`otra_extension${prefix}`}
                         maxLength={10}
-                        disabled={!prefix}
                         className={styles.personaInput}
-                        value={personaData.otra_extension || ''}
-                        onChange={handleChange}
+                        defaultValue={defaultValue?.otra_extension || ''}
                     />
                 </div>
             </div>
