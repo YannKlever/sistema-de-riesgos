@@ -51,6 +51,7 @@ async function createTable(db) {
               nro_documento_representante TEXT,
               extension_representante TEXT,
               otra_extension_representante TEXT,
+              compania TEXT,
               ramo_seguro TEXT,
               tipo_documento TEXT,
               fecha_inicio TEXT,

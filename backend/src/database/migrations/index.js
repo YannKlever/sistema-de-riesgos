@@ -5,6 +5,7 @@ const clientesInternos = require('./004_clientes_internos');
 const productosServicios = require('./005_productos_servicios');
 const sucursales = require('./006_sucursales');
 const usuarios = require('./007_usuarios');
+const empresa = require('./008_empresa');
 
 async function runMigrations(db) {
     console.log('Iniciando migraciones...');
@@ -17,6 +18,7 @@ async function runMigrations(db) {
         await productosServicios.up(db);
         await sucursales.up(db);
         await usuarios.up(db);
+        await empresa.up(db);
 
         console.log('Todas las migraciones se ejecutaron correctamente');
     } catch (err) {
