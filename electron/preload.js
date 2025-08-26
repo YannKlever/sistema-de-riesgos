@@ -56,5 +56,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     obtenerUsuario: (id) => ipcRenderer.invoke('obtener-usuario', id),
     actualizarUsuario: (id, data) => ipcRenderer.invoke('actualizar-usuario', id, data),
     eliminarUsuario: (id) => ipcRenderer.invoke('eliminar-usuario', id),
-    verificarCredenciales: (email, password) => ipcRenderer.invoke('verificar-credenciales', email, password)
+    verificarCredenciales: (email, password) => ipcRenderer.invoke('verificar-credenciales', email, password),
+    verificarEstadoInicial: () => ipcRenderer.invoke('verificar-estado-inicial'),
+    //Tabla empresa
+    obtenerEmpresa: () => ipcRenderer.invoke('obtener-empresa'),
+    guardarEmpresa: (datos) => ipcRenderer.invoke('guardar-empresa', datos)
 });
