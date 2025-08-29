@@ -14,7 +14,7 @@ const Header = ({ toggleSidebar, sidebarVisible }) => {
       </button>
       <div className={styles.headerContent}>
         {/* Aquí puedes agregar otros elementos del header */}
-        <h1 className={styles.pageTitle}>Gestión de Riesgos</h1>
+        <h1 className={styles.pageTitle}>Sistema de Gestión de Riesgos</h1>
       </div>
     </header>
   );
