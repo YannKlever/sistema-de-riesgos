@@ -1,51 +1,77 @@
-// pdfGeneratorCuestionario.js
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { addHeader } from './pdfUtils/header';
+import { databaseService } from '../../services/database';
 
-export const generateCuestionarioPDF = (formData, secciones, formTitle, detalles) => {
+export const generateCuestionarioPDF = async (formData, secciones, formTitle, detalles) => {
     try {
         const doc = new jsPDF({
             orientation: 'portrait',
             unit: 'mm'
         });
 
-        // Configuración compacta
-        const margin = 10; // Reducir márgenes (antes 15)
+        const margin = 10;
         const pageWidth = doc.internal.pageSize.width;
-        const compactSpacing = 3; // Espaciado reducido entre elementos
+        const compactSpacing = 3;
 
         // ==============================================
-        // Encabezado compacto
+        // Encabezado compacto (usando el componente modular)
         // ==============================================
+        // Primero creamos un encabezado temporal para obtener los datos
+        const tempDoc = new jsPDF();
+        await addHeader(tempDoc, pageWidth, margin);
+        
+        // Ahora obtenemos los datos reales de la empresa
+        let empresaData = {
+            nombreEmpresa: 'EMPRESA SEGUROS S.A.',
+            nit: 'NIT: 1234567890123',
+            direccion: 'Av. Principal 123, La Paz',
+            telefono: 'Teléfono: (123) 456-7890'
+        };
+        
+        try {
+            const empresaResult = await databaseService.obtenerEmpresa();
+            if (empresaResult.success && empresaResult.data) {
+                const empresa = empresaResult.data;
+                empresaData.nombreEmpresa = empresa.nombre || empresaData.nombreEmpresa;
+                empresaData.nit = empresa.nit ? `NIT: ${empresa.nit}` : empresaData.nit;
+                empresaData.direccion = empresa.direccion || empresaData.direccion;
+                empresaData.telefono = empresa.telefono ? `Teléfono: ${empresa.telefono}` : empresaData.telefono;
+            }
+        } catch (error) {
+            console.error('Error al obtener datos de empresa:', error);
+            // Usamos los valores por defecto en caso de error
+        }
+
+        // Creamos el encabezado compacto con los datos obtenidos
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(10); // Reducido de 12
+        doc.setFontSize(10); // Compacto: 10px en lugar de 12px
         doc.setTextColor(30, 30, 30);
-        doc.text('EMPRESA SEGUROS S.A.', pageWidth - margin, 10, { align: 'right' }); // Posición más alta
+        doc.text(empresaData.nombreEmpresa, pageWidth - margin, 10, { align: 'right' });
 
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(7); // Reducido de 9
-        doc.text('NIT: 1234567890123', pageWidth - margin, 14, { align: 'right' });
-        doc.text('Av. Principal 123, La Paz', pageWidth - margin, 18, { align: 'right' });
-        doc.text('Teléfono: (123) 456-7890', pageWidth - margin, 22, { align: 'right' });
+        doc.setFontSize(7); // Compacto: 7px en lugar de 9px
+        doc.text(empresaData.nit, pageWidth - margin, 14, { align: 'right' });
+        doc.text(empresaData.direccion, pageWidth - margin, 18, { align: 'right' });
+        doc.text(empresaData.telefono, pageWidth - margin, 22, { align: 'right' });
 
-        // Línea divisoria más fina
         doc.setDrawColor(200, 200, 200);
-        doc.setLineWidth(0.2); // Reducido de 0.3
+        doc.setLineWidth(0.2); // Línea más fina
         doc.line(margin, 26, pageWidth - margin, 26); // Posición más alta
 
         // ==============================================
         // Título del formulario compacto
         // ==============================================
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(16); // Reducido de 20
+        doc.setFontSize(16);
         doc.setTextColor(30, 30, 30);
-        doc.text(formTitle, pageWidth / 2, 34, { align: 'center' }); // Posición más alta
+        doc.text(formTitle, pageWidth / 2, 34, { align: 'center' });
 
         doc.setDrawColor(22, 160, 133);
-        doc.setLineWidth(0.3); // Reducido de 0.5
-        doc.line(margin, 38, pageWidth - margin, 38); // Posición más alta
+        doc.setLineWidth(0.3);
+        doc.line(margin, 38, pageWidth - margin, 38);
 
-        let startY = 42; // Posición inicial más alta
+        let startY = 42;
 
         // ==============================================
         // Configuración compacta para tablas
@@ -53,11 +79,11 @@ export const generateCuestionarioPDF = (formData, secciones, formTitle, detalles
         const tableConfig = {
             margin: { left: margin, right: margin },
             styles: {
-                fontSize: 8, // Reducido de 9
-                cellPadding: 2, // Reducido de 3
+                fontSize: 8,
+                cellPadding: 2,
                 lineColor: [220, 220, 220],
-                lineWidth: 0.1, // Reducido de 0.2
-                minCellHeight: 6, // Reducido de 8
+                lineWidth: 0.1,
+                minCellHeight: 6,
                 overflow: 'linebreak'
             },
             headStyles: {
@@ -65,11 +91,11 @@ export const generateCuestionarioPDF = (formData, secciones, formTitle, detalles
                 textColor: [255, 255, 255],
                 fontStyle: 'bold',
                 halign: 'left',
-                fontSize: 8 // Reducido
+                fontSize: 8
             },
             bodyStyles: {
                 textColor: [50, 50, 50],
-                cellPadding: 1, // Reducido de 2
+                cellPadding: 1,
                 valign: 'top'
             },
             columnStyles: {
@@ -90,7 +116,7 @@ export const generateCuestionarioPDF = (formData, secciones, formTitle, detalles
             });
 
             // Añadir título de sección compacto
-            doc.setFontSize(12); // Reducido de 14
+            doc.setFontSize(12);
             doc.setTextColor(22, 160, 133);
             doc.text(seccion.titulo, margin, startY + compactSpacing);
 
@@ -104,32 +130,30 @@ export const generateCuestionarioPDF = (formData, secciones, formTitle, detalles
                 body: tableData,
                 startY: startY + compactSpacing * 2,
                 didDrawCell: (data) => {
-                    // Autoajuste de altura más compacto
                     if (data.section === 'body') {
-                        const lines = data.doc.splitTextToSize(data.cell.raw, data.cell.width - 2); // Margen reducido
+                        const lines = data.doc.splitTextToSize(data.cell.raw, data.cell.width - 2);
                         if (lines.length > 1) {
-                            data.row.height = Math.max(data.row.height, lines.length * 3.5); // Altura reducida
+                            data.row.height = Math.max(data.row.height, lines.length * 3.5);
                         }
                     }
                 }
             });
 
-            // Espaciado reducido entre secciones
             startY = doc.lastAutoTable.finalY + (index < secciones.length - 1 ? compactSpacing * 2 : compactSpacing);
         });
 
         // Detalles adicionales compactos
         if (detalles && detalles.trim() !== '') {
-            doc.setFontSize(10); // Reducido de 12
+            doc.setFontSize(10);
             doc.setTextColor(22, 160, 133);
             doc.text('Detalles Adicionales', margin, startY + compactSpacing);
 
-            doc.setFontSize(8); // Reducido de 10
+            doc.setFontSize(8);
             doc.setTextColor(50, 50, 50);
             const lines = doc.splitTextToSize(detalles, pageWidth - 2 * margin);
-            doc.text(lines, margin, startY + compactSpacing * 3); // Espaciado reducido
+            doc.text(lines, margin, startY + compactSpacing * 3);
 
-            startY += compactSpacing * 3 + (lines.length * 3.5); // Altura de línea reducida
+            startY += compactSpacing * 3 + (lines.length * 3.5);
         }
 
         // Sección de firmas compacta
@@ -146,61 +170,58 @@ export const generateCuestionarioPDF = (formData, secciones, formTitle, detalles
 const addCompactSignatureSection = (doc, yPosition) => {
     const pageHeight = doc.internal.pageSize.height;
     const pageWidth = doc.internal.pageSize.width;
-    const marginBottom = 15; // Margen inferior reducido
+    const marginBottom = 15;
     
-    // Verificar espacio para versión compacta (40mm en lugar de 60mm)
     if (yPosition + 40 > pageHeight - marginBottom) {
         doc.addPage();
-        yPosition = 15; // Posición más alta en nueva página
+        yPosition = 15;
     }
 
-    const boxWidth = 50; // Reducido de 55
-    const boxHeight = 25; // Reducido de 30
-    const spacing = (pageWidth - 2 * 10 - (boxWidth * 2)) / 1; // Márgenes más ajustados
+    const boxWidth = 50;
+    const boxHeight = 25;
+    const spacing = (pageWidth - 2 * 10 - (boxWidth * 2)) / 1;
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10); // Reducido de 12
+    doc.setFontSize(10);
     doc.setTextColor(22, 160, 133);
     doc.text('FIRMAS Y AUTORIZACIONES', pageWidth / 2, yPosition, { align: 'center' });
 
     doc.setDrawColor(22, 160, 133);
-    doc.setLineWidth(0.2); // Reducido de 0.3
-    doc.line(pageWidth / 2 - 25, yPosition + 2, pageWidth / 2 + 25, yPosition + 2); // Línea más corta
+    doc.setLineWidth(0.2);
+    doc.line(pageWidth / 2 - 25, yPosition + 2, pageWidth / 2 + 25, yPosition + 2);
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8); // Reducido de 10
+    doc.setFontSize(8);
     doc.setTextColor(80, 80, 80);
 
-    const startX = 10; // Márgen más ajustado
+    const startX = 10;
 
-    // Cajas de firma más pequeñas
-    doc.roundedRect(startX, yPosition + 8, boxWidth, boxHeight, 1.5, 1.5); // Radio reducido
-    doc.text('Firma del Evaluador', startX + boxWidth / 2, yPosition + 8 + boxHeight + 6, { // Espaciado reducido
+    doc.roundedRect(startX, yPosition + 8, boxWidth, boxHeight, 1.5, 1.5);
+    doc.text('Firma del Evaluador', startX + boxWidth / 2, yPosition + 8 + boxHeight + 6, {
         align: 'center',
         fontStyle: 'bold',
-        fontSize: 8 // Reducido
+        fontSize: 8
     });
 
     doc.roundedRect(startX + boxWidth + spacing, yPosition + 8, boxWidth, boxHeight, 1.5, 1.5);
     doc.text('Firma del Responsable', startX + boxWidth + spacing + boxWidth / 2, yPosition + 8 + boxHeight + 6, {
         align: 'center',
         fontStyle: 'bold',
-        fontSize: 8 // Reducido
+        fontSize: 8
     });
 
-    // Pie de página más compacto
-    doc.setFontSize(7); // Reducido de 8
+    doc.setFontSize(7);
     doc.setTextColor(120, 120, 120);
     const now = new Date();
-    const fechaHoraGeneracion = `${now.toLocaleDateString()} ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`; // Sin segundos
-    doc.text(`Documento generado el ${fechaHoraGeneracion}`, pageWidth - 10, doc.internal.pageSize.height - 8, { // Posición más alta
+    const fechaHoraGeneracion = `${now.toLocaleDateString()} ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+    doc.text(`Documento generado el ${fechaHoraGeneracion}`, pageWidth - 10, doc.internal.pageSize.height - 8, {
         align: 'right',
         fontStyle: 'italic'
     });
 
     doc.setDrawColor(220, 220, 220);
-    doc.setLineWidth(0.1); // Reducido de 0.2
-    doc.line(10, doc.internal.pageSize.height - 10, pageWidth - 10, doc.internal.pageSize.height - 10); // Línea más fina y alta
+    doc.setLineWidth(0.1);
+    doc.line(10, doc.internal.pageSize.height - 10, pageWidth - 10, doc.internal.pageSize.height - 10);
 };
 
 export const downloadPDF = (pdf, fileName) => {
