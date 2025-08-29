@@ -39,6 +39,16 @@ function setupEvaluacionesLDFTHandlers(ipcMain) {
             return { success: false, error: error.message };
         }
     });
+    ipcMain.handle('eliminar-evaluacion-riesgo-ld-ft', async (_, id) => {
+        try {
+            console.log('Eliminando evaluación LD/FT ID:', id);
+            const resultado = await EvaluacionRiesgoLDFT.eliminar(id);
+            return resultado;
+        } catch (error) {
+            console.error('Error al eliminar evaluación LD/FT:', error);
+            return { success: false, error: error.message };
+        }
+    });
 }
 
 module.exports = setupEvaluacionesLDFTHandlers;
