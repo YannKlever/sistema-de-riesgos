@@ -1,12 +1,33 @@
-import React, { useState, useEffect } from "react";
+// HomePage.js - Versión optimizada
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./styles.module.css";
 import { databaseService } from "../../services/database";
+
+// Precargar imágenes (hacerlo fuera del componente)
+const preloadImages = () => {
+  const images = ['/images/logo.jpg', '/images/registros-optimized.webp'];
+  images.forEach(src => {
+    const img = new Image();
+    img.src = src;
+  });
+};
+
+// Ejecutar precarga tan pronto como sea posible
+if (typeof window !== 'undefined') {
+  // Precargar después de que la página principal esté cargada
+  if (document.readyState === 'complete') {
+    preloadImages();
+  } else {
+    window.addEventListener('load', preloadImages);
+  }
+}
 
 const HomePage = () => {
   const navigate = useNavigate();
   const [nombreEmpresa, setNombreEmpresa] = useState("");
   const [loading, setLoading] = useState(true);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   React.useEffect(() => {
     if (!localStorage.getItem("token")) {
@@ -14,47 +35,45 @@ const HomePage = () => {
     }
   }, [navigate]);
 
-  // Cargar datos de la empresa al montar el componente
-  useEffect(() => {
-    const cargarDatosEmpresa = async () => {
-      try {
-        const resultado = await databaseService.obtenerEmpresa();
-        if (resultado.success && resultado.data && resultado.data.nombre) {
-          setNombreEmpresa(resultado.data.nombre);
-        }
-      } catch (error) {
-        console.error('Error cargando datos de la empresa:', error);
-      } finally {
-        setLoading(false);
+  const cargarDatosEmpresa = useCallback(async () => {
+    try {
+      const resultado = await databaseService.obtenerEmpresa();
+      if (resultado.success && resultado.data?.nombre) {
+        setNombreEmpresa(resultado.data.nombre);
       }
-    };
-
-    cargarDatosEmpresa();
+    } catch (error) {
+      console.error('Error cargando datos de la empresa:', error);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    cargarDatosEmpresa();
+  }, [cargarDatosEmpresa]);
 
   return (
     <div className={styles.container}>
       <div className={styles.background} />
       <div className={styles.content}>
-        <img 
+        <img
           src="/images/logo.jpg"
-          alt="Logo de la empresa" 
-          className={styles.logo} 
+          alt="Logo de la empresa"
+          className={styles.logo}
+          loading="lazy"
+          style={{ opacity: imageLoaded ? 1 : 0 }}
+          onLoad={() => setImageLoaded(true)}
         />
-        
+
         <h1 className={styles.title}>
-          {nombreEmpresa ? (
-            <>
-              Sistema de Gestión de Riesgos
-              <span className={styles.companyName}>de {nombreEmpresa}</span>
-            </>
-          ) : (
-            "Sistema de Gestión de Riesgos"
+          Sistema de Gestión de Riesgos
+          {nombreEmpresa && (
+            <span className={styles.companyName}>de {nombreEmpresa}</span>
           )}
         </h1>
-        
+
         <p className={styles.subtitle}>
-          {nombreEmpresa 
+          {nombreEmpresa
             ? `Monitoreo integral de riesgos para ${nombreEmpresa}`
             : "Monitoreo integral de riesgos empresariales"
           }
@@ -70,4 +89,4 @@ const HomePage = () => {
   );
 };
 
-export default HomePage;
+export default React.memo(HomePage);
