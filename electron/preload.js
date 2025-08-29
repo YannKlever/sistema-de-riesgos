@@ -25,6 +25,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     crearEvaluacionRiesgoLDFT: (data) => ipcRenderer.invoke('crear-evaluacion-riesgo-ld-ft', data),
     listarEvaluacionesRiesgoLDFT: () => ipcRenderer.invoke('listar-evaluaciones-riesgo-ld-ft'),
     actualizarEvaluacionRiesgoLDFT: (id, data) => ipcRenderer.invoke('actualizar-evaluacion-riesgo-ld-ft', { id, data }),
+    eliminarEvaluacionRiesgoLDFT: (id) => ipcRenderer.invoke('eliminar-evaluacion-riesgo-ld-ft', id),
     //Table clientes internos
     crearClienteInterno: (data) => ipcRenderer.invoke('crear-cliente-interno', data),
     listarClientesInternos: () => ipcRenderer.invoke('listar-clientes-internos'),

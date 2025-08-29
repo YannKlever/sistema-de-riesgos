@@ -10,7 +10,8 @@ function createMainWindow() {
         webPreferences: {
             contextIsolation: true,
             preload: path.join(__dirname, 'preload.js')
-        }
+        },
+        title: 'Sistema de Gestión de Riesgos S.R.G.'
     });
 
     mainWindow.loadURL('http://localhost:3000/login');
