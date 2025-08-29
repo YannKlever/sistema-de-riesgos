@@ -147,9 +147,13 @@ const FormularioEmpresaUnipersonal5000 = () => {
         }
     }, []);
 
-    const handlePrint = (formData) => {
+    const handlePrint = async (formData) => {
         try {
-            const pdf = generateFormPDF(formData, "Formulario de Empresa Unipersonal (Prima $5000+)", printSections);
+            const pdf = await generateFormPDF(
+                formData,
+                "Formulario de Empresa Unipersonal (Prima $5000+)",
+                printSections
+            );
             downloadPDF(pdf, "formulario_Empresa_Unipersonal_5000");
             return true;
         } catch (error) {
@@ -160,11 +164,22 @@ const FormularioEmpresaUnipersonal5000 = () => {
 
     const handlePrintError = (error) => {
         console.error('Error en generación de PDF:', error);
-        setPrintError(error);
+        let errorMessage = 'Error desconocido al generar el PDF';
+
+        if (error.message) {
+            errorMessage = error.message;
+        } else if (typeof error === 'string') {
+            errorMessage = error;
+        }
+
+        setPrintError(errorMessage);
+        alert(`Error al generar PDF: ${errorMessage}`);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsSubmitting(true);
+        setPrintError(null);
         console.log('Iniciando envío...');
 
         const formData = new FormData(e.target);
@@ -187,7 +202,7 @@ const FormularioEmpresaUnipersonal5000 = () => {
                 const shouldPrint = window.confirm('¿Desea imprimir el comprobante de registro?');
                 if (shouldPrint) {
                     const formDataForPrint = getFormData();
-                    handlePrint(formDataForPrint);
+                    await handlePrint(formDataForPrint);
                 }
 
                 // Limpiar formulario si es exitoso

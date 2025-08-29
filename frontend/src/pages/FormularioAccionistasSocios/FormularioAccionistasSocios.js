@@ -144,11 +144,11 @@ const FormularioAccionistasSocios = () => {
         }
     }, []);
 
-    const handlePrint = (formData) => {
+    const handlePrint = async (formData) => {
         try {
-            const pdf = generateFormPDF(
-                formData, 
-                `Formulario de Accionista/Socio ${isEditing ? '(Edición)' : '(Nuevo)'}`, 
+            const pdf = await generateFormPDF(
+                formData,
+                `Formulario de Accionista/Socio ${isEditing ? '(Edición)' : '(Nuevo)'}`,
                 printSections
             );
             downloadPDF(pdf, `formulario_Accionista_Socio_${formData.nombres_accionistas_socios || 'nuevo'}`);
@@ -161,12 +161,22 @@ const FormularioAccionistasSocios = () => {
 
     const handlePrintError = (error) => {
         console.error('Error en generación de PDF:', error);
-        setPrintError(error);
+        let errorMessage = 'Error desconocido al generar el PDF';
+
+        if (error.message) {
+            errorMessage = error.message;
+        } else if (typeof error === 'string') {
+            errorMessage = error;
+        }
+
+        setPrintError(errorMessage);
+        alert(`Error al generar PDF: ${errorMessage}`);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
+        setPrintError(null);
 
         const formData = new FormData(e.target);
         const formValues = Object.fromEntries(formData.entries());
@@ -181,14 +191,14 @@ const FormularioAccionistasSocios = () => {
 
             if (result?.success) {
                 alert(`Accionista/Socio ${isEditing ? 'actualizado' : 'creado'} correctamente`);
-                
+
                 // Preguntar si desea imprimir
                 const shouldPrint = window.confirm('¿Desea imprimir el comprobante de registro?');
                 if (shouldPrint) {
                     const formDataForPrint = getFormData();
-                    handlePrint(formDataForPrint);
+                    await handlePrint(formDataForPrint);
                 }
-                
+
                 navigate('/parametros/lista-accionistas-socios');
             } else {
                 alert(`Error: ${result?.error || 'Error desconocido'}`);

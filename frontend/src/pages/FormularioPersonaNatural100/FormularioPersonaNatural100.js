@@ -134,24 +134,42 @@ const FormularioPersonaNatural100 = () => {
             return {};
         }
     }, []);
-    const handlePrint = (formData) => {
+    const handlePrint = async (formData) => {
         try {
-            const pdf = generateFormPDF(formData, "Formulario de Persona Natural (Prima $100-$1000)", printSections);
+            setIsSubmitting(true);
+            const pdf = await generateFormPDF(
+                formData,
+                "Formulario de Persona Natural (Prima $100-$1000)",
+                printSections
+            );
             downloadPDF(pdf, "formulario_Persona_Natural_100_1000");
             return true;
         } catch (error) {
             handlePrintError(error);
             return false;
+        } finally {
+            setIsSubmitting(false);
         }
     };
     const handlePrintError = (error) => {
         console.error('Error en generación de PDF:', error);
-        setPrintError(error);
+        let errorMessage = 'Error desconocido al generar el PDF';
+
+        if (error.message) {
+            errorMessage = error.message;
+        } else if (typeof error === 'string') {
+            errorMessage = error;
+        }
+
+        setPrintError(errorMessage);
+        alert(`Error al generar PDF: ${errorMessage}`);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         console.log('Iniciando envío...');
+        setIsSubmitting(true);
+        setPrintError(null);
 
         const formData = new FormData(e.target);
         const formValues = Object.fromEntries(formData.entries());
@@ -169,11 +187,12 @@ const FormularioPersonaNatural100 = () => {
 
             if (result?.success) {
                 alert(`Cliente guardado con ID: ${result.id ?? 'N/A'}`);
+
                 // Preguntar si desea imprimir
                 const shouldPrint = window.confirm('¿Desea imprimir el comprobante de registro?');
                 if (shouldPrint) {
                     const formDataForPrint = getFormData();
-                    handlePrint(formDataForPrint);
+                    await handlePrint(formDataForPrint); // Ahora con await
                 }
 
                 // Limpiar formulario si es exitoso

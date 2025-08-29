@@ -126,21 +126,34 @@ const FormularioClienteInterno = () => {
         }
     }, []);
 
-    const handlePrint = useCallback((formData) => {
+    const handlePrint = async (formData) => {
         try {
-            const pdf = generateFormPDF(formData, `Formulario de Cliente Interno ${isEditing ? '(Edición)' : '(Nuevo)'}`, printSections);
+            const pdf = await generateFormPDF(
+                formData,
+                `Formulario de Cliente Interno ${isEditing ? '(Edición)' : '(Nuevo)'}`,
+                printSections
+            );
             downloadPDF(pdf, `formulario_cliente_interno_${id || 'nuevo'}`);
             return true;
         } catch (error) {
             handlePrintError(error);
             return false;
         }
-    }, [isEditing, id]);
+    };
 
-    const handlePrintError = useCallback((error) => {
+    const handlePrintError = (error) => {
         console.error('Error en generación de PDF:', error);
-        setPrintError(error);
-    }, []);
+        let errorMessage = 'Error desconocido al generar el PDF';
+
+        if (error.message) {
+            errorMessage = error.message;
+        } else if (typeof error === 'string') {
+            errorMessage = error;
+        }
+
+        setPrintError(errorMessage);
+        alert(`Error al generar PDF: ${errorMessage}`);
+    };
 
     useEffect(() => {
         if (id) {
@@ -172,6 +185,7 @@ const FormularioClienteInterno = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
+        setPrintError(null);
 
         const formData = new FormData(e.target);
         const formValues = Object.fromEntries(formData.entries());
@@ -245,7 +259,7 @@ const FormularioClienteInterno = () => {
                 const shouldPrint = window.confirm('¿Desea imprimir el comprobante de registro?');
                 if (shouldPrint) {
                     const formDataForPrint = getFormData();
-                    handlePrint(formDataForPrint);
+                    await handlePrint(formDataForPrint);
                 }
 
                 navigate('/parametros/clientes-internos');

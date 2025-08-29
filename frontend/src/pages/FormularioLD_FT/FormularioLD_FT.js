@@ -18,7 +18,7 @@ const FormularioLD_FT = ({ onBack, evaluacionId, onGuardadoExitoso }) => {
     useEffect(() => {
         // Simular obtención del usuario actual
         setUsuarioActual('admin@empresa.com');
-        
+
         // Inicializar respuestas
         const respuestasIniciales = {};
         secciones.forEach(seccion => {
@@ -37,11 +37,11 @@ const FormularioLD_FT = ({ onBack, evaluacionId, onGuardadoExitoso }) => {
     const cargarEvaluacionExistente = async (id) => {
         try {
             const resultado = await databaseService.obtenerEvaluacionLDFT(id);
-            
+
             if (resultado.success) {
                 const evaluacion = resultado.data;
                 setDetalles(evaluacion.detalles || '');
-                
+
                 const respuestasCargadas = {};
                 secciones.forEach(seccion => {
                     seccion.preguntas.forEach(pregunta => {
@@ -51,7 +51,7 @@ const FormularioLD_FT = ({ onBack, evaluacionId, onGuardadoExitoso }) => {
                         };
                     });
                 });
-                
+
                 setRespuestas(respuestasCargadas);
                 setPuntajeTotal(evaluacion.puntaje_total || 0);
             }
@@ -81,7 +81,7 @@ const FormularioLD_FT = ({ onBack, evaluacionId, onGuardadoExitoso }) => {
 
     const validarFormulario = () => {
         const errores = [];
-        
+
         secciones.forEach(seccion => {
             seccion.preguntas.forEach(pregunta => {
                 if (!respuestas[pregunta.id]?.texto) {
@@ -109,7 +109,7 @@ const FormularioLD_FT = ({ onBack, evaluacionId, onGuardadoExitoso }) => {
         return datos;
     };
 
-    const handlePrint = () => {
+    const handlePrint = async () => {
         try {
             const datosParaPDF = {
                 ...respuestas,
@@ -120,7 +120,7 @@ const FormularioLD_FT = ({ onBack, evaluacionId, onGuardadoExitoso }) => {
                 puntajeTotal
             };
 
-            const pdf = generateCuestionarioPDF(
+            const pdf = await generateCuestionarioPDF(
                 datosParaPDF,
                 secciones,
                 `Evaluación de Riesgo LD/FT ${evaluacionId ? '(Edición)' : '(Nueva)'}`,
@@ -138,7 +138,7 @@ const FormularioLD_FT = ({ onBack, evaluacionId, onGuardadoExitoso }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         const errores = validarFormulario();
         if (errores.length > 0) {
             alert(`Por favor complete las siguientes preguntas:\n\n${errores.join('\n')}`);
@@ -146,7 +146,7 @@ const FormularioLD_FT = ({ onBack, evaluacionId, onGuardadoExitoso }) => {
         }
 
         setIsSubmitting(true);
-        
+
         try {
             const datosEnvio = prepararDatosEnvio();
             console.log('Enviando evaluación:', datosEnvio);
@@ -160,19 +160,19 @@ const FormularioLD_FT = ({ onBack, evaluacionId, onGuardadoExitoso }) => {
 
             if (resultado.success) {
                 alert(`✅ Evaluación ${evaluacionId ? 'actualizada' : 'guardada'} exitosamente`);
-                
+
                 // Preguntar si desea imprimir
                 const shouldPrint = window.confirm('¿Desea imprimir el comprobante de evaluación?');
                 if (shouldPrint) {
-                    handlePrint();
+                    await handlePrint(); // Ahora es await
                 }
 
                 handleReset();
-                
+
                 if (typeof onBack === 'function') {
                     onBack();
                 }
-                
+
                 if (typeof onGuardadoExitoso === 'function') {
                     onGuardadoExitoso();
                 }
@@ -206,13 +206,13 @@ const FormularioLD_FT = ({ onBack, evaluacionId, onGuardadoExitoso }) => {
             )}
             <div className={styles.card}>
                 <div className={styles.header}>
-                    <HeaderInfoRegistro 
-                        titulo={`Evaluación de Riesgo LD/FT ${evaluacionId ? '(Edición)' : '(Nueva)'}`} 
+                    <HeaderInfoRegistro
+                        titulo={`Evaluación de Riesgo LD/FT`}
                         onBack={onBack}
                         infoAdicional={`Puntaje total: ${puntajeTotal}`}
                     />
                 </div>
-                
+
                 <div className={styles.content}>
                     <form onSubmit={handleSubmit}>
                         {secciones.map((seccion, index) => (

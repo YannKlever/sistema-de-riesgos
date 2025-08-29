@@ -135,9 +135,13 @@ const FormularioEmpresaPublica = () => {
         }
     }, []);
 
-    const handlePrint = (formData) => {
+    const handlePrint = async (formData) => {
         try {
-            const pdf = generateFormPDF(formData, "Formulario de Empresa Pública", printSections);
+            const pdf = await generateFormPDF(
+                formData,
+                "Formulario de Empresa Pública",
+                printSections
+            );
             downloadPDF(pdf, "formulario_Empresa_Publica");
             return true;
         } catch (error) {
@@ -148,11 +152,22 @@ const FormularioEmpresaPublica = () => {
 
     const handlePrintError = (error) => {
         console.error('Error en generación de PDF:', error);
-        setPrintError(error);
+        let errorMessage = 'Error desconocido al generar el PDF';
+
+        if (error.message) {
+            errorMessage = error.message;
+        } else if (typeof error === 'string') {
+            errorMessage = error;
+        }
+
+        setPrintError(errorMessage);
+        alert(`Error al generar PDF: ${errorMessage}`);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsSubmitting(true);
+        setPrintError(null);
         console.log('Iniciando envío...');
 
         const formData = new FormData(e.target);
@@ -175,7 +190,7 @@ const FormularioEmpresaPublica = () => {
                 const shouldPrint = window.confirm('¿Desea imprimir el comprobante de registro?');
                 if (shouldPrint) {
                     const formDataForPrint = getFormData();
-                    handlePrint(formDataForPrint);
+                    await handlePrint(formDataForPrint); // Agrega await aquí
                 }
 
                 // Limpiar formulario si es exitoso
