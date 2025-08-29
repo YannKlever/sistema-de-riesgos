@@ -188,6 +188,31 @@ button:hover:not(:disabled) {
 .botonEditar:hover {
     background-color: var(--clr-info-osc);
 }
+.contenedorAcciones {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+.botonEliminar {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background-color 0.2s;
+}
+
+.botonEliminar:hover:not(:disabled) {
+    background-color: #c82333;
+}
+
+.botonEliminar:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
 
 /* Paginación */
 .paginacion {

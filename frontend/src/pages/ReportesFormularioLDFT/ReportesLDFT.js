@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, flexRender } from '@tanstack/react-table';
 import { useReportesLDFT } from './useReporteLDFT';
 import styles from './reportesLDFT.module.css';
@@ -14,14 +14,45 @@ export const ReportesLDFT = ({ onNuevaEvaluacion }) => {
         COLUMNAS_REPORTE
     } = useReportesLDFT();
 
+    const [eliminandoId, setEliminandoId] = useState(null);
+    const [errorEliminacion, setErrorEliminacion] = useState('');
+
     // Función para limpiar errores
     const limpiarError = () => {
         handleFiltroChange({ target: { value: '' } });
         actualizarReporte();
+        setErrorEliminacion('');
+    };
+
+    // Función para eliminar una evaluación
+    const handleEliminarEvaluacion = async (id) => {
+        if (!window.confirm('¿Está seguro de que desea eliminar esta evaluación? Esta acción no se puede deshacer.')) {
+            return;
+        }
+
+        setEliminandoId(id);
+        setErrorEliminacion('');
+
+        try {
+            const resultado = await databaseService.eliminarEvaluacionLDFT(id);
+            
+            if (resultado.success) {
+                // Actualizar la lista localmente
+                actualizarReporte();
+                alert('Evaluación eliminada correctamente');
+            } else {
+                setErrorEliminacion(resultado.error || 'Error al eliminar la evaluación');
+            }
+        } catch (error) {
+            console.error('Error al eliminar evaluación:', error);
+            setErrorEliminacion('Error de conexión al intentar eliminar');
+        } finally {
+            setEliminandoId(null);
+        }
     };
 
     // Configuración de columnas para react-table
-    const columnasConPromedio = useMemo(() => [
+    const columnasConAcciones = useMemo(() => [
         ...COLUMNAS_REPORTE.filter(col => col.id !== 'promedio_riesgo').map(col => ({
             accessorKey: col.id,
             header: col.nombre,
@@ -46,13 +77,30 @@ export const ReportesLDFT = ({ onNuevaEvaluacion }) => {
             header: 'Promedio Validado',
             cell: info => info.getValue()?.toFixed(2) || '-',
             size: 150
+        },
+        {
+            id: 'acciones',
+            header: 'Acciones',
+            cell: ({ row }) => (
+                <div className={styles.contenedorAcciones}>
+                    <button
+                        onClick={() => handleEliminarEvaluacion(row.original.id)}
+                        disabled={eliminandoId === row.original.id}
+                        className={styles.botonEliminar}
+                        title="Eliminar evaluación"
+                    >
+                        {eliminandoId === row.original.id ? 'Eliminando...' : 'Eliminar'}
+                    </button>
+                </div>
+            ),
+            size: 120
         }
-    ], [COLUMNAS_REPORTE]);
+    ], [COLUMNAS_REPORTE, eliminandoId]);
 
     // Configuración de la tabla
     const table = useReactTable({
         data: evaluacionesFiltradas,
-        columns: columnasConPromedio,
+        columns: columnasConAcciones,
         state: {
             globalFilter: state.filtro
         },
@@ -135,9 +183,9 @@ export const ReportesLDFT = ({ onNuevaEvaluacion }) => {
                 <p>Histórico de evaluaciones de riesgo</p>
             </header>
 
-            {state.error && (
+            {(state.error || errorEliminacion) && (
                 <div className={styles.error}>
-                    {state.error}
+                    {state.error || errorEliminacion}
                     <button 
                         onClick={limpiarError}
                         className={styles.botonCerrarError}
@@ -158,13 +206,6 @@ export const ReportesLDFT = ({ onNuevaEvaluacion }) => {
                 />
 
                 <div className={styles.controlesDerecha}>
-                   {/* <button
-                        onClick={onNuevaEvaluacion}
-                        className={styles.botonNuevo}
-                    >
-                        Nueva Evaluación
-                    </button>*/}
-
                     <button
                         onClick={actualizarReporte}
                         className={styles.botonActualizar}
@@ -215,7 +256,7 @@ export const ReportesLDFT = ({ onNuevaEvaluacion }) => {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan={columnasConPromedio.length} className={styles.sinResultados}>
+                                <td colSpan={columnasConAcciones.length} className={styles.sinResultados}>
                                     {state.loading 
                                         ? 'Cargando evaluaciones...' 
                                         : evaluacionesFiltradas.length === 0 
