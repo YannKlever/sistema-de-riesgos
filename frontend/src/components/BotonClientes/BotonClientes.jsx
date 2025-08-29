@@ -1,15 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './styles.module.css';
-import ModalOpciones from './ModalOpciones/ModalOpciones';
+const ModalOpciones = lazy(() => import('./ModalOpciones/ModalOpciones'));
 
 const BotonClientes = () => {
     const [currentModal, setCurrentModal] = useState(null);
     const [modalHistory, setModalHistory] = useState([]);
+    const [imageLoaded, setImageLoaded] = useState(false);
     const navigate = useNavigate();
 
     const handleOpenModal = (modalType) => {
-        setModalHistory([...modalHistory, currentModal]);
+        setModalHistory(prev => [...prev, currentModal]);
         setCurrentModal(modalType);
     };
 
@@ -17,7 +18,7 @@ const BotonClientes = () => {
         if (modalHistory.length > 0) {
             const previousModal = modalHistory[modalHistory.length - 1];
             setCurrentModal(previousModal);
-            setModalHistory(modalHistory.slice(0, -1));
+            setModalHistory(prev => prev.slice(0, -1));
         } else {
             setCurrentModal(null);
         }
@@ -44,11 +45,15 @@ const BotonClientes = () => {
                 </header>
 
                 <div className={styles.heroSection}>
-                    <img 
-                        src="/images/registros.png" 
-                        alt="Ilustración de gestión de riesgos" 
+                    <img
+                        src="/images/registros.png"
+                        alt="Ilustración de gestión de riesgos"
                         className={styles.heroImage}
+                        loading="lazy"
+                        style={{ opacity: imageLoaded ? 1 : 0 }}
+                        onLoad={() => setImageLoaded(true)}
                     />
+
                     <div className={styles.ctaContainer}>
                         <button
                             className={styles.mainButton}
@@ -64,6 +69,8 @@ const BotonClientes = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Modales */}
             <ModalOpciones
                 show={currentModal === 'externos'}
                 onHide={handleClose}
@@ -131,4 +138,4 @@ const BotonClientes = () => {
     );
 };
 
-export default BotonClientes;
+export default React.memo(BotonClientes);
