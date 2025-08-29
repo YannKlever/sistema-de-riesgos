@@ -1,5 +1,3 @@
-
-
 // Verificar Electron
 const isElectron = () => {
     return !!(window && window.process && window.process.versions && window.process.versions.electron);
@@ -619,20 +617,6 @@ export const databaseService = {
         }
     },
     // Métodos para Empresa
-    async obtenerEmpresa() {
-        if (!window.electronAPI) {
-            console.error('Electron API no disponible');
-            return { success: false, error: 'API no disponible', data: null };
-        }
-        try {
-            const resultado = await window.electronAPI.obtenerEmpresa();
-            return resultado;
-        } catch (error) {
-            console.error('Error al obtener datos de la empresa:', error);
-            return { success: false, error: error.message, data: null };
-        }
-    },
-
     async guardarEmpresa(datos) {
         if (!window.electronAPI) {
             console.error('Electron API no disponible');
@@ -644,6 +628,27 @@ export const databaseService = {
         } catch (error) {
             console.error('Error al guardar datos de la empresa:', error);
             return { success: false, error: error.message };
+        }
+    },
+    async obtenerEmpresa() {
+        if (window.electronAPI && window.electronAPI.obtenerEmpresa) {
+            try {
+                return await window.electronAPI.obtenerEmpresa();
+            } catch (error) {
+                console.error('Error al obtener datos de la empresa:', error);
+                return { 
+                    success: false, 
+                    error: error.message,
+                    data: null 
+                };
+            }
+        } else {
+            console.error('Electron API no disponible');
+            return { 
+                success: false, 
+                error: 'API no disponible',
+                data: null 
+            };
         }
     }
 };
