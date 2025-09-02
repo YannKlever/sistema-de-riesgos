@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, flexRender } from '@tanstack/react-table';
 import { useCanalesDistribucion } from './useCanalesDistribucion';
+import { exportarReporteCanalesPDF } from './reportePDFcanales';
 import styles from './reportesCanalesDistribucion.module.css';
 
 export const ReporteCanalesDistribucion = () => {
@@ -11,11 +12,56 @@ export const ReporteCanalesDistribucion = () => {
         actualizarReporte,
         validarTodosLosRiesgos,
         COLUMNAS_REPORTE,
-        setState
+        setExporting,
+        limpiarError
     } = useCanalesDistribucion();
 
+    const [notificacion, setNotificacion] = useState({ mensaje: '', tipo: '' });
+
+    const mostrarNotificacion = (mensaje, tipo = 'info') => {
+        setNotificacion({ mensaje, tipo });
+        setTimeout(() => setNotificacion({ mensaje: '', tipo: '' }), 5000);
+    };
+
+    const handleExportPDF = async () => {
+        try {
+            setExporting(true);
+
+            const opcionesExportacion = {
+                creador: 'Sistema de Gestión de Riesgos'
+            };
+
+            // Añadir tipos a las columnas para el PDF
+            const columnasConTipos = COLUMNAS_REPORTE.map(col => {
+                let tipo = 'texto';
+                if (col.id.includes('probabilidad') ||
+                    col.id.includes('impacto') ||
+                    col.id.includes('factor_riesgo') ||
+                    col.id.includes('promedio_riesgo') ||
+                    col.id.includes('numerico')) {
+                    tipo = 'numero';
+                }
+                return { ...col, tipo };
+            });
+
+            await exportarReporteCanalesPDF(
+                canalesFiltrados,
+                columnasConTipos,
+                'Reporte_Canales_Distribucion',
+                opcionesExportacion
+            );
+
+            mostrarNotificacion('Reporte exportado a PDF exitosamente', 'exito');
+        } catch (error) {
+            console.error('Error en exportación PDF:', error);
+            mostrarNotificacion(`Error al exportar PDF: ${error.message}`, 'error');
+        } finally {
+            setExporting(false);
+        }
+    };
+
     // Configuración de columnas para react-table
-    const columns = useMemo(() => 
+    const columns = useMemo(() =>
         COLUMNAS_REPORTE.map(col => ({
             accessorKey: col.id,
             header: col.nombre,
@@ -30,7 +76,7 @@ export const ReporteCanalesDistribucion = () => {
             size: col.ancho || 150,
             enableColumnFilter: col.filtrable !== false
         }))
-    , [COLUMNAS_REPORTE]);
+        , [COLUMNAS_REPORTE]);
 
     // Configuración de la tabla
     const table = useReactTable({
@@ -45,14 +91,14 @@ export const ReporteCanalesDistribucion = () => {
         getPaginationRowModel: getPaginationRowModel(),
         globalFilterFn: (row, columnId, filterValue) => {
             const value = row.getValue(columnId);
-            
+
             if (value === undefined || value === null) {
                 return false;
             }
-            
+
             const safeValue = String(value).toLowerCase();
             const safeFilter = filterValue.toLowerCase();
-            
+
             return safeValue.includes(safeFilter);
         },
         initialState: {
@@ -65,7 +111,7 @@ export const ReporteCanalesDistribucion = () => {
     // Calcular promedios
     const calcularPromedio = (campo) => {
         if (canalesFiltrados.length === 0) return '0.00';
-        const total = canalesFiltrados.reduce((sum, canal) => 
+        const total = canalesFiltrados.reduce((sum, canal) =>
             sum + (canal[campo] || 0), 0);
         return (total / canalesFiltrados.length).toFixed(2);
     };
@@ -73,19 +119,32 @@ export const ReporteCanalesDistribucion = () => {
     return (
         <div className={styles.contenedor}>
             <h1 className={styles.titulo}>Reporte de Canales de Distribución</h1>
-            
+
+            {/* Notificación de estado de exportación */}
+            {notificacion.mensaje && (
+                <div className={`${styles.notificacion} ${styles[notificacion.tipo]}`}>
+                    {notificacion.mensaje}
+                    <button
+                        onClick={() => setNotificacion({ mensaje: '', tipo: '' })}
+                        className={styles.botonCerrarNotificacion}
+                    >
+                        ×
+                    </button>
+                </div>
+            )}
+
             {state.error && (
                 <div className={styles.error}>
                     Error: {state.error}
-                    <button 
-                        onClick={() => setState(prev => ({ ...prev, error: '' }))}
+                    <button
+                        onClick={limpiarError}
                         className={styles.botonCerrarError}
                     >
                         ×
                     </button>
                 </div>
             )}
-            
+
             <div className={styles.controles}>
                 <input
                     type="text"
@@ -104,13 +163,29 @@ export const ReporteCanalesDistribucion = () => {
                     >
                         Actualizar Reporte
                     </button>
-                    
+
                     <button
                         onClick={validarTodosLosRiesgos}
                         className={styles.botonValidar}
                         disabled={state.loading}
                     >
                         Validar Todos
+                    </button>
+
+                    {/* Botón de exportación a PDF */}
+                    <button
+                        onClick={handleExportPDF}
+                        className={styles.botonExportarPDF}
+                        disabled={canalesFiltrados.length === 0 || state.loading || state.exporting}
+                        title="Exportar a PDF"
+                    >
+                        {state.exporting ? (
+                            <span>⏳ Generando PDF...</span>
+                        ) : (
+                            <>
+                                <span className={styles.iconoPdf}>📄</span> Exportar a PDF
+                            </>
+                        )}
                     </button>
                 </div>
             </div>
@@ -148,10 +223,10 @@ export const ReporteCanalesDistribucion = () => {
                         ) : (
                             <tr>
                                 <td colSpan={columns.length} className={styles.sinResultados}>
-                                    {state.loading 
-                                        ? 'Cargando datos...' 
-                                        : canalesFiltrados.length === 0 
-                                            ? 'No hay canales de distribución registrados' 
+                                    {state.loading
+                                        ? 'Cargando datos...'
+                                        : canalesFiltrados.length === 0
+                                            ? 'No hay canales de distribución registrados'
                                             : 'No se encontraron resultados con los filtros aplicados'}
                                 </td>
                             </tr>

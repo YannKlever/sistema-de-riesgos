@@ -12,8 +12,18 @@ export const useClientesExternos = () => {
         loading: true,
         error: '',
         filtro: '',
-        validando: false
+        validando: false,
+        exporting: false
     });
+
+    const setExporting = (exporting) => {
+        setState(prev => ({ ...prev, exporting }));
+    };
+
+    // Función para limpiar errores
+    const limpiarError = useCallback(() => {
+        setState(prev => ({ ...prev, error: '' }));
+    }, []);
 
     const [clientesConRiesgo, setClientesConRiesgo] = useState([]);
     const [modalMitigacion, setModalMitigacion] = useState({
@@ -269,6 +279,7 @@ export const useClientesExternos = () => {
         cerrarModalMitigacion,
         handleMitigacionGuardada,
         COLUMNAS_REPORTE,
-        setState
+        setExporting,
+        limpiarError
     };
 };

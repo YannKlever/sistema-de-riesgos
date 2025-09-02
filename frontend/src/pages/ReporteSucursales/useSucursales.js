@@ -12,10 +12,16 @@ export const useSucursales = () => {
         loading: true,
         error: '',
         filtro: '',
-        validandoTodos: false
+        validandoTodos: false,
+        exporting: false
     });
 
     const [sucursalesConRiesgo, setSucursalesConRiesgo] = useState([]);
+
+    // Función para establecer estado de exportación
+    const setExporting = (exporting) => {
+        setState(prev => ({ ...prev, exporting }));
+    };
 
     const calcularRiesgosSucursales = useCallback((sucursales) => {
         const sucursalesActualizadas = sucursales.map(sucursal => {
@@ -195,9 +201,11 @@ export const useSucursales = () => {
     return {
         state,
         sucursalesFiltradas,
+        setExporting,
         handleFiltroChange,
         actualizarReporte,
         validarTodosLosRiesgos,
-        COLUMNAS_REPORTE: COLUMNAS_REPORTE_SUCURSALES
+        COLUMNAS_REPORTE: COLUMNAS_REPORTE_SUCURSALES,
+        setState
     };
 };

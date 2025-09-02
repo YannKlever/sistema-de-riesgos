@@ -7,8 +7,20 @@ export const useCanalesDistribucion = () => {
         canales: [],
         loading: true,
         error: '',
-        filtro: ''
+        filtro: '',
+        exporting: false
     });
+
+    // Función para establecer estado de exportación
+    const setExporting = (exporting) => {
+        setState(prev => ({ ...prev, exporting }));
+    };
+
+    // Función para limpiar errores
+    const limpiarError = useCallback(() => {
+        setState(prev => ({ ...prev, error: '' }));
+    }, []);
+
 
     const [canalesConRiesgo, setCanalesConRiesgo] = useState([]);
 
@@ -162,6 +174,8 @@ export const useCanalesDistribucion = () => {
         handleFiltroChange,
         actualizarReporte,
         validarTodosLosRiesgos,
-        COLUMNAS_REPORTE: COLUMNAS_REPORTE_CANALES
+        COLUMNAS_REPORTE: COLUMNAS_REPORTE_CANALES,
+        setExporting,
+        limpiarError
     };
 };

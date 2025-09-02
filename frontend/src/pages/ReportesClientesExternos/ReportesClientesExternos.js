@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, flexRender } from '@tanstack/react-table';
 import { useClientesExternos } from './useClientesExternos';
 import { ModalMitigacion } from './ModalMitigacion';
+import { exportarReporteClientesExternosPDF } from './reportePDFclientesExternos';
 import styles from './reportesClientesExternos.module.css';
 
 export const ReporteClientesExternos = () => {
@@ -16,41 +17,73 @@ export const ReporteClientesExternos = () => {
         cerrarModalMitigacion,
         handleMitigacionGuardada,
         COLUMNAS_REPORTE,
-        setState
+        setExporting,
+        limpiarError
     } = useClientesExternos();
 
-// Configuración de columnas para react-table
-const columns = useMemo(() =>
-    COLUMNAS_REPORTE.map(col => ({
-        accessorKey: col.id,
-        header: col.nombre,
-        cell: info => {
-            const value = info.getValue();
-            if (value == null) return '-';
-            if (typeof value === 'string' && value.length > 20) {
-                return `${value.substring(0, 17)}...`;
-            }
-            return value;
-        },
-        size: col.ancho || 150,
-        enableColumnFilter: col.filtrable !== false
-    })).concat([
-        {
-            id: 'acciones',
-            header: 'Acciones',
-            cell: ({ row }) => (
-                <button
-                    onClick={() => abrirModalMitigacion(row.original)}
-                    className={styles.botonMitigacion}
-                    title="Aplicar medidas de mitigación"
-                >
-                    Mitigación
-                </button>
-            ),
-            size: 100
+    const [notificacion, setNotificacion] = useState({ mensaje: '', tipo: '' });
+
+    const mostrarNotificacion = (mensaje, tipo = 'info') => {
+        setNotificacion({ mensaje, tipo });
+        setTimeout(() => setNotificacion({ mensaje: '', tipo: '' }), 5000);
+    };
+
+    const handleExportPDF = async () => {
+        try {
+            setExporting(true);
+
+            const opcionesExportacion = {
+                creador: 'Sistema de Gestión de Riesgos'
+            };
+
+            await exportarReporteClientesExternosPDF(
+                clientesFiltrados,
+                COLUMNAS_REPORTE, // Pasa las columnas directamente
+                'Reporte_Clientes_Externos',
+                opcionesExportacion
+            );
+
+            mostrarNotificacion('Reporte exportado a PDF exitosamente', 'exito');
+        } catch (error) {
+            console.error('Error en exportación PDF:', error);
+            mostrarNotificacion(`Error al exportar PDF: ${error.message}`, 'error');
+        } finally {
+            setExporting(false);
         }
-    ])
-, [COLUMNAS_REPORTE, abrirModalMitigacion]);
+    };
+
+    // Configuración de columnas para react-table
+    const columns = useMemo(() =>
+        COLUMNAS_REPORTE.map(col => ({
+            accessorKey: col.id,
+            header: col.nombre,
+            cell: info => {
+                const value = info.getValue();
+                if (value == null) return '-';
+                if (typeof value === 'string' && value.length > 20) {
+                    return `${value.substring(0, 17)}...`;
+                }
+                return value;
+            },
+            size: col.ancho || 150,
+            enableColumnFilter: col.filtrable !== false
+        })).concat([
+            {
+                id: 'acciones',
+                header: 'Acciones',
+                cell: ({ row }) => (
+                    <button
+                        onClick={() => abrirModalMitigacion(row.original)}
+                        className={styles.botonMitigacion}
+                        title="Aplicar medidas de mitigación"
+                    >
+                        Mitigación
+                    </button>
+                ),
+                size: 100
+            }
+        ])
+        , [COLUMNAS_REPORTE, abrirModalMitigacion]);
 
     // Configuración de la tabla
     const table = useReactTable({
@@ -97,6 +130,19 @@ const columns = useMemo(() =>
                 <p>Información formal de evaluación de riesgos</p>
             </header>
 
+            {/* Notificación de estado de exportación */}
+            {notificacion.mensaje && (
+                <div className={`${styles.notificacion} ${styles[notificacion.tipo]}`}>
+                    {notificacion.mensaje}
+                    <button
+                        onClick={() => setNotificacion({ mensaje: '', tipo: '' })}
+                        className={styles.botonCerrarNotificacion}
+                    >
+                        ×
+                    </button>
+                </div>
+            )}
+
             <ModalMitigacion
                 isOpen={modalMitigacion.isOpen}
                 onClose={cerrarModalMitigacion}
@@ -111,7 +157,7 @@ const columns = useMemo(() =>
                 <div className={styles.error}>
                     {state.error}
                     <button
-                        onClick={() => setState(prev => ({ ...prev, error: '' }))}
+                        onClick={limpiarError}
                         className={styles.botonCerrarError}
                     >
                         ×
@@ -144,6 +190,22 @@ const columns = useMemo(() =>
                         disabled={state.loading || state.validando}
                     >
                         {state.validando ? 'Validando...' : 'Validar Riesgos'}
+                    </button>
+
+                    {/* Botón de exportación a PDF */}
+                    <button
+                        onClick={handleExportPDF}
+                        className={styles.botonExportarPDF}
+                        disabled={clientesFiltrados.length === 0 || state.loading || state.exporting}
+                        title="Exportar a PDF"
+                    >
+                        {state.exporting ? (
+                            <span>⏳ Generando PDF...</span>
+                        ) : (
+                            <>
+                                <span className={styles.iconoPdf}>📄</span> Exportar a PDF
+                            </>
+                        )}
                     </button>
                 </div>
             </div>

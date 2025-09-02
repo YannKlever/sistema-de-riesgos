@@ -8,8 +8,19 @@ export const useAccionistasSocios = () => {
         loading: true,
         error: '',
         filtro: '',
-        validando: false
+        validando: false,
+        exporting: false
     });
+
+    // Función para establecer estado de exportación
+    const setExporting = (exporting) => {
+        setState(prev => ({ ...prev, exporting }));
+    };
+
+    // Función para limpiar errores
+    const limpiarError = useCallback(() => {
+        setState(prev => ({ ...prev, error: '' }));
+    }, []);
 
     const [accionistasConRiesgo, setAccionistasConRiesgo] = useState([]);
     const [modalMitigacion, setModalMitigacion] = useState({
@@ -87,12 +98,12 @@ export const useAccionistasSocios = () => {
             setState(prev => ({
                 ...prev,
                 accionistasSocios: prev.accionistasSocios.map(acc =>
-                    acc.id === accionistaActualizado.id 
+                    acc.id === accionistaActualizado.id
                         ? { ...acc, ...accionistaActualizado }
                         : acc
                 )
             }));
-            
+
             // Recalcular riesgos para este accionista específico
             setAccionistasConRiesgo(prev => prev.map(acc => {
                 if (acc.id === accionistaActualizado.id) {
@@ -100,19 +111,19 @@ export const useAccionistasSocios = () => {
                     const valoresProbabilidad = COLUMNAS_PROBABILIDAD
                         .map(col => acc[col])
                         .filter(val => val !== null && !isNaN(val));
-                    
-                    const probabilidad = valoresProbabilidad.length > 0 ? 
+
+                    const probabilidad = valoresProbabilidad.length > 0 ?
                         valoresProbabilidad.reduce((sum, val) => sum + val, 0) / valoresProbabilidad.length : 0;
 
                     const valoresImpacto = COLUMNAS_IMPACTO
                         .map(col => acc[col])
                         .filter(val => val !== null && !isNaN(val));
-                    
-                    const impacto = valoresImpacto.length > 0 ? 
+
+                    const impacto = valoresImpacto.length > 0 ?
                         valoresImpacto.reduce((sum, val) => sum + val, 0) / valoresImpacto.length : 0;
 
                     const riesgoInherente = (probabilidad + impacto) / 2;
-                    
+
                     let riesgoResidual = riesgoInherente;
                     if (accionistaActualizado.mitigacion_numerico) {
                         riesgoResidual = riesgoInherente - (riesgoInherente * (accionistaActualizado.mitigacion_numerico / 100));
@@ -130,7 +141,7 @@ export const useAccionistasSocios = () => {
                 }
                 return acc;
             }));
-            
+
         } catch (error) {
             console.error('Error al actualizar estado después de mitigación:', error);
             // Si falla, recargar desde la base de datos
@@ -140,7 +151,7 @@ export const useAccionistasSocios = () => {
 
     const validarRiesgos = useCallback(async () => {
         setState(prev => ({ ...prev, validando: true, error: '' }));
-        
+
         try {
             // Validar cada accionista/socio - CORREGIDO: usar riesgo_residual en lugar de riesgo_residual_accionista_socio
             const promises = accionistasConRiesgo.map(async (accionista) => {
@@ -153,12 +164,12 @@ export const useAccionistasSocios = () => {
                     mitigacion_numerico: accionista.mitigacion_numerico,
                     mitigacion_adicional: accionista.mitigacion_adicional
                 };
-                
+
                 return databaseService.actualizarAccionistaSocio(accionista.id, datosActualizacion);
             });
-            
+
             await Promise.all(promises);
-            
+
             // Recargar los datos después de la validación
             const resultado = await databaseService.listarAccionistasSocios();
             if (resultado.success) {
@@ -256,6 +267,7 @@ export const useAccionistasSocios = () => {
         cerrarModalMitigacion,
         handleMitigacionGuardada,
         COLUMNAS_REPORTE,
-        setState
+        setExporting,
+        limpiarError
     };
 };

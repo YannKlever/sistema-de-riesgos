@@ -7,8 +7,14 @@ export const useReportesLDFT = () => {
         evaluaciones: [],
         loading: true,
         error: '',
-        filtro: ''
+        filtro: '',
+        exporting: false // Añadir estado de exportación
     });
+
+    // Función para establecer estado de exportación
+    const setExporting = (exporting) => {
+        setState(prev => ({ ...prev, exporting }));
+    };
 
     const [evaluacionesConRiesgo, setEvaluacionesConRiesgo] = useState([]);
 
@@ -29,6 +35,7 @@ export const useReportesLDFT = () => {
         
         setEvaluacionesConRiesgo(evaluacionesActualizadas);
     }, []);
+
 
     const actualizarEvaluacionLocal = useCallback((id, nuevosValores) => {
         setEvaluacionesConRiesgo(prev => prev.map(item => 
@@ -106,6 +113,8 @@ export const useReportesLDFT = () => {
         handleFiltroChange,
         actualizarReporte,
         actualizarEvaluacionLocal,
-        COLUMNAS_REPORTE: COLUMNAS_REPORTE_LDFT
+        COLUMNAS_REPORTE: COLUMNAS_REPORTE_LDFT,
+        setExporting,
+        limpiarError: () => setState(prev => ({ ...prev, error: '' }))
     };
 };

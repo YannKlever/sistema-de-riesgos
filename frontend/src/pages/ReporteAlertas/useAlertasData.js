@@ -16,7 +16,7 @@ export const useAlertasData = () => {
 
             if (resultado.success) {
                 setState({
-                    data: resultado.data,
+                    data: resultado.data || [],
                     loading: false,
                     error: ''
                 });

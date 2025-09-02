@@ -1,28 +1,65 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, flexRender } from '@tanstack/react-table';
 import { useProductosServicios } from './useProductosServicios';
 import { COLUMNAS_REPORTE_PRODUCTOS } from './constantes';
+import { exportarReporteProductosPDF } from './reportePDF';
 import styles from './reportesProductosServicios.module.css';
 
 export const ReportesProductosServicios = () => {
     const {
         state,
+        setExporting, // Ahora está definido en el hook
         productosFiltrados,
         handleFiltroChange,
         actualizarReporte,
-        validarTodosLosRiesgos,
-        setState
+        validarTodosLosRiesgos
     } = useProductosServicios();
 
+    const [notificacion, setNotificacion] = useState({ mensaje: '', tipo: '' });
+
+    const mostrarNotificacion = (mensaje, tipo = 'info') => {
+        setNotificacion({ mensaje, tipo });
+        setTimeout(() => setNotificacion({ mensaje: '', tipo: '' }), 5000);
+    };
+
+    const handleExportPDF = async () => {
+        try {
+            setExporting(true); // Usa setExporting del hook
+
+            const opcionesExportacion = {
+                creador: 'Sistema de Gestión de Riesgos'
+            };
+
+            exportarReporteProductosPDF(
+                productosFiltrados,
+                COLUMNAS_REPORTE_PRODUCTOS,
+                'Reporte_Factor_Productos_Servicios',
+                opcionesExportacion
+            );
+
+            mostrarNotificacion('Reporte exportado a PDF exitosamente', 'exito');
+        } catch (error) {
+            console.error('Error en exportación PDF:', error);
+            mostrarNotificacion(`Error al exportar PDF: ${error.message}`, 'error');
+        } finally {
+            setExporting(false); // Usa setExporting del hook
+        }
+    };
+
     // Configuración de columnas para react-table
-    const columns = useMemo(() => 
+    const columns = useMemo(() =>
         COLUMNAS_REPORTE_PRODUCTOS.map(col => ({
             accessorKey: col.id,
             header: col.nombre,
             cell: info => {
                 const value = info.getValue();
                 if (value == null) return '-';
-                if (typeof value === 'string' && value.length > 20) {
+
+                if (col.tipo === 'numero') {
+                    return Number(value).toFixed(2);
+                } else if (col.tipo === 'boolean') {
+                    return value ? 'Sí' : 'No';
+                } else if (typeof value === 'string' && value.length > 20) {
                     return `${value.substring(0, 17)}...`;
                 }
                 return value;
@@ -30,7 +67,7 @@ export const ReportesProductosServicios = () => {
             size: col.ancho || 150,
             enableColumnFilter: col.filtrable !== false
         }))
-    , [COLUMNAS_REPORTE_PRODUCTOS]);
+        , [COLUMNAS_REPORTE_PRODUCTOS]);
 
     // Configuración de la tabla
     const table = useReactTable({
@@ -45,14 +82,14 @@ export const ReportesProductosServicios = () => {
         getPaginationRowModel: getPaginationRowModel(),
         globalFilterFn: (row, columnId, filterValue) => {
             const value = row.getValue(columnId);
-            
+
             if (value === undefined || value === null) {
                 return false;
             }
-            
+
             const safeValue = String(value).toLowerCase();
             const safeFilter = filterValue.toLowerCase();
-            
+
             return safeValue.includes(safeFilter);
         },
         initialState: {
@@ -65,7 +102,7 @@ export const ReportesProductosServicios = () => {
     // Calcular promedios
     const calcularPromedio = (campo) => {
         if (productosFiltrados.length === 0) return '0.00';
-        const total = productosFiltrados.reduce((sum, producto) => 
+        const total = productosFiltrados.reduce((sum, producto) =>
             sum + (producto[campo] || 0), 0);
         return (total / productosFiltrados.length).toFixed(2);
     };
@@ -73,19 +110,32 @@ export const ReportesProductosServicios = () => {
     return (
         <div className={styles.contenedor}>
             <h1 className={styles.titulo}>Reporte de Productos y Servicios</h1>
-            
+
+            {/* Notificación de estado de exportación */}
+            {notificacion.mensaje && (
+                <div className={`${styles.notificacion} ${styles[notificacion.tipo]}`}>
+                    {notificacion.mensaje}
+                    <button
+                        onClick={() => setNotificacion({ mensaje: '', tipo: '' })}
+                        className={styles.botonCerrarNotificacion}
+                    >
+                        ×
+                    </button>
+                </div>
+            )}
+
             {state.error && (
                 <div className={styles.error}>
                     Error: {state.error}
-                    <button 
-                        onClick={() => setState(prev => ({ ...prev, error: '' }))}
+                    <button
+                        onClick={() => window.location.reload()}
                         className={styles.botonCerrarError}
                     >
                         ×
                     </button>
                 </div>
             )}
-            
+
             <div className={styles.controles}>
                 <input
                     type="text"
@@ -104,13 +154,27 @@ export const ReportesProductosServicios = () => {
                     >
                         Actualizar Reporte
                     </button>
-                    
+
                     <button
                         onClick={validarTodosLosRiesgos}
                         className={styles.botonValidar}
                         disabled={state.loading || state.validandoTodos}
                     >
                         {state.validandoTodos ? 'Validando...' : 'Validar Todos'}
+                    </button>
+                    <button
+                        onClick={handleExportPDF}
+                        className={styles.botonExportar}
+                        disabled={productosFiltrados.length === 0 || state.loading || state.exporting}
+                        title="Exportar a PDF"
+                    >
+                        {state.exporting ? (
+                            <span>⏳ Generando PDF...</span>
+                        ) : (
+                            <>
+                                <span className={styles.iconoPdf}>📄</span> Exportar a PDF
+                            </>
+                        )}
                     </button>
                 </div>
             </div>
@@ -148,10 +212,10 @@ export const ReportesProductosServicios = () => {
                         ) : (
                             <tr>
                                 <td colSpan={columns.length} className={styles.sinResultados}>
-                                    {state.loading 
-                                        ? 'Cargando datos...' 
-                                        : productosFiltrados.length === 0 
-                                            ? 'No hay productos/servicios registrados' 
+                                    {state.loading
+                                        ? 'Cargando datos...'
+                                        : productosFiltrados.length === 0
+                                            ? 'No hay productos/servicios registrados'
                                             : 'No se encontraron resultados con los filtros aplicados'}
                                 </td>
                             </tr>
@@ -215,7 +279,7 @@ export const ReportesProductosServicios = () => {
                     <span>Total en reporte:</span>
                     <strong>{productosFiltrados.length}</strong>
                 </div>
-                
+
                 {productosFiltrados.length > 0 && (
                     <>
                         <div className={styles.resumenItem}>
@@ -224,21 +288,21 @@ export const ReportesProductosServicios = () => {
                                 {calcularPromedio('probabilidad')}
                             </strong>
                         </div>
-                        
+
                         <div className={styles.resumenItem}>
                             <span>Promedio de impacto:</span>
                             <strong className={styles.valorNumerico}>
                                 {calcularPromedio('impacto')}
                             </strong>
                         </div>
-                        
+
                         <div className={styles.resumenItem}>
                             <span>Promedio de riesgo calculado:</span>
                             <strong className={styles.valorNumerico}>
                                 {calcularPromedio('riesgoFactorProductosServicios')}
                             </strong>
                         </div>
-                        
+
                         <div className={styles.resumenItem}>
                             <span>Promedio de riesgo validado:</span>
                             <strong className={styles.valorNumerico}>

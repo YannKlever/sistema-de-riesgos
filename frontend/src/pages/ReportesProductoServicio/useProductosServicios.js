@@ -14,10 +14,15 @@ export const useProductosServicios = () => {
         productosServicios: [],
         loading: true,
         error: '',
-        filtro: ''
+        filtro: '',
+        exporting: false
     });
 
     const [productosConRiesgo, setProductosConRiesgo] = useState([]);
+    
+    const setExporting = (exporting) => {
+        setState(prev => ({ ...prev, exporting }));
+    };
 
 const calcularRiesgoProductos = useCallback(async (productos) => {
     const productosConRiesgos = await Promise.all(
@@ -215,6 +220,7 @@ const calcularRiesgoProductos = useCallback(async (productos) => {
     return {
         state,
         productosFiltrados,
+        setExporting,
         handleFiltroChange,
         actualizarReporte,
         validarTodosLosRiesgos,

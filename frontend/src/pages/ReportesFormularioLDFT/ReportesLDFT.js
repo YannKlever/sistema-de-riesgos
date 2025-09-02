@@ -3,6 +3,7 @@ import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowMo
 import { useReportesLDFT } from './useReporteLDFT';
 import styles from './reportesLDFT.module.css';
 import { databaseService } from '../../services/database';
+import { exportarReporteLDFTPDF } from './reportePDFldft'; // Importar la nueva función
 
 export const ReportesLDFT = ({ onNuevaEvaluacion }) => {
     const {
@@ -11,17 +12,52 @@ export const ReportesLDFT = ({ onNuevaEvaluacion }) => {
         handleFiltroChange,
         actualizarReporte,
         actualizarEvaluacionLocal,
-        COLUMNAS_REPORTE
+        COLUMNAS_REPORTE,
+        setExporting,
+        limpiarError
     } = useReportesLDFT();
 
     const [eliminandoId, setEliminandoId] = useState(null);
     const [errorEliminacion, setErrorEliminacion] = useState('');
+    const [notificacion, setNotificacion] = useState({ mensaje: '', tipo: '' });
 
-    // Función para limpiar errores
-    const limpiarError = () => {
-        handleFiltroChange({ target: { value: '' } });
-        actualizarReporte();
-        setErrorEliminacion('');
+    const mostrarNotificacion = (mensaje, tipo = 'info') => {
+        setNotificacion({ mensaje, tipo });
+        setTimeout(() => setNotificacion({ mensaje: '', tipo: '' }), 5000);
+    };
+    const handleExportPDF = async () => {
+        try {
+            setExporting(true);
+
+            const opcionesExportacion = {
+                creador: 'Sistema de Gestión de Riesgos LDFT'
+            };
+
+            // Añadir tipos a las columnas para el PDF
+            const columnasConTipos = COLUMNAS_REPORTE.map(col => {
+                let tipo = 'texto';
+                if (col.id.endsWith('_numerico') || col.id === 'promedio_frontend' || col.id === 'promedio_riesgo') {
+                    tipo = 'numero';
+                } else if (col.id === 'fecha_evaluacion') {
+                    tipo = 'fecha';
+                }
+                return { ...col, tipo };
+            });
+
+            await exportarReporteLDFTPDF(
+                evaluacionesFiltradas,
+                columnasConTipos,
+                'Reporte_Evaluaciones_LDFT',
+                opcionesExportacion
+            );
+
+            mostrarNotificacion('Reporte exportado a PDF exitosamente', 'exito');
+        } catch (error) {
+            console.error('Error en exportación PDF:', error);
+            mostrarNotificacion(`Error al exportar PDF: ${error.message}`, 'error');
+        } finally {
+            setExporting(false);
+        }
     };
 
     // Función para eliminar una evaluación
@@ -35,7 +71,7 @@ export const ReportesLDFT = ({ onNuevaEvaluacion }) => {
 
         try {
             const resultado = await databaseService.eliminarEvaluacionLDFT(id);
-            
+
             if (resultado.success) {
                 // Actualizar la lista localmente
                 actualizarReporte();
@@ -124,7 +160,7 @@ export const ReportesLDFT = ({ onNuevaEvaluacion }) => {
 
     const calcularPromedioGeneral = () => {
         if (evaluacionesFiltradas.length === 0) return '0.00';
-        const total = evaluacionesFiltradas.reduce((sum, evaluacion) => 
+        const total = evaluacionesFiltradas.reduce((sum, evaluacion) =>
             sum + (evaluacion.promedio_riesgo || evaluacion.promedio_frontend || 0), 0);
         return (total / evaluacionesFiltradas.length).toFixed(2);
     };
@@ -169,7 +205,7 @@ export const ReportesLDFT = ({ onNuevaEvaluacion }) => {
             });
 
             alert(`Validación masiva completada: ${resultados.filter(r => r.success).length} de ${registrosAValidar.length} registros actualizados`);
-            
+
         } catch (error) {
             console.error('Error en validación masiva:', error);
             alert('Error al realizar la validación masiva');
@@ -183,10 +219,23 @@ export const ReportesLDFT = ({ onNuevaEvaluacion }) => {
                 <p>Histórico de evaluaciones de riesgo</p>
             </header>
 
+            {/* Añadir notificación */}
+            {notificacion.mensaje && (
+                <div className={`${styles.notificacion} ${styles[notificacion.tipo]}`}>
+                    {notificacion.mensaje}
+                    <button
+                        onClick={() => setNotificacion({ mensaje: '', tipo: '' })}
+                        className={styles.botonCerrarNotificacion}
+                    >
+                        ×
+                    </button>
+                </div>
+            )}
+
             {(state.error || errorEliminacion) && (
                 <div className={styles.error}>
                     {state.error || errorEliminacion}
-                    <button 
+                    <button
                         onClick={limpiarError}
                         className={styles.botonCerrarError}
                     >
@@ -213,13 +262,29 @@ export const ReportesLDFT = ({ onNuevaEvaluacion }) => {
                     >
                         Actualizar
                     </button>
-                    
+
                     <button
                         onClick={handleValidarTodo}
                         className={styles.botonValidar}
                         disabled={state.loading}
                     >
                         Validar Todo
+                    </button>
+
+                    {/* Añadir botón de exportación PDF */}
+                    <button
+                        onClick={handleExportPDF}
+                        className={styles.botonExportarPDF}
+                        disabled={evaluacionesFiltradas.length === 0 || state.loading || state.exporting}
+                        title="Exportar a PDF"
+                    >
+                        {state.exporting ? (
+                            <span>⏳ Generando PDF...</span>
+                        ) : (
+                            <>
+                                <span className={styles.iconoPdf}>📄</span> Exportar a PDF
+                            </>
+                        )}
                     </button>
                 </div>
             </div>
@@ -257,10 +322,10 @@ export const ReportesLDFT = ({ onNuevaEvaluacion }) => {
                         ) : (
                             <tr>
                                 <td colSpan={columnasConAcciones.length} className={styles.sinResultados}>
-                                    {state.loading 
-                                        ? 'Cargando evaluaciones...' 
-                                        : evaluacionesFiltradas.length === 0 
-                                            ? 'No hay evaluaciones registradas' 
+                                    {state.loading
+                                        ? 'Cargando evaluaciones...'
+                                        : evaluacionesFiltradas.length === 0
+                                            ? 'No hay evaluaciones registradas'
                                             : 'No se encontraron resultados con los filtros aplicados'}
                                 </td>
                             </tr>
@@ -324,7 +389,7 @@ export const ReportesLDFT = ({ onNuevaEvaluacion }) => {
                     <span>Total en reporte:</span>
                     <strong>{evaluacionesFiltradas.length}</strong>
                 </div>
-                
+
                 {evaluacionesFiltradas.length > 0 && (
                     <>
                         <div className={styles.resumenItem}>
@@ -333,7 +398,7 @@ export const ReportesLDFT = ({ onNuevaEvaluacion }) => {
                                 {calcularPromedioGeneral()}
                             </strong>
                         </div>
-                        
+
                         <div className={styles.resumenItem}>
                             <span>Evaluación más reciente:</span>
                             <strong>{obtenerFechaMasReciente()}</strong>
@@ -344,5 +409,4 @@ export const ReportesLDFT = ({ onNuevaEvaluacion }) => {
         </div>
     );
 };
-
 export default ReportesLDFT;

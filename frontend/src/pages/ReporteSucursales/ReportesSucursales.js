@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, flexRender } from '@tanstack/react-table';
 import { useSucursales } from './useSucursales';
+import { exportarReporteSucursalesPDF } from './reportePDFsucursales';
 import styles from './reportesZonaGeografica.module.css';
 
 export const ReportesSucursales = () => {
@@ -11,11 +12,42 @@ export const ReportesSucursales = () => {
         actualizarReporte,
         validarTodosLosRiesgos,
         COLUMNAS_REPORTE,
-        setState
+        setExporting
     } = useSucursales();
 
+    const [notificacion, setNotificacion] = useState({ mensaje: '', tipo: '' });
+
+    const mostrarNotificacion = (mensaje, tipo = 'info') => {
+        setNotificacion({ mensaje, tipo });
+        setTimeout(() => setNotificacion({ mensaje: '', tipo: '' }), 5000);
+    };
+
+    const handleExportPDF = async () => {
+        try {
+            setExporting(true);
+
+            const opcionesExportacion = {
+                creador: 'Sistema de Gestión de Riesgos'
+            };
+
+            exportarReporteSucursalesPDF(
+                sucursalesFiltradas,
+                COLUMNAS_REPORTE,
+                'Reporte_Sucursales_Ubicacion_Geografica',
+                opcionesExportacion
+            );
+
+            mostrarNotificacion('Reporte exportado a PDF exitosamente', 'exito');
+        } catch (error) {
+            console.error('Error en exportación PDF:', error);
+            mostrarNotificacion(`Error al exportar PDF: ${error.message}`, 'error');
+        } finally {
+            setExporting(false);
+        }
+    };
+
     // Configuración de columnas para react-table
-    const columns = useMemo(() => 
+    const columns = useMemo(() =>
         COLUMNAS_REPORTE.map(col => ({
             accessorKey: col.id,
             header: col.nombre,
@@ -30,7 +62,7 @@ export const ReportesSucursales = () => {
             size: col.ancho || 150,
             enableColumnFilter: col.filtrable !== false
         }))
-    , [COLUMNAS_REPORTE]);
+        , [COLUMNAS_REPORTE]);
 
     // Configuración de la tabla
     const table = useReactTable({
@@ -45,14 +77,14 @@ export const ReportesSucursales = () => {
         getPaginationRowModel: getPaginationRowModel(),
         globalFilterFn: (row, columnId, filterValue) => {
             const value = row.getValue(columnId);
-            
+
             if (value === undefined || value === null) {
                 return false;
             }
-            
+
             const safeValue = String(value).toLowerCase();
             const safeFilter = filterValue.toLowerCase();
-            
+
             return safeValue.includes(safeFilter);
         },
         initialState: {
@@ -65,7 +97,7 @@ export const ReportesSucursales = () => {
     // Calcular promedios
     const calcularPromedio = (campo, campoAlternativo = null) => {
         if (sucursalesFiltradas.length === 0) return '0.00';
-        const total = sucursalesFiltradas.reduce((sum, sucursal) => 
+        const total = sucursalesFiltradas.reduce((sum, sucursal) =>
             sum + (sucursal[campo] || (campoAlternativo ? sucursal[campoAlternativo] : 0) || 0), 0);
         return (total / sucursalesFiltradas.length).toFixed(2);
     };
@@ -77,17 +109,28 @@ export const ReportesSucursales = () => {
                 <p>Evaluación de riesgos por ubicación geográfica</p>
             </header>
 
-            {state.error && (
-                <div className={styles.error}>
-                    {state.error}
-                    <button 
-                        onClick={() => setState(prev => ({ ...prev, error: '' }))}
-                        className={styles.botonCerrarError}
+            {notificacion.mensaje && (
+                <div className={`${styles.notificacion} ${styles[notificacion.tipo]}`}>
+                    {notificacion.mensaje}
+                    <button
+                        onClick={() => setNotificacion({ mensaje: '', tipo: '' })}
+                        className={styles.botonCerrarNotificacion}
                     >
                         ×
                     </button>
                 </div>
             )}
+
+            {state.error && (
+        <div className={styles.error}>
+            {state.error}
+            <button 
+                className={styles.botonCerrarError}
+            >
+                ×
+            </button>
+        </div>
+    )}
 
             <div className={styles.controles}>
                 <input
@@ -107,13 +150,27 @@ export const ReportesSucursales = () => {
                     >
                         Actualizar Reporte
                     </button>
-                    
+
                     <button
                         onClick={validarTodosLosRiesgos}
                         className={styles.botonValidar}
                         disabled={state.loading || state.validandoTodos}
                     >
                         {state.validandoTodos ? 'Validando...' : 'Validar Todos'}
+                    </button>
+                    <button
+                        onClick={handleExportPDF}
+                        className={styles.botonExportar}
+                        disabled={sucursalesFiltradas.length === 0 || state.loading || state.exporting}
+                        title="Exportar a PDF"
+                    >
+                        {state.exporting ? (
+                            <span>⏳ Generando PDF...</span>
+                        ) : (
+                            <>
+                                <span className={styles.iconoPdf}>📄</span> Exportar a PDF
+                            </>
+                        )}
                     </button>
                 </div>
             </div>
@@ -151,10 +208,10 @@ export const ReportesSucursales = () => {
                         ) : (
                             <tr>
                                 <td colSpan={columns.length} className={styles.sinResultados}>
-                                    {state.loading 
-                                        ? 'Cargando datos...' 
-                                        : sucursalesFiltradas.length === 0 
-                                            ? 'No hay sucursales registradas' 
+                                    {state.loading
+                                        ? 'Cargando datos...'
+                                        : sucursalesFiltradas.length === 0
+                                            ? 'No hay sucursales registradas'
                                             : 'No se encontraron resultados con los filtros aplicados'}
                                 </td>
                             </tr>
@@ -218,7 +275,7 @@ export const ReportesSucursales = () => {
                     <span>Total en reporte:</span>
                     <strong>{sucursalesFiltradas.length}</strong>
                 </div>
-                
+
                 {sucursalesFiltradas.length > 0 && (
                     <>
                         <div className={styles.resumenItem}>
@@ -227,21 +284,21 @@ export const ReportesSucursales = () => {
                                 {calcularPromedio('probabilidad')}
                             </strong>
                         </div>
-                        
+
                         <div className={styles.resumenItem}>
                             <span>Promedio de impacto:</span>
                             <strong className={styles.valorNumerico}>
                                 {calcularPromedio('impacto')}
                             </strong>
                         </div>
-                        
+
                         <div className={styles.resumenItem}>
                             <span>Promedio de riesgo calculado:</span>
                             <strong className={styles.valorNumerico}>
                                 {calcularPromedio('factorRiesgoZonaGeografica')}
                             </strong>
                         </div>
-                        
+
                         <div className={styles.resumenItem}>
                             <span>Promedio de riesgo validado:</span>
                             <strong className={styles.valorNumerico}>

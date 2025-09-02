@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, flexRender } from '@tanstack/react-table';
 import { useAccionistasSocios } from './useAccionistasSocios';
 import { ModalMitigacion } from './ModalMitigacion';
+import { exportarReporteAccionistasPDF } from './reportePDFaccionistas';
 import styles from './reportesAccionistasSocios.module.css';
 
 export const ReportesAccionistasSocios = () => {
@@ -16,9 +17,57 @@ export const ReportesAccionistasSocios = () => {
         cerrarModalMitigacion,
         handleMitigacionGuardada,
         COLUMNAS_REPORTE,
-        setState
+        setExporting,
+        limpiarError
     } = useAccionistasSocios();
 
+    const [notificacion, setNotificacion] = useState({ mensaje: '', tipo: '' });
+
+    const mostrarNotificacion = (mensaje, tipo = 'info') => {
+        setNotificacion({ mensaje, tipo });
+        setTimeout(() => setNotificacion({ mensaje: '', tipo: '' }), 5000);
+    };
+
+    const handleExportPDF = async () => {
+        try {
+            setExporting(true);
+
+            const opcionesExportacion = {
+                creador: 'Sistema de Gestión de Riesgos'
+            };
+
+            // Añadir tipos a las columnas para el PDF
+            const columnasConTipos = COLUMNAS_REPORTE.map(col => {
+                let tipo = 'texto';
+                if (col.id.includes('numerico') ||
+                    col.id === 'probabilidad' ||
+                    col.id === 'impacto' ||
+                    col.id === 'riesgo_inherente' ||
+                    col.id === 'riesgo_residual') {
+                    tipo = 'numero';
+                } else if (col.id === 'mitigacion_numerico') {
+                    tipo = 'porcentaje';
+                } else if (col.id === 'categoria_pep' || col.id === 'nacionalidad') {
+                    tipo = 'texto';
+                }
+                return { ...col, tipo };
+            });
+
+            await exportarReporteAccionistasPDF(
+                accionistasFiltrados,
+                columnasConTipos,
+                'Reporte_Accionistas_Socios',
+                opcionesExportacion
+            );
+
+            mostrarNotificacion('Reporte exportado a PDF exitosamente', 'exito');
+        } catch (error) {
+            console.error('Error en exportación PDF:', error);
+            mostrarNotificacion(`Error al exportar PDF: ${error.message}`, 'error');
+        } finally {
+            setExporting(false);
+        }
+    };
     // Configuración de columnas para react-table
     const columns = useMemo(() =>
         COLUMNAS_REPORTE.map(col => ({
@@ -96,7 +145,17 @@ export const ReportesAccionistasSocios = () => {
                 <h1>Reporte de Accionistas y Socios</h1>
                 <p>Información formal de evaluación de riesgos</p>
             </header>
-
+            {notificacion.mensaje && (
+                <div className={`${styles.notificacion} ${styles[notificacion.tipo]}`}>
+                    {notificacion.mensaje}
+                    <button
+                        onClick={() => setNotificacion({ mensaje: '', tipo: '' })}
+                        className={styles.botonCerrarNotificacion}
+                    >
+                        ×
+                    </button>
+                </div>
+            )}
             <ModalMitigacion
                 isOpen={modalMitigacion.isOpen}
                 onClose={cerrarModalMitigacion}
@@ -111,7 +170,7 @@ export const ReportesAccionistasSocios = () => {
                 <div className={styles.error}>
                     {state.error}
                     <button
-                        onClick={() => setState(prev => ({ ...prev, error: '' }))}
+                        onClick={limpiarError}
                         className={styles.botonCerrarError}
                     >
                         ×
@@ -144,6 +203,20 @@ export const ReportesAccionistasSocios = () => {
                         disabled={state.loading || state.validando}
                     >
                         {state.validando ? 'Validando...' : 'Validar Riesgos'}
+                    </button>
+                    <button
+                        onClick={handleExportPDF}
+                        className={styles.botonExportarPDF}
+                        disabled={accionistasFiltrados.length === 0 || state.loading || state.exporting}
+                        title="Exportar a PDF"
+                    >
+                        {state.exporting ? (
+                            <span>⏳ Generando PDF...</span>
+                        ) : (
+                            <>
+                                <span className={styles.iconoPdf}>📄</span> Exportar a PDF
+                            </>
+                        )}
                     </button>
                 </div>
             </div>
