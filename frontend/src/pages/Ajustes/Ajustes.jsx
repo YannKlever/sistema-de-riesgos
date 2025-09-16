@@ -1,3 +1,4 @@
+// Ajustes.js
 import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import styles from './styles.module.css';
@@ -29,7 +30,15 @@ const Ajustes = () => {
       path: 'generales',
       icon: '⚙️',
       adminOnly: true
-    }
+    },
+    
+    {
+      title: 'Backup de Datos',
+      path: 'backup',
+      icon: '💾',
+      adminOnly: true
+    },
+    
   ];
 
   const isSubRoute = location.pathname !== '/ajustes';

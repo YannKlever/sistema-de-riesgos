@@ -66,7 +66,7 @@ const LoginPage = ({ onLoginSuccess }) => {
         setTimeRemaining(prevTime => {
           if (prevTime <= 1) {
             clearInterval(intervalId);
-            reiniciarContadorIntentos(); // Esto limpiará el error también
+            reiniciarContadorIntentos(); 
             return 0;
           }
           return prevTime - 1;

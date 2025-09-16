@@ -157,6 +157,95 @@
     color: var(--clr-gris-60);
     font-style: italic;
 }
+/* Nuevos estilos para edición */
+.celdaEditable {
+    padding: 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.inputEdicion {
+    width: 100%;
+    padding: 6px;
+    border: 2px solid #007bff;
+    border-radius: 4px;
+    font-size: 14px;
+    outline: none;
+}
+.editingRow {
+    background-color: rgba(255, 193, 7, 0.1) !important;
+    outline: 2px solid #ffc107;
+}
+
+.inputEdicion {
+    width: 100%;
+    padding: 6px;
+    border: 2px solid #007bff;
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.inputEdicion:focus {
+    outline: none;
+    border-color: #0056b3;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+.accionesContainer {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+}
+
+.botonEditar {
+    padding: 6px 12px;
+    background-color: var(--clr-alerta);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.2s;
+}
+
+.botonEditar:hover {
+    background-color: #218838;
+}
+
+.botonEliminar {
+    padding: 6px 12px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.2s;
+}
+
+.botonEliminar:hover {
+    background-color: #c82333;
+}
+
+/* En listaClientesExternos.module.css */
+.botonGuardar, .botonCancelar {
+    min-width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.botonGuardar:hover {
+    background-color: #218838;
+}
+
+.botonCancelar:hover {
+    background-color: #c82333;
+}
 
 /* Botones */
 button {
@@ -201,14 +290,6 @@ button:hover:not(:disabled) {
 
 .botonVer:hover {
     background-color: var(--clr-info-osc);
-}
-
-.botonEditar {
-    background-color: var(--clr-alerta);
-}
-
-.botonEditar:hover {
-    background-color: var(--clr-alerta-osc);
 }
 
 .botonEliminar {

@@ -5,16 +5,16 @@ import { databaseService } from '../../services/database';
 import { exportExcelFile } from '../../utils/export';
 import ImportModal from '../../utils/import/components/ImportModal';
 import { CLIENTES_EXTERNOS_SCHEMA } from '../../utils/import/constants/clientesExternos';
-import { TODAS_LAS_COLUMNAS, DEFAULT_VISIBLE_COLUMNS } from './constants';
+import { TODAS_LAS_COLUMNAS, DEFAULT_VISIBLE_COLUMNS, EDITABLE_COLUMNS } from './constants';
 import ColumnSelector from './ColumnSelector';
 import ClientActions from './ClientActions';
+import EditableCell from './EditableCell';
+import { useEditableTable } from './useEditableTable';
+import EditableRow from './EditableRow';
 import styles from './listaClientesExternos.module.css';
 
 const ListaClientesExternos = () => {
     const [state, setState] = useState({
-        clientes: [],
-        loading: true,
-        error: '',
         columnasVisibles: DEFAULT_VISIBLE_COLUMNS,
         mostrarSelectorColumnas: false,
         todasLasColumnas: false
@@ -24,121 +24,64 @@ const ListaClientesExternos = () => {
     const [globalFilter, setGlobalFilter] = useState('');
     const navigate = useNavigate();
 
-    // Funciones auxiliares
-    const formatearValor = useCallback((valor) => {
-        if (valor == null) return '-';
-        if (typeof valor === 'string' && valor.length > 20) {
-            return `${valor.substring(0, 17)}...`;
-        }
-        return valor;
-    }, []);
+    //Para la funcionalidad de edición
+    const {
+        data: clientes,
+        setData: setClientes,
+        editingRow,
+        tempData,
+        loading,
+        error,
+        startEditing,
+        cancelEditing,
+        updateTempField,
+        saveEditing,
+        clearError,
+        isEditing
+    } = useEditableTable([]);
+
+    const dataColumns = useMemo(() => {
+        const columnasActuales = state.columnasVisibles.length > 0
+            ? state.columnasVisibles
+            : DEFAULT_VISIBLE_COLUMNS;
+
+        return columnasActuales.map(col => ({
+            id: col.id,
+            header: col.nombre,
+            accessorKey: col.id,
+            size: 150,
+            enableColumnFilter: true
+        }));
+    }, [state.columnasVisibles]);
 
     const cargarClientes = useCallback(async () => {
         try {
-            setState(prev => ({ ...prev, loading: true, error: '' }));
             const resultado = await databaseService.listarClientesExternos();
 
             if (resultado.success) {
-                setState(prev => ({ ...prev, clientes: resultado.data }));
+                setClientes(resultado.data);
             } else {
-                setState(prev => ({
-                    ...prev,
-                    clientes: [],
-                    error: resultado.error || 'Error al cargar clientes'
-                }));
+                setClientes([]);
             }
         } catch (err) {
-            setState(prev => ({
-                ...prev,
-                clientes: [],
-                error: 'Error de conexión con la base de datos'
-            }));
+            setClientes([]);
             console.error('Error al cargar clientes:', err);
-        } finally {
-            setState(prev => ({ ...prev, loading: false }));
         }
-    }, []);
+    }, [setClientes]);
 
     const eliminarCliente = useCallback(async (id) => {
         if (window.confirm('¿Está seguro de eliminar este cliente?')) {
             try {
-                setState(prev => ({ ...prev, loading: true }));
                 const resultado = await databaseService.eliminarClienteExterno(id);
 
                 if (resultado.success) {
                     await cargarClientes();
-                } else {
-                    setState(prev => ({
-                        ...prev,
-                        error: resultado.error || 'Error al eliminar cliente',
-                        loading: false
-                    }));
                 }
             } catch (err) {
-                setState(prev => ({
-                    ...prev,
-                    error: 'Error al conectar con el servidor',
-                    loading: false
-                }));
                 console.error('Error al eliminar cliente:', err);
             }
         }
     }, [cargarClientes]);
-
-    // Configuración de la tabla con filtrado mejorado
-    const columns = useMemo(() => [
-        ...state.columnasVisibles.map(col => ({
-            accessorKey: col.id,
-            header: col.nombre,
-            cell: info => formatearValor(info.getValue()),
-            size: 150,
-            // Permitir filtrado en todas las columnas
-            enableColumnFilter: true
-        })),
-        {
-            id: 'acciones',
-            header: 'Acciones',
-            cell: info => (
-                <ClientActions 
-                    clientId={info.row.original.id} 
-                    onDelete={eliminarCliente} 
-                />
-            ),
-            size: 120,
-            enableColumnFilter: false // No filtrar en la columna de acciones
-        }
-    ], [state.columnasVisibles, formatearValor, eliminarCliente]);
-
-    const table = useReactTable({
-        data: state.clientes,
-        columns,
-        state: {
-            globalFilter
-        },
-        onGlobalFilterChange: setGlobalFilter,
-        getCoreRowModel: getCoreRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        // Filtrado global mejorado
-        globalFilterFn: (row, columnId, filterValue) => {
-            const value = row.getValue(columnId);
-            
-            if (value === undefined || value === null) {
-                return false;
-            }
-            
-            // Convertir todo a string para comparar
-            const safeValue = String(value).toLowerCase();
-            const safeFilter = filterValue.toLowerCase();
-            
-            return safeValue.includes(safeFilter);
-        },
-        initialState: {
-            pagination: {
-                pageSize: 20
-            }
-        }
-    });
 
     // Funciones de manejo de columnas
     const toggleColumna = useCallback((columnaId) => {
@@ -172,7 +115,7 @@ const ListaClientesExternos = () => {
 
     const handleExportExcel = useCallback(() => {
         exportExcelFile(
-            table.getFilteredRowModel().rows.map(row => row.original),
+            clientes,
             TODAS_LAS_COLUMNAS.map(col => ({ id: col.id, name: col.nombre })),
             `lista_clientes_externos`,
             {
@@ -184,20 +127,67 @@ const ListaClientesExternos = () => {
                 }
             }
         );
-    }, [table]);
+    }, [clientes]);
 
-    // Efectos
+    // Configuración de la tabla
+    const columns = useMemo(() => [
+        ...dataColumns,
+        {
+            id: 'acciones',
+            header: 'Acciones',
+            size: 120,
+            enableColumnFilter: false
+        }
+    ], [dataColumns]);
+
+    const table = useReactTable({
+        data: clientes,
+        columns,
+        state: {
+            globalFilter
+        },
+        onGlobalFilterChange: setGlobalFilter,
+        getCoreRowModel: getCoreRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        globalFilterFn: (row, columnId, filterValue) => {
+            const value = row.getValue(columnId);
+
+            if (value === undefined || value === null) {
+                return false;
+            }
+
+            const safeValue = String(value).toLowerCase();
+            const safeFilter = filterValue.toLowerCase();
+
+            return safeValue.includes(safeFilter);
+        },
+        initialState: {
+            pagination: {
+                pageSize: 20
+            }
+        }
+    });
+
     useEffect(() => {
         cargarClientes();
     }, [cargarClientes]);
 
-    // Renderizado
     return (
         <div className={styles.contenedor}>
             <h1>Clientes Externos</h1>
-
-            {state.error && <div className={styles.error}>{state.error}</div>}
-
+            {error && (
+                <div className={styles.error}>
+                    {error}
+                    <button
+                        onClick={clearError}
+                        className={styles.botonCerrarError}
+                        style={{ marginLeft: '10px', background: 'none', border: 'none', color: 'inherit' }}
+                    >
+                        ×
+                    </button>
+                </div>
+            )}
             <div className={styles.controles}>
                 <input
                     type="text"
@@ -205,22 +195,22 @@ const ListaClientesExternos = () => {
                     value={globalFilter}
                     onChange={e => setGlobalFilter(e.target.value)}
                     className={styles.buscador}
-                    disabled={state.loading}
+                    disabled={loading}
                 />
 
                 <div className={styles.controlesDerecha}>
                     <button
                         onClick={() => setShowImportModal(true)}
                         className={styles.botonImportar}
-                        disabled={state.loading}
+                        disabled={loading}
                     >
                         Importar Excel
                     </button>
-                    
+
                     <button
                         onClick={() => setState(prev => ({ ...prev, mostrarSelectorColumnas: !prev.mostrarSelectorColumnas }))}
                         className={styles.botonColumnas}
-                        disabled={state.loading}
+                        disabled={loading}
                     >
                         Columnas
                     </button>
@@ -228,7 +218,7 @@ const ListaClientesExternos = () => {
                     <button
                         onClick={toggleTodasLasColumnas}
                         className={styles.botonMostrarTodas}
-                        disabled={state.loading}
+                        disabled={loading}
                     >
                         {state.todasLasColumnas ? 'Mostrar menos' : 'Mostrar todas'}
                     </button>
@@ -236,7 +226,7 @@ const ListaClientesExternos = () => {
                     <button
                         onClick={handleExportExcel}
                         className={styles.botonExportar}
-                        disabled={state.loading || table.getFilteredRowModel().rows.length === 0}
+                        disabled={loading || clientes.length === 0}
                     >
                         Exportar Excel
                     </button>
@@ -272,11 +262,11 @@ const ListaClientesExternos = () => {
                     columns={TODAS_LAS_COLUMNAS}
                     visibleColumns={state.columnasVisibles}
                     onToggleColumn={toggleColumna}
-                    loading={state.loading}
+                    loading={loading}
                 />
             )}
 
-            {state.loading ? (
+            {loading ? (
                 <div className={styles.cargando}>Cargando clientes...</div>
             ) : (
                 <div className={styles.tablaContenedor}>
@@ -298,22 +288,25 @@ const ListaClientesExternos = () => {
                         <tbody>
                             {table.getRowModel().rows.length > 0 ? (
                                 table.getRowModel().rows.map(row => (
-                                    <tr key={row.id}>
-                                        {row.getVisibleCells().map(cell => (
-                                            <td key={cell.id}>
-                                                {flexRender(
-                                                    cell.column.columnDef.cell,
-                                                    cell.getContext()
-                                                )}
-                                            </td>
-                                        ))}
-                                    </tr>
+                                    <EditableRow
+                                        key={row.id}
+                                        row={row.original}
+                                        columns={columns}
+                                        isEditing={isEditing(row.original.id)}
+                                        tempData={tempData}
+                                        onUpdateTempField={updateTempField}
+                                        onStartEditing={startEditing}
+                                        onSaveEditing={saveEditing}
+                                        onCancelEditing={cancelEditing}
+                                        onDelete={eliminarCliente}
+                                        EDITABLE_COLUMNS={EDITABLE_COLUMNS}
+                                    />
                                 ))
                             ) : (
                                 <tr>
                                     <td colSpan={columns.length} className={styles.sinResultados}>
-                                        {state.clientes.length === 0 
-                                            ? 'No hay clientes registrados' 
+                                        {clientes.length === 0
+                                            ? 'No hay clientes registrados'
                                             : 'No se encontraron resultados'}
                                     </td>
                                 </tr>
