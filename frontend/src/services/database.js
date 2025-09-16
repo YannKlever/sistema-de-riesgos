@@ -616,6 +616,28 @@ export const databaseService = {
             return handleConnectionError(error);
         }
     },
+
+
+   // Métodos de backup
+    async backupDatabase(backupPath) {
+        if (!window.electronAPI) throw new Error('API no disponible');
+        return window.electronAPI.backupDatabase(backupPath);
+    },
+
+    async restoreDatabase(backupFilePath) {
+        if (!window.electronAPI) throw new Error('API no disponible');
+        return window.electronAPI.restoreDatabase(backupFilePath);
+    },
+
+    async listBackups(directoryPath) {
+        if (!window.electronAPI) throw new Error('API no disponible');
+        return window.electronAPI.listBackups(directoryPath);
+    },
+
+    async selectDirectory() {
+        if (!window.electronAPI) throw new Error('API no disponible');
+        return window.electronAPI.selectDirectory();
+    },
     // Métodos para Empresa
     async guardarEmpresa(datos) {
         if (!window.electronAPI) {

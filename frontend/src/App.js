@@ -45,6 +45,8 @@ import ReportesLDFT from './pages/ReportesFormularioLDFT/ReportesLDFT';
 import ReporteCanalesDistribucion from './pages/ReportesCanalDistribucion/ReporteCanalesDistribucion';
 import ReporteAlertas from './pages/ReporteAlertas/ReporteAlertas';
 
+import Backup from './components/AjustesSection/Backup';
+
 // Componentes de graficos
 import Graficos from './pages/Graficos/Graficos';
 import GraficosAccionistaSocio from './pages/GraficosAccionistasSocios/GraficosAccionistasSocios';
@@ -200,6 +202,8 @@ function App() {
                   } 
                 />
                 <Route path="generales" element={<GeneralConfig />} />
+                
+                <Route path="backup" element={<Backup />} />
                 <Route index element={<Navigate to="generales" replace />} />
               </Route>
 
