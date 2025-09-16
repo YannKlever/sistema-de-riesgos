@@ -61,5 +61,34 @@ contextBridge.exposeInMainWorld('electronAPI', {
     verificarEstadoInicial: () => ipcRenderer.invoke('verificar-estado-inicial'),
     //Tabla empresa
     obtenerEmpresa: () => ipcRenderer.invoke('obtener-empresa'),
-    guardarEmpresa: (datos) => ipcRenderer.invoke('guardar-empresa', datos)
+    guardarEmpresa: (datos) => ipcRenderer.invoke('guardar-empresa', datos),
+     // Métodos de backup
+    backupDatabase: (backupPath) => ipcRenderer.invoke('backup-database', backupPath),
+    restoreDatabase: (backupFilePath) => ipcRenderer.invoke('restore-database', backupFilePath),
+    listBackups: (directoryPath) => ipcRenderer.invoke('list-backups', directoryPath),
+    selectDirectory: () => ipcRenderer.invoke('select-directory'),
+     openDialog: (options) => ipcRenderer.invoke('open-dialog', options),
+
+    
+
+});
+
+
+contextBridge.exposeInMainWorld('productKeyAPI', {
+  checkStatus: () => ipcRenderer.invoke('check-product-key-status'),
+  getInfo: () => ipcRenderer.invoke('get-product-key-info'),
+  clearKey: () => ipcRenderer.invoke('clear-product-key')
+});
+
+contextBridge.exposeInMainWorld('menuAPI', {
+    onNewRecord: (callback) => ipcRenderer.on('menu-new-record', callback),
+    onImport: (callback) => ipcRenderer.on('menu-import', callback),
+    onExport: (callback) => ipcRenderer.on('menu-export', callback),
+    onPrint: (callback) => ipcRenderer.on('menu-print', callback),
+    removeAllMenuListeners: () => {
+        ipcRenderer.removeAllListeners('menu-new-record');
+        ipcRenderer.removeAllListeners('menu-import');
+        ipcRenderer.removeAllListeners('menu-export');
+        ipcRenderer.removeAllListeners('menu-print');
+    }
 });
