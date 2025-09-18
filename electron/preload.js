@@ -62,22 +62,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
     //Tabla empresa
     obtenerEmpresa: () => ipcRenderer.invoke('obtener-empresa'),
     guardarEmpresa: (datos) => ipcRenderer.invoke('guardar-empresa', datos),
-     // Métodos de backup
+    // Métodos de backup
     backupDatabase: (backupPath) => ipcRenderer.invoke('backup-database', backupPath),
     restoreDatabase: (backupFilePath) => ipcRenderer.invoke('restore-database', backupFilePath),
     listBackups: (directoryPath) => ipcRenderer.invoke('list-backups', directoryPath),
     selectDirectory: () => ipcRenderer.invoke('select-directory'),
-     openDialog: (options) => ipcRenderer.invoke('open-dialog', options),
-
-    
-
+    openDialog: (options) => ipcRenderer.invoke('open-dialog', options)
 });
 
 
 contextBridge.exposeInMainWorld('productKeyAPI', {
-  checkStatus: () => ipcRenderer.invoke('check-product-key-status'),
-  getInfo: () => ipcRenderer.invoke('get-product-key-info'),
-  clearKey: () => ipcRenderer.invoke('clear-product-key')
+    checkStatus: () => ipcRenderer.invoke('check-product-key-status'),
+    getInfo: () => ipcRenderer.invoke('get-product-key-info'),
+    clearKey: () => ipcRenderer.invoke('clear-product-key')
 });
 
 contextBridge.exposeInMainWorld('menuAPI', {

@@ -11,6 +11,11 @@ function createActivationWindow(parentWindow) {
         parent: parentWindow,
         modal: !!parentWindow,
         resizable: false,
+        
+         titleBarStyle: 'default', 
+        autoHideMenuBar: true,    
+        menu: null,                
+        frame: true,
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,

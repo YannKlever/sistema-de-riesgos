@@ -16,12 +16,6 @@ function showMainWindow() {
 function createMainWindow() {
     console.log('Creando ventana principal...');
     
-    // Si ya existe una ventana, enfocarla
-    if (mainWindow && !mainWindow.isDestroyed()) {
-        showMainWindow();
-        return mainWindow;
-    }
-
     mainWindow = new BrowserWindow({
         width: 1400,
         height: 900,
@@ -39,7 +33,11 @@ function createMainWindow() {
             allowRunningInsecureContent: false,
             experimentalFeatures: false
         },
-        titleBarStyle: 'default'
+        
+        titleBarStyle: 'default', 
+        autoHideMenuBar: true,    
+        menu: null,                
+        frame: true 
     });
 
     // Optimizar rendimiento

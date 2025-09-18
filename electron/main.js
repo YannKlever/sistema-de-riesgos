@@ -77,14 +77,14 @@ app.whenReady().then(async () => {
             
             // Crear menú personalizado cuando la ventana esté lista
             if (mainWindow) {
-                mainWindow.once('ready-to-show', () => {
+                /*mainWindow.once('ready-to-show', () => {
                     try {
                         createMenu(mainWindow);
                         console.log('Menú personalizado creado correctamente');
                     } catch (error) {
                         console.error('Error creando menú:', error);
                     }
-                });
+                });*/
             }
             
             // Iniciar verificación periódica (una vez al día)
