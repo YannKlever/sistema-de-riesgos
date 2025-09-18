@@ -1,4 +1,3 @@
-// DirectorySelector.js
 import React, { useState, useEffect } from 'react';
 import styles from './DirectorySelector.module.css';
 
@@ -17,11 +16,10 @@ const DirectorySelector = ({ isOpen, onSelect, onCancel, mode }) => {
   const handleSelect = async () => {
     setIsLoading(true);
     try {
-      // Usar el diálogo real de Electron
       const result = await window.electronAPI.openDialog({
         properties: [mode === 'backup' ? 'openDirectory' : 'openFile'],
         filters: mode === 'restore' ? [
-          { name: 'Backup Files', extensions: ['db', 'backup', 'sqlite'] }
+          { name: 'Backup Files', extensions: ['db', 'sqlite'] }
         ] : [],
         title: mode === 'backup' 
           ? 'Seleccionar carpeta para guardar el backup' 
@@ -32,12 +30,17 @@ const DirectorySelector = ({ isOpen, onSelect, onCancel, mode }) => {
         const path = result.filePaths[0];
         setSelectedPath(path);
         
-        // Para restore, verificar que el archivo es válido
+        // Verificación básica para restore
         if (mode === 'restore') {
-          const verification = await window.electronAPI.verifyBackupFile(path);
-          if (!verification.success) {
-            alert(`Error: ${verification.error}`);
-            setSelectedPath('');
+          try {
+            // Verificar que el archivo existe y tiene un tamaño razonable
+            const stats = await window.electronAPI.invoke('get-file-stats', path);
+            if (stats.size < 1000) { // Menos de 1KB probablemente no es válido
+              alert('El archivo seleccionado parece no ser un backup válido');
+              setSelectedPath('');
+            }
+          } catch (error) {
+            console.warn('No se pudo verificar el archivo de backup:', error);
           }
         }
       }
