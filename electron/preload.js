@@ -1,0 +1,97 @@
+const { contextBridge, ipcRenderer } = require('electron');
+console.log('✅ Preload script cargado - Inicializando APIs...');
+
+const electronAPI = {
+    crearCliente: (data) => ipcRenderer.invoke('crear-cliente', data),
+    listarClientesExternos: () => ipcRenderer.invoke('listar-clientes-externos'),
+    listarClientesConAlertas: () => ipcRenderer.invoke('listar-clientes-con-alertas'),
+    crearClienteExterno: (cliente) => ipcRenderer.invoke('crear-cliente-externo', cliente),
+    eliminarClienteExterno: (id) => ipcRenderer.invoke('eliminar-cliente-externo', id),
+    actualizarClienteExterno: (id, data) => ipcRenderer.invoke('actualizar-cliente-externo', id, data),
+    bulkCreateClientesExternos: (data) => ipcRenderer.invoke('bulk-create-clientes-externos', data),
+    // Nuevos métodos
+    listarClientesExternosConRiesgoInterno: () => ipcRenderer.invoke('listar-clientes-externos-con-riesgo-interno'),
+    listarClientesExternosConRiesgoProductoServicio: () => ipcRenderer.invoke('listar-clientes-externos-con-riesgo-producto-servicio'),
+    vincularClienteInterno: (idClienteExterno, idClienteInterno) =>
+        ipcRenderer.invoke('vincular-cliente-interno', idClienteExterno, idClienteInterno),
+    //Tabla accionistas socios
+    crearAccionistaSocio: (data) => ipcRenderer.invoke('crear-accionista-socio', data),
+    listarAccionistasSocios: () => ipcRenderer.invoke('listar-accionistas-socios'),
+    obtenerAccionistaSocio: (id) => ipcRenderer.invoke('obtener-accionista-socio', id),
+    actualizarAccionistaSocio: (id, data) => ipcRenderer.invoke('actualizar-accionista-socio', id, data),
+    eliminarAccionistaSocio: (id) => ipcRenderer.invoke('eliminar-accionista-socio', id),
+    bulkCreateAccionistasSocios: (data) => ipcRenderer.invoke('bulk-create-accionistas-socios', data),
+    //Tabla evaluacion LDTF
+    crearEvaluacionRiesgoLDFT: (data) => ipcRenderer.invoke('crear-evaluacion-riesgo-ld-ft', data),
+    obtenerEvaluacionRiesgoLDFT: (id) => ipcRenderer.invoke('obtener-evaluacion-riesgo-ld-ft', id), 
+    listarEvaluacionesRiesgoLDFT: () => ipcRenderer.invoke('listar-evaluaciones-riesgo-ld-ft'),
+    actualizarEvaluacionRiesgoLDFT: (id, data) => ipcRenderer.invoke('actualizar-evaluacion-riesgo-ld-ft', { id, data }),
+    eliminarEvaluacionRiesgoLDFT: (id) => ipcRenderer.invoke('eliminar-evaluacion-riesgo-ld-ft', id),
+    //Table clientes internos
+    crearClienteInterno: (data) => ipcRenderer.invoke('crear-cliente-interno', data),
+    listarClientesInternos: () => ipcRenderer.invoke('listar-clientes-internos'),
+    obtenerClienteInterno: (id) => ipcRenderer.invoke('obtener-cliente-interno', id),
+    actualizarClienteInterno: (id, data) => ipcRenderer.invoke('actualizar-cliente-interno', id, data),
+    eliminarClienteInterno: (id) => ipcRenderer.invoke('eliminar-cliente-interno', id),
+    bulkCreateClientesInternos: (data) => ipcRenderer.invoke('bulk-create-clientes-internos', data),
+    //Tabla producto servicio
+    crearProductoServicio: (data) => ipcRenderer.invoke('crear-producto-servicio', data),
+    listarProductosServicios: () => ipcRenderer.invoke('listar-productos-servicios'),
+    obtenerProductoServicio: (id) => ipcRenderer.invoke('obtener-producto-servicio', id),
+    actualizarProductoServicio: (id, data) => ipcRenderer.invoke('actualizar-producto-servicio', id, data),
+    bulkCreateProductosServicios: (data) => ipcRenderer.invoke('bulk-create-productos-servicios', data),
+
+    obtenerRiesgoZona: (oficina) => ipcRenderer.invoke('obtener-riesgo-zona', oficina),
+    obtenerRiesgoCanal: (oficina) => ipcRenderer.invoke('obtener-riesgo-canal', oficina),
+    eliminarProductoServicio: (id) => ipcRenderer.invoke('eliminar-producto-servicio', id),
+    //Tabla sucursal
+    crearSucursal: (data) => ipcRenderer.invoke('crear-sucursal', data),
+    listarSucursales: () => ipcRenderer.invoke('listar-sucursales'),
+    obtenerSucursal: (id) => ipcRenderer.invoke('obtener-sucursal', id),
+    actualizarSucursal: (id, data) => ipcRenderer.invoke('actualizar-sucursal', id, data),
+
+    bulkCreateSucursales: (data) => ipcRenderer.invoke('bulk-create-sucursales', data),
+    eliminarSucursal: (id) => ipcRenderer.invoke('eliminar-sucursal', id),
+    //Tabla usuarios
+    crearUsuario: (data) => ipcRenderer.invoke('crear-usuario', data),
+    listarUsuarios: () => ipcRenderer.invoke('listar-usuarios'),
+    obtenerUsuario: (id) => ipcRenderer.invoke('obtener-usuario', id),
+    actualizarUsuario: (id, data) => ipcRenderer.invoke('actualizar-usuario', id, data),
+    eliminarUsuario: (id) => ipcRenderer.invoke('eliminar-usuario', id),
+    verificarCredenciales: (email, password) => ipcRenderer.invoke('verificar-credenciales', email, password),
+    verificarEstadoInicial: () => ipcRenderer.invoke('verificar-estado-inicial'),
+    //Tabla empresa
+    obtenerEmpresa: () => ipcRenderer.invoke('obtener-empresa'),
+    guardarEmpresa: (datos) => ipcRenderer.invoke('guardar-empresa', datos),
+    // Métodos de backup
+    backupDatabase: (backupPath) => ipcRenderer.invoke('backup-database', backupPath),
+    restoreDatabase: (backupFilePath) => ipcRenderer.invoke('restore-database', backupFilePath),
+    listBackups: (directoryPath) => ipcRenderer.invoke('list-backups', directoryPath),
+    selectDirectory: () => ipcRenderer.invoke('select-directory'),
+    openDialog: (options) => ipcRenderer.invoke('open-dialog', options),
+
+    checkStatus: () => ipcRenderer.invoke('check-product-key-status'),
+    getInfo: () => ipcRenderer.invoke('get-product-key-info'),
+    clearKey: () => ipcRenderer.invoke('clear-product-key'),
+
+    validateProductKey: (productKey) => ipcRenderer.invoke('validate-product-key', productKey),
+    checkActivationStatus: () => ipcRenderer.invoke('check-activation-status'),
+    checkProductKeyStatus: () => ipcRenderer.invoke('check-product-key-status'),
+    getProductKeyInfo: () => ipcRenderer.invoke('get-product-key-info'),
+    clearProductKey: () => ipcRenderer.invoke('clear-product-key'),
+    notifyActivationSuccess: () => ipcRenderer.send('activation-success'),
+
+    onNewRecord: (callback) => ipcRenderer.on('menu-new-record', callback),
+    onImport: (callback) => ipcRenderer.on('menu-import', callback),
+    onExport: (callback) => ipcRenderer.on('menu-export', callback),
+    onPrint: (callback) => ipcRenderer.on('menu-print', callback),
+    removeAllMenuListeners: () => {
+        ipcRenderer.removeAllListeners('menu-new-record');
+        ipcRenderer.removeAllListeners('menu-import');
+        ipcRenderer.removeAllListeners('menu-export');
+        ipcRenderer.removeAllListeners('menu-print');
+    }
+};
+// Exponer las APIs
+contextBridge.exposeInMainWorld('electronAPI', electronAPI);
+console.log('✅ APIs expuestas al renderer:', Object.keys(electronAPI));

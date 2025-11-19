@@ -1,0 +1,71 @@
+{
+  "appId": "com.riesgos.sistema-gestion",
+  "productName": "Sistema de Gestión de Riesgos",
+  "copyright": "Copyright © 2024",
+  "directories": {
+    "output": "release-obfuscated",
+    "buildResources": "assets"
+  },
+  "files": [
+    {
+      "from": "frontend/build",
+      "to": "frontend/build",
+      "filter": ["**/*"]
+    },
+    {
+      "from": "backend/src",
+      "to": "backend/src", 
+      "filter": ["**/*"]
+    },
+    {
+      "from": "electron",
+      "to": "electron",
+      "filter": ["**/*"]
+    },
+    "package.json",
+    {
+      "from": "node_modules",
+      "to": "node_modules",
+      "filter": ["**/*"]
+    }
+  ],
+  "extraResources": [
+    {
+      "from": "backend/database.sqlite",
+      "to": "database.sqlite"
+    },
+    {
+      "from": "backend/database.sqlite-shm", 
+      "to": "database.sqlite-shm"
+    },
+    {
+      "from": "backend/database.sqlite-wal",
+      "to": "database.sqlite-wal"
+    },
+    {
+      "from": "frontend/build",
+      "to": "frontend-build"
+    },
+    {
+      "from": "assets",
+      "to": "assets",
+      "filter": ["**/*"]
+    }
+  ],
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64", "ia32"]
+      }
+    ],
+    "icon": "assets/icon.ico"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "Sistema de Gestión de Riesgos"
+  }
+}

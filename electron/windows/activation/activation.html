@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Activación del Producto</title>
+    <link rel="stylesheet" href="activation.css">
+</head>
+<body>
+    <div class="activation-container">
+        <div class="activation-header">
+            <h1>Activación del Producto</h1>
+            <p>Ingrese su clave de producto para continuar</p>
+        </div>
+        
+        <div class="activation-form">
+            <div class="form-group">
+                <label for="productKey">Clave de Producto:</label>
+                <input 
+                    type="text" 
+                    id="productKey" 
+                    placeholder="Ingrese su clave de producto"
+                    autocomplete="off"
+                />
+            </div>
+            
+            <button id="activateBtn" class="activate-button">Activar Producto</button>
+            
+            <div id="message" class="message"></div>
+        </div>
+        
+        <div class="activation-footer">
+            <p>¿No tiene una clave? <a href="#" id="contactLink">Contáctenos</a></p>
+        </div>
+    </div>
+
+    <script src="activation.js"></script>
+</body>
+</html>
